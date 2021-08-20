@@ -1,5 +1,4 @@
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 /**
  * @author Dongguo
@@ -8,9 +7,9 @@ import java.util.Map;
  */
 public class Test {
     public static void main(String[] args) {
-        Map<Integer,String> hashMap = new HashMap<>();
-        hashMap.put(1,"张三");
-        hashMap.put(2,"李四");
-        hashMap.put(3,"王五");
+        Map<Integer, String> hashMap = new HashMap<>();
+        hashMap.put(1, "张三");
+        hashMap.put(2, "李四");
+        hashMap.put(3, "王五");
     }
 }
