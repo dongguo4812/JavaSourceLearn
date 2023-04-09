@@ -608,7 +608,6 @@ public class HashMap<K,V> extends AbstractMap<K,V>
      *         (A <tt>null</tt> return can also indicate that the map
      *         previously associated <tt>null</tt> with <tt>key</tt>.)
      */
-    //put操作
     public V put(K key, V value) {
         return putVal(hash(key), key, value, false, true);
     }

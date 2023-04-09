@@ -16,13 +16,7 @@ import java.util.List;
 class MyTest {
     @Test
     public void test1() {
-
         String array[] = {"hello", "world", "java"};
-//        List<String> list1 = Arrays.asList(array);
-//        list1.add("zhangsan");
-//        System.out.println(list1);
-//        list1.remove("zhangsan");
-//        System.out.println(list1);
         List<String> list = new ArrayList<String>(Arrays.asList(array));
         list.add("zhangsan");
         System.out.println(list);

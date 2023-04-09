@@ -459,6 +459,8 @@ public class ArrayList<E> extends AbstractList<E>
      *
      * @param e element to be appended to this list
      * @return <tt>true</tt> (as specified by {@link Collection#add})
+     *
+     * add添加
      */
     public boolean add(E e) {
         ensureCapacityInternal(size + 1);  // Increments modCount!!

@@ -1451,23 +1451,19 @@ public class GTKLookAndFeel extends SynthLookAndFeel {
         {
             throw new InternalError("Unable to load native GTK libraries");
         }
-         /**
-          * @author Dongguo
-          * @date 2021/8/19 0019 21:48
-          * @description:源码环境搭建后依然报错，注释掉程序能够运行
-          */
-//        if (UNIXToolkit.getGtkVersion() == UNIXToolkit.GtkVersions.GTK2) {
-//            String version = AccessController.doPrivileged(
-//                    new GetPropertyAction("jdk.gtk.version"));
-//            if (version != null) {
-//                IS_22 = version.equals("2.2");
-//            } else {
-//                IS_22 = true;
-//            }
-//        } else if (UNIXToolkit.getGtkVersion() ==
-//                                UNIXToolkit.GtkVersions.GTK3) {
-//            IS_3 = true;
-//        }
+
+        if (UNIXToolkit.getGtkVersion() == UNIXToolkit.GtkVersions.GTK2) {
+            String version = AccessController.doPrivileged(
+                    new GetPropertyAction("jdk.gtk.version"));
+            if (version != null) {
+                IS_22 = version.equals("2.2");
+            } else {
+                IS_22 = true;
+            }
+        } else if (UNIXToolkit.getGtkVersion() ==
+                                UNIXToolkit.GtkVersions.GTK3) {
+            IS_3 = true;
+        }
 
         super.initialize();
         inInitialize = true;
