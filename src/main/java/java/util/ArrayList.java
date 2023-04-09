@@ -107,15 +107,19 @@ import sun.misc.SharedSecrets;
 public class ArrayList<E> extends AbstractList<E>
         implements List<E>, RandomAccess, Cloneable, java.io.Serializable
 {
+
+    //序列化的VersionUID
     private static final long serialVersionUID = 8683452581122892189L;
 
     /**
      * Default initial capacity.
+     * 默认初始容量 10，注意：调用无参构造函数时，初始容量为DEFAULTCAPACITY_EMPTY_ELEMENTDATA
      */
     private static final int DEFAULT_CAPACITY = 10;
 
     /**
      * Shared empty array instance used for empty instances.
+     * 指定初始容量为0时，返回该空数组
      */
     private static final Object[] EMPTY_ELEMENTDATA = {};
 
@@ -123,6 +127,8 @@ public class ArrayList<E> extends AbstractList<E>
      * Shared empty array instance used for default sized empty instances. We
      * distinguish this from EMPTY_ELEMENTDATA to know how much to inflate when
      * first element is added.
+     * 不指定初始容量时，返回该空数组。
+     * 用于与EMPTY_ELEMENTDATA进行区分，在第一次添加元素时容量扩容为多少
      */
     private static final Object[] DEFAULTCAPACITY_EMPTY_ELEMENTDATA = {};
 
@@ -131,12 +137,15 @@ public class ArrayList<E> extends AbstractList<E>
      * The capacity of the ArrayList is the length of this array buffer. Any
      * empty ArrayList with elementData == DEFAULTCAPACITY_EMPTY_ELEMENTDATA
      * will be expanded to DEFAULT_CAPACITY when the first element is added.
+     * 数组缓冲区  用于存储元素，ArrayList的容量就是这个缓冲区的容量。
+     * 当elementData == DEFAULTCAPACITY_EMPTY_ELEMENTDATA时，第一次添加元素后，扩容至默认容量10。
+     * 另外虽然这里用了transient修饰，但是其实现了readObject和writeObject，查看源码可知,是实现了序列化
      */
     transient Object[] elementData; // non-private to simplify nested class access
 
     /**
      * The size of the ArrayList (the number of elements it contains).
-     *
+     * 元素个数，并不一定是容量
      * @serial
      */
     private int size;
@@ -175,6 +184,7 @@ public class ArrayList<E> extends AbstractList<E>
      * @throws NullPointerException if the specified collection is null
      */
     public ArrayList(Collection<? extends E> c) {
+        System.out.println("test");
         Object[] a = c.toArray();
         if ((size = a.length) != 0) {
             if (c.getClass() == ArrayList.class) {
@@ -246,6 +256,8 @@ public class ArrayList<E> extends AbstractList<E>
      * Some VMs reserve some header words in an array.
      * Attempts to allocate larger arrays may result in
      * OutOfMemoryError: Requested array size exceeds VM limit
+     * 最大容量，避免在某些虚拟机下可能引起的OutOfMemoryError，
+     * 减8的原因：数组作为一个对象，需要一定的内存存储对象头信息，对象头信息最大占用内存不可超过8字节
      */
     private static final int MAX_ARRAY_SIZE = Integer.MAX_VALUE - 8;
 
