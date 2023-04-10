@@ -23,6 +23,13 @@ class MyTest {
         list.remove("zhangsan");
         System.out.println(list);
     }
+    @Test
+    public void testAdd(){
+        ArrayList<Integer> list = new ArrayList<>();
+        list.add(1);
+        list.add(2);
+    }
+
 
     @Test
     public void test2() {
