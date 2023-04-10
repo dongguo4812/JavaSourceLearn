@@ -75,10 +75,13 @@ public class Arrays {
      * algorithm will not further partition the sorting task. Using
      * smaller sizes typically results in memory contention across
      * tasks that makes parallel speedups unlikely.
+     * 并行排序的最小数组长度8192，数组长度小于这个数则不再划分数组
+     * 数组长度较小会导致排序的任务竞争内存导致效率降低
      */
     private static final int MIN_ARRAY_SORT_GRAN = 1 << 13;
 
     // Suppresses default constructor, ensuring non-instantiability.
+    //私有构造函数，确保不会进行实例化
     private Arrays() {}
 
     /**
@@ -107,6 +110,7 @@ public class Arrays {
     /**
      * Checks that {@code fromIndex} and {@code toIndex} are in
      * the range and throws an exception if they aren't.
+     * 私有方法，检查是否越界，超出范围抛出异常
      */
     private static void rangeCheck(int arrayLength, int fromIndex, int toIndex) {
         if (fromIndex > toIndex) {
@@ -668,13 +672,21 @@ public class Arrays {
      * @param a the array to be sorted
      *
      * @since 1.8
+     * 这个排序算法是个将数组划分为几个子数组分别排序然后合并的并行排序-合并过程。
+     * 当子数组长度达到最小粒度，或者数组小于设定的最小粒度，
+     * 使用类似Arrays.sort()的方法(DualPivotQuickSort)来进行排序。
+     * 这个算法需要一个不大于原数组大小的额外空间，使用ForkJoin common pool
+     * ForkJoinPool#commonPool()）来执行并行的排序任务
      */
     public static void parallelSort(int[] a) {
         int n = a.length, p, g;
+        //如果数组长度小于分组的最小粒度或者只有一个执行线程，使用DualPivotQuicksort
         if (n <= MIN_ARRAY_SORT_GRAN ||
             (p = ForkJoinPool.getCommonPoolParallelism()) == 1)
             DualPivotQuicksort.sort(a, 0, n - 1, null, 0, 0);
         else
+            //g表示粒度，参数4、5、6分别为排序数组开始位置，需要排序的长度和额外空间的开始位置
+            //g = n / (p << 2)不可小于最小粒度,否则使用最小粒度
             new ArraysParallelSortHelpers.FJInt.Sorter
                 (null, a, new int[n], 0, n, 0,
                  ((g = n / (p << 2)) <= MIN_ARRAY_SORT_GRAN) ?
@@ -1002,8 +1014,10 @@ public class Arrays {
         int n = a.length, p, g;
         if (n <= MIN_ARRAY_SORT_GRAN ||
             (p = ForkJoinPool.getCommonPoolParallelism()) == 1)
+            //与基本类型不同，这里使用TimSort
             TimSort.sort(a, 0, n, NaturalOrder.INSTANCE, null, 0, 0);
         else
+            //不提供Comparator时，使用Arrays.NaturalOrder自然顺序的Comparator
             new ArraysParallelSortHelpers.FJObject.Sorter<T>
                 (null, a,
                  (T[])Array.newInstance(a.getClass().getComponentType(), n),
@@ -1323,6 +1337,7 @@ public class Arrays {
      * Tuning parameter: list size at or below which insertion sort will be
      * used in preference to mergesort.
      * To be removed in a future release.
+     * 小于等于这个值时，使用插入排序优先于归并排序。在未来的版本将被废弃
      */
     private static final int INSERTIONSORT_THRESHOLD = 7;
 
@@ -1861,6 +1876,7 @@ public class Arrays {
      *         and only if the key is found.
      */
     public static int binarySearch(int[] a, int key) {
+        //调用私有方法
         return binarySearch0(a, 0, a.length, key);
     }
 
@@ -1917,9 +1933,9 @@ public class Arrays {
             else if (midVal > key)
                 high = mid - 1;
             else
-                return mid; // key found
+                return mid; // key found  找到了
         }
-        return -(low + 1);  // key not found.
+        return -(low + 1);  // key not found.  没找着，保证为负
     }
 
     /**
@@ -2599,13 +2615,14 @@ public class Arrays {
     public static boolean equals(int[] a, int[] a2) {
         if (a==a2)
             return true;
+        //存在null，则false
         if (a==null || a2==null)
             return false;
 
         int length = a.length;
         if (a2.length != length)
             return false;
-
+        //依次比较
         for (int i=0; i<length; i++)
             if (a[i] != a2[i])
                 return false;
@@ -2822,7 +2839,7 @@ public class Arrays {
         int length = a.length;
         if (a2.length != length)
             return false;
-
+        //依次比较
         for (int i=0; i<length; i++) {
             Object o1 = a[i];
             Object o2 = a2[i];
@@ -3255,6 +3272,7 @@ public class Arrays {
      * @throws NegativeArraySizeException if <tt>newLength</tt> is negative
      * @throws NullPointerException if <tt>original</tt> is null
      * @since 1.6
+     * 给出数组新长度，拷贝到新数组中，使用System.arrayCopy实现，newLenght >= oldLength
      */
     public static short[] copyOf(short[] original, int newLength) {
         short[] copy = new short[newLength];
@@ -4246,6 +4264,7 @@ public class Arrays {
      * @see #equals(Object[],Object[])
      * @see Objects#deepEquals(Object, Object)
      * @since 1.5
+     * 深入比较，即比较多维数组。deepHashcode和deepToString也是如此。
      */
     public static boolean deepEquals(Object[] a1, Object[] a2) {
         if (a1 == a2)
@@ -4253,6 +4272,7 @@ public class Arrays {
         if (a1 == null || a2==null)
             return false;
         int length = a1.length;
+        //长度不同直接false
         if (a2.length != length)
             return false;
 
@@ -4266,6 +4286,7 @@ public class Arrays {
                 return false;
 
             // Figure out whether the two elements are equal
+            //递归比较，记录是否相等
             boolean eq = deepEquals0(e1, e2);
 
             if (!eq)
