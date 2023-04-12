@@ -247,6 +247,7 @@ public class Vector<E>
      */
     private void ensureCapacityHelper(int minCapacity) {
         // overflow-conscious code
+        // 当传入容量大于当前容量时，进行扩容
         if (minCapacity - elementData.length > 0)
             grow(minCapacity);
     }
@@ -261,13 +262,16 @@ public class Vector<E>
 
     private void grow(int minCapacity) {
         // overflow-conscious code
+        // 获取当前容量
         int oldCapacity = elementData.length;
+        // 当已达到上限时，直接修改为最大容量，否则修改为当前容量+设置的增长容量
         int newCapacity = oldCapacity + ((capacityIncrement > 0) ?
                                          capacityIncrement : oldCapacity);
         if (newCapacity - minCapacity < 0)
             newCapacity = minCapacity;
         if (newCapacity - MAX_ARRAY_SIZE > 0)
             newCapacity = hugeCapacity(minCapacity);
+        // 使用Arrays.copyOf方法将原数组元素复制到容量为newCapacity的新数组中
         elementData = Arrays.copyOf(elementData, newCapacity);
     }
 
@@ -603,9 +607,13 @@ public class Vector<E>
             throw new ArrayIndexOutOfBoundsException(index
                                                      + " > " + elementCount);
         }
+        // 确定插入后的容量没有超过最大容量，否则对Vector进行扩容
         ensureCapacityHelper(elementCount + 1);
+        // 使用System.arraycopy将elementData[index]及其之后的元素向后移动一个位置
         System.arraycopy(elementData, index, elementData, index + 1, elementCount - index);
+        // 将obj赋值给elementData[index]
         elementData[index] = obj;
+        // Vector元素数量加1
         elementCount++;
     }
 
@@ -643,8 +651,13 @@ public class Vector<E>
      */
     public synchronized boolean removeElement(Object obj) {
         modCount++;
+        // 获取元素obj的索引
+        // 根据indexOf的源码，若Vector中存在多个obj，将返回遍历Vector得到的第一个obj的索引
         int i = indexOf(obj);
+        // 若元素obj存在
         if (i >= 0) {
+            // 调用removeElementAt删除指定索引的元素
+            // removeElementAt方法与上面的remove(int index)方法基本一致
             removeElementAt(i);
             return true;
         }
@@ -736,6 +749,7 @@ public class Vector<E>
 
     @SuppressWarnings("unchecked")
     E elementData(int index) {
+        // 返回elementData[index]，直截了当
         return (E) elementData[index];
     }
 
@@ -751,7 +765,7 @@ public class Vector<E>
     public synchronized E get(int index) {
         if (index >= elementCount)
             throw new ArrayIndexOutOfBoundsException(index);
-
+        // 直接调用elementData方法
         return elementData(index);
     }
 
@@ -769,9 +783,11 @@ public class Vector<E>
     public synchronized E set(int index, E element) {
         if (index >= elementCount)
             throw new ArrayIndexOutOfBoundsException(index);
-
+        // 获取index处原先的值
         E oldValue = elementData(index);
+        // 将element赋值给elementData[index]
         elementData[index] = element;
+        // 返回index处原先的值
         return oldValue;
     }
 
@@ -784,7 +800,9 @@ public class Vector<E>
      */
     public synchronized boolean add(E e) {
         modCount++;
+        // 确定插入后的容量没有超过最大容量，否则对Vector进行扩容
         ensureCapacityHelper(elementCount + 1);
+        // 将e赋值给elementData[elementCount]，然后将Vector元素数量加1
         elementData[elementCount++] = e;
         return true;
     }
@@ -801,6 +819,7 @@ public class Vector<E>
      * @since 1.2
      */
     public boolean remove(Object o) {
+        // 直接调用removeElement方法
         return removeElement(o);
     }
 
@@ -816,6 +835,7 @@ public class Vector<E>
      * @since 1.2
      */
     public void add(int index, E element) {
+        // 直接调用insertElementAt方法
         insertElementAt(element, index);
     }
 
@@ -834,14 +854,17 @@ public class Vector<E>
         modCount++;
         if (index >= elementCount)
             throw new ArrayIndexOutOfBoundsException(index);
+        // 获取index处原先的值
         E oldValue = elementData(index);
 
         int numMoved = elementCount - index - 1;
         if (numMoved > 0)
+            // 使用System.arraycopy将elementData[index]之后的元素向前移动一个位置
             System.arraycopy(elementData, index+1, elementData, index,
                              numMoved);
+        // 将Vector最后一个元素设置为null（以便进行gc），然后将Vector元素数量减1
         elementData[--elementCount] = null; // Let gc do its work
-
+        // 返回index处原先的值
         return oldValue;
     }
 

@@ -1,6 +1,12 @@
 package test.com.util;
 
+import org.junit.jupiter.api.Named;
+import org.junit.jupiter.api.Test;
+
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * @author dongguo
@@ -8,5 +14,16 @@ import java.util.Arrays;
  * @description:
  */
 public class ArrayListTest {
-//    Arrays.toString()
+    //    Arrays.toString()
+    @Test
+    public void testSubList() {
+        List<String> names = new ArrayList<>();
+        names.add("zhangsan");
+        names.add("lisi");
+        names.add("wangwu");
+        names = names.subList(0, 1);
+        System.out.println(names);
+        names.add("zhaoliu");
+        System.out.println(names);
+    }
 }
