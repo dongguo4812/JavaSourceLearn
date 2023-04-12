@@ -208,6 +208,7 @@ public class Object {
      *               throw this exception to indicate that an instance cannot
      *               be cloned.
      * @see java.lang.Cloneable
+     * C
      */
     protected native Object clone() throws CloneNotSupportedException;
 

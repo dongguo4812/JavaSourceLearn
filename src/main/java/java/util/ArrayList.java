@@ -101,7 +101,7 @@ import sun.misc.SharedSecrets;
  * @see     List
  * @see     LinkedList
  * @see     Vector
- * @since   1.2
+ * @since
  */
 
 public class ArrayList<E> extends AbstractList<E>
@@ -392,12 +392,15 @@ public class ArrayList<E> extends AbstractList<E>
      * elements themselves are not copied.)
      *
      * @return a clone of this <tt>ArrayList</tt> instance
-     * 克隆，主要拷贝elementData数组
+     * 克隆，主要拷贝elementData数组  ArrayLis的clone方法返回类型为ArrayList的类型
      */
     public Object clone() {
         try {
+            //调用父类Object的clone方法，强转为ArrayList
             ArrayList<?> v = (ArrayList<?>) super.clone();
+            //将原集合的元素赋值给新的集合，指定新集合的长度
             v.elementData = Arrays.copyOf(elementData, size);
+            //重置修改次数
             v.modCount = 0;
             return v;
         } catch (CloneNotSupportedException e) {

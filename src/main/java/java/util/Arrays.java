@@ -3225,10 +3225,14 @@ public class Arrays {
     public static <T,U> T[] copyOf(U[] original, int newLength, Class<? extends T[]> newType) {
         @SuppressWarnings("unchecked")
         T[] copy = ((Object)newType == (Object)Object[].class)
+                //符合条件 创建指定长度的Object数组
             ? (T[]) new Object[newLength]
+                //否则创建指定类型和长度的新数组
             : (T[]) Array.newInstance(newType.getComponentType(), newLength);
+        //拷贝数组
         System.arraycopy(original, 0, copy, 0,
                          Math.min(original.length, newLength));
+        //此时新的数组已经拷贝完毕
         return copy;
     }
 
