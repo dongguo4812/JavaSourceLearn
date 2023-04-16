@@ -9,6 +9,6 @@ import java.util.LinkedList;
  */
 public class LinkedListTest {
     public void test(){
-//        LinkedList
+      new  LinkedList();
     }
 }

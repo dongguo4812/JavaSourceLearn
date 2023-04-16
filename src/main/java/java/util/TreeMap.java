@@ -117,18 +117,21 @@ public class TreeMap<K,V>
      * null if it uses the natural ordering of its keys.
      *
      * @serial
+     * 定义key的排序规则
      */
     private final Comparator<? super K> comparator;
-
+    //根节点
     private transient Entry<K,V> root;
 
     /**
      * The number of entries in the tree
+     * 元素个数
      */
     private transient int size = 0;
 
     /**
      * The number of structural modifications to the tree.
+     * 一次操作所修改的元素个数
      */
     private transient int modCount = 0;
 
@@ -338,6 +341,7 @@ public class TreeMap<K,V>
      * @throws NullPointerException if the specified key is null
      *         and this map uses natural ordering, or its comparator
      *         does not permit null keys
+     *  log(n)
      */
     final Entry<K,V> getEntry(Object key) {
         // Offload comparator-based version for sake of performance
@@ -348,6 +352,7 @@ public class TreeMap<K,V>
         @SuppressWarnings("unchecked")
             Comparable<? super K> k = (Comparable<? super K>) key;
         Entry<K,V> p = root;
+        //遍历红黑树找到相同的元素返回
         while (p != null) {
             int cmp = k.compareTo(p.key);
             if (cmp < 0)
@@ -531,6 +536,7 @@ public class TreeMap<K,V>
      * @throws NullPointerException if the specified key is null
      *         and this map uses natural ordering, or its comparator
      *         does not permit null keys
+     *  如果key存在的话，old value被替换，否则新建一个节点，然后做红黑树的平衡操作
      */
     public V put(K key, V value) {
         Entry<K,V> t = root;
@@ -545,8 +551,10 @@ public class TreeMap<K,V>
         int cmp;
         Entry<K,V> parent;
         // split comparator and comparable paths
+        // 自定义key大小比较规则
         Comparator<? super K> cpr = comparator;
         if (cpr != null) {
+            //对红黑树进行遍历搜索
             do {
                 parent = t;
                 cmp = cpr.compare(key, t.key);
@@ -555,6 +563,7 @@ public class TreeMap<K,V>
                 else if (cmp > 0)
                     t = t.right;
                 else
+                    //如果该节点存在，替换并返回
                     return t.setValue(value);
             } while (t != null);
         }
@@ -574,11 +583,13 @@ public class TreeMap<K,V>
                     return t.setValue(value);
             } while (t != null);
         }
+        //不存在则新建结点插入
         Entry<K,V> e = new Entry<>(key, value, parent);
         if (cmp < 0)
             parent.left = e;
         else
             parent.right = e;
+        //红黑树平衡调整
         fixAfterInsertion(e);
         size++;
         modCount++;
@@ -2144,18 +2155,24 @@ public class TreeMap<K,V>
 
     /**
      * Returns the successor of the specified Entry, or null if no such.
+     * 宏观上讲，TreeMap通过对红黑树进行中序遍历保证其迭代输出是有序的。迭代器
+     * 的next方法会调用successor取得后继。
      */
     static <K,V> TreeMap.Entry<K,V> successor(Entry<K,V> t) {
         if (t == null)
             return null;
+        //有右子树的结点，后继结点是右子树的“最左结点”，
+        // 因为最左子树就是右子树的最小结点
         else if (t.right != null) {
             Entry<K,V> p = t.right;
             while (p.left != null)
                 p = p.left;
             return p;
         } else {
+            //若右子树为空，寻找当前结点所在左子树的第一个祖先结点
             Entry<K,V> p = t.parent;
             Entry<K,V> ch = t;
+            //保证左子树，即父结点的右子树不指向它
             while (p != null && ch == p.right) {
                 ch = p;
                 p = p.parent;

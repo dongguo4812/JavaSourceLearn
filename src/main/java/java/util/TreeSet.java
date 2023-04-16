@@ -94,10 +94,12 @@ public class TreeSet<E> extends AbstractSet<E>
 {
     /**
      * The backing map.
+     * 依托内部的NavigableMap<E,Object>，实际上是TreeMap做内部容器
      */
     private transient NavigableMap<E,Object> m;
 
     // Dummy value to associate with an Object in the backing Map
+    //填补Map中的value
     private static final Object PRESENT = new Object();
 
     /**
@@ -294,17 +296,21 @@ public class TreeSet<E> extends AbstractSet<E>
      * @throws NullPointerException if the specified collection is null or
      *         if any element is null and this set uses natural ordering, or
      *         its comparator does not permit null elements
+     *  加入集合c中全部元素
      */
     public  boolean addAll(Collection<? extends E> c) {
         // Use linear-time version if applicable
         if (m.size()==0 && c.size() > 0 &&
             c instanceof SortedSet &&
             m instanceof TreeMap) {
+            //类型转换
             SortedSet<? extends E> set = (SortedSet<? extends E>) c;
             TreeMap<E,Object> map = (TreeMap<E, Object>) m;
             Comparator<?> cc = set.comparator();
             Comparator<? super E> mc = map.comparator();
+            //如果cc和mc两个Comparator相等
             if (cc==mc || (cc != null && cc.equals(mc))) {
+                //把Collection中所有元素添加成TreeMap集合的key
                 map.addAllForTreeSet(set, PRESENT);
                 return true;
             }
@@ -319,6 +325,7 @@ public class TreeSet<E> extends AbstractSet<E>
      *         does not permit null elements
      * @throws IllegalArgumentException {@inheritDoc}
      * @since 1.6
+     * 返回子Set，从fromElement到toElement。
      */
     public NavigableSet<E> subSet(E fromElement, boolean fromInclusive,
                                   E toElement,   boolean toInclusive) {
@@ -333,6 +340,7 @@ public class TreeSet<E> extends AbstractSet<E>
      *         not permit null elements
      * @throws IllegalArgumentException {@inheritDoc}
      * @since 1.6
+     * 从头部到toElement，inclusive为是否包含toElement
      */
     public NavigableSet<E> headSet(E toElement, boolean inclusive) {
         return new TreeSet<>(m.headMap(toElement, inclusive));
@@ -345,6 +353,7 @@ public class TreeSet<E> extends AbstractSet<E>
      *         not permit null elements
      * @throws IllegalArgumentException {@inheritDoc}
      * @since 1.6
+     * 从fromElement到结尾。
      */
     public NavigableSet<E> tailSet(E fromElement, boolean inclusive) {
         return new TreeSet<>(m.tailMap(fromElement, inclusive));
@@ -409,6 +418,7 @@ public class TreeSet<E> extends AbstractSet<E>
      *         and this set uses natural ordering, or its comparator
      *         does not permit null elements
      * @since 1.6
+     * 小于e的最大元素
      */
     public E lower(E e) {
         return m.lowerKey(e);
@@ -420,6 +430,7 @@ public class TreeSet<E> extends AbstractSet<E>
      *         and this set uses natural ordering, or its comparator
      *         does not permit null elements
      * @since 1.6
+     * 小于/等于e的最大元素
      */
     public E floor(E e) {
         return m.floorKey(e);
@@ -431,6 +442,7 @@ public class TreeSet<E> extends AbstractSet<E>
      *         and this set uses natural ordering, or its comparator
      *         does not permit null elements
      * @since 1.6
+     * 大于/等于e的最小元素
      */
     public E ceiling(E e) {
         return m.ceilingKey(e);
@@ -442,6 +454,7 @@ public class TreeSet<E> extends AbstractSet<E>
      *         and this set uses natural ordering, or its comparator
      *         does not permit null elements
      * @since 1.6
+     * 中大于e的最小元素
      */
     public E higher(E e) {
         return m.higherKey(e);

@@ -122,6 +122,7 @@ public
 class Properties extends Hashtable<Object,Object> {
     /**
      * use serialVersionUID from JDK 1.1.X for interoperability
+     * 序列化版本号
      */
      private static final long serialVersionUID = 4112578634029874840L;
 
@@ -130,6 +131,7 @@ class Properties extends Hashtable<Object,Object> {
      * found in this property list.
      *
      * @serial
+     * 默认属性集
      */
     protected Properties defaults;
 
@@ -161,6 +163,7 @@ class Properties extends Hashtable<Object,Object> {
      *             list, or {@code null} if it did not have one.
      * @see #getProperty
      * @since    1.2
+     * 同步方法
      */
     public synchronized Object setProperty(String key, String value) {
         return put(key, value);
@@ -336,49 +339,74 @@ class Properties extends Hashtable<Object,Object> {
      * @throws     IllegalArgumentException if the input stream contains a
      *             malformed Unicode escape sequence.
      * @since 1.2
+     * 将流封装成Properties.LineReader，然后用load0读取properties，LineReader是面向行读取的Reder
      */
     public synchronized void load(InputStream inStream) throws IOException {
         load0(new LineReader(inStream));
     }
 
+    /**
+     * 行分为自然行和逻辑行。自然行被定义为以("\n","\r","\r\n"，eof)任一结尾的字符行。
+     * 自然行也可以是空行，注释行(#,!作为第一个非空白字符的行)，或者保存了全部或部分键-元素对的字符行。
+     * 逻辑行保存了所有键-元素对的数据，可能分散在多个相邻的自然行中，用反斜杠字符 \ 转义行结束符序列。
+     *
+     * key和value中间的分隔符可以是":"、"="，" "，分隔符左右两侧的空格会被删掉，key前的空格也会被去掉
+     * @param lr
+     * @throws IOException
+     */
     private void load0 (LineReader lr) throws IOException {
         char[] convtBuf = new char[1024];
+        // 字符总数
         int limit;
+        // key的长度
         int keyLen;
+        // value的起始位置
         int valueStart;
         char c;
         boolean hasSep;
+        // 是否是转义字符
         boolean precedingBackslash;
 
         while ((limit = lr.readLine()) >= 0) {
             c = 0;
             keyLen = 0;
+            // value的起始位置默认为limit
             valueStart = limit;
             hasSep = false;
 
             //System.out.println("line=<" + new String(lineBuf, 0, limit) + ">");
             precedingBackslash = false;
+            // keyLen < limit
             while (keyLen < limit) {
                 c = lr.lineBuf[keyLen];
                 //need check if escaped.
+                // 检测到非空格分隔符且前面的字符没有转义
                 if ((c == '=' ||  c == ':') && !precedingBackslash) {
+                    //下一个就是value开始的位置
                     valueStart = keyLen + 1;
+                    // 并且指定，去除空格
                     hasSep = true;
                     break;
                 } else if ((c == ' ' || c == '\t' ||  c == '\f') && !precedingBackslash) {
+                    // 检测到空格分隔符
                     valueStart = keyLen + 1;
                     break;
                 }
+                // 检测到'\'，记录
                 if (c == '\\') {
                     precedingBackslash = !precedingBackslash;
                 } else {
                     precedingBackslash = false;
                 }
+                //前进一位
                 keyLen++;
             }
+            // valueStart < limit
             while (valueStart < limit) {
                 c = lr.lineBuf[valueStart];
+                // 判断是否是空格类字符
                 if (c != ' ' && c != '\t' &&  c != '\f') {
+                    // 不是空格类字符，并且第一次出现非空格分隔符
                     if (!hasSep && (c == '=' ||  c == ':')) {
                         hasSep = true;
                     } else {
@@ -387,8 +415,10 @@ class Properties extends Hashtable<Object,Object> {
                 }
                 valueStart++;
             }
+            // 读取key和value
             String key = loadConvert(lr.lineBuf, 0, keyLen, convtBuf);
             String value = loadConvert(lr.lineBuf, valueStart, limit - valueStart, convtBuf);
+            // 放入
             put(key, value);
         }
     }
@@ -764,6 +794,7 @@ class Properties extends Hashtable<Object,Object> {
      *             contains any keys or values that are not {@code Strings}.
      * @exception  NullPointerException  if {@code writer} is null.
      * @since 1.6
+     * 存储，给定Writer或OutStreamWriter和comments
      */
     public void store(Writer writer, String comments)
         throws IOException
@@ -824,19 +855,26 @@ class Properties extends Hashtable<Object,Object> {
         throws IOException
     {
         if (comments != null) {
+            // 写入注释,用 8859-1存储中文
             writeComments(bw, comments);
         }
+        // 写入时间
         bw.write("#" + new Date().toString());
+        //另起一行
         bw.newLine();
+        // 同步
         synchronized (this) {
             for (Enumeration<?> e = keys(); e.hasMoreElements();) {
                 String key = (String)e.nextElement();
                 String val = (String)get(key);
+                // 对key中的空格转义
                 key = saveConvert(key, true, escUnicode);
                 /* No need to escape embedded and trailing spaces for value, hence
                  * pass false to flag.
                  */
+                // 不转义value的的空格
                 val = saveConvert(val, false, escUnicode);
+                // 写入按照key=value
                 bw.write(key + "=" + val);
                 bw.newLine();
             }
@@ -964,10 +1002,13 @@ class Properties extends Hashtable<Object,Object> {
      * @return  the value in this property list with the specified key value.
      * @see     #setProperty
      * @see     #defaults
+     * 获取属性
      */
     public String getProperty(String key) {
         Object oval = super.get(key);
+        //存储的不是字符串就返回null
         String sval = (oval instanceof String) ? (String)oval : null;
+        //如果默认属性中存在就返回
         return ((sval == null) && (defaults != null)) ? defaults.getProperty(key) : sval;
     }
 
@@ -983,9 +1024,11 @@ class Properties extends Hashtable<Object,Object> {
      * @return  the value in this property list with the specified key value.
      * @see     #setProperty
      * @see     #defaults
+     * 给定默认值 获取属性
      */
     public String getProperty(String key, String defaultValue) {
         String val = getProperty(key);
+        //默认属性集的优先级要高于给定的默认值
         return (val == null) ? defaultValue : val;
     }
 
@@ -1040,6 +1083,7 @@ class Properties extends Hashtable<Object,Object> {
      * @param   out   an output stream.
      * @throws  ClassCastException if any key in this property list
      *          is not a string.
+     *          打印属性集
      */
     public void list(PrintStream out) {
         out.println("-- listing properties --");
@@ -1126,6 +1170,7 @@ class Properties extends Hashtable<Object,Object> {
     }
 
     /** A table of hex digits */
+    //十六进制数常量
     private static final char[] hexDigit = {
         '0','1','2','3','4','5','6','7','8','9','A','B','C','D','E','F'
     };

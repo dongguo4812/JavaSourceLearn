@@ -129,6 +129,7 @@ public class LinkedHashSet<E>
      * @param      loadFactor      the load factor of the linked hash set
      * @throws     IllegalArgumentException  if the initial capacity is less
      *               than zero, or if the load factor is nonpositive
+     *   构造具有指定的初始容量和负载因子的新的，空的链接散列集。
      */
     public LinkedHashSet(int initialCapacity, float loadFactor) {
         super(initialCapacity, loadFactor, true);
@@ -141,6 +142,7 @@ public class LinkedHashSet<E>
      * @param   initialCapacity   the initial capacity of the LinkedHashSet
      * @throws  IllegalArgumentException if the initial capacity is less
      *              than zero
+     *   构造一个具有指定初始容量和默认负载因子（0.75）的新的，空的链接散列集。
      */
     public LinkedHashSet(int initialCapacity) {
         super(initialCapacity, .75f, true);
@@ -149,6 +151,7 @@ public class LinkedHashSet<E>
     /**
      * Constructs a new, empty linked hash set with the default initial
      * capacity (16) and load factor (0.75).
+     * 构造一个具有默认初始容量（16）和负载因子（0.75）的新的，空的链接散列集。
      */
     public LinkedHashSet() {
         super(16, .75f, true);
@@ -163,6 +166,7 @@ public class LinkedHashSet<E>
      * @param c  the collection whose elements are to be placed into
      *           this set
      * @throws NullPointerException if the specified collection is null
+     * 构造与指定集合相同的元素的新的链接散列集。
      */
     public LinkedHashSet(Collection<? extends E> c) {
         super(Math.max(2*c.size(), 11), .75f, true);

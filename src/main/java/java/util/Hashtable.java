@@ -134,11 +134,13 @@ public class Hashtable<K,V>
 
     /**
      * The hash table data.
+     * hash表数组
      */
     private transient Entry<?,?>[] table;
 
     /**
      * The total number of entries in the hash table.
+     * 元素个数
      */
     private transient int count;
 
@@ -147,6 +149,7 @@ public class Hashtable<K,V>
      * value of this field is (int)(capacity * loadFactor).)
      *
      * @serial
+     * 扩容阈值
      */
     private int threshold;
 
@@ -154,6 +157,7 @@ public class Hashtable<K,V>
      * The load factor for the hashtable.
      *
      * @serial
+     * 负载因子
      */
     private float loadFactor;
 
@@ -163,10 +167,12 @@ public class Hashtable<K,V>
      * the Hashtable or otherwise modify its internal structure (e.g.,
      * rehash).  This field is used to make iterators on Collection-views of
      * the Hashtable fail-fast.  (See ConcurrentModificationException).
+     * 修改次数
      */
     private transient int modCount = 0;
 
     /** use serialVersionUID from JDK 1.0.2 for interoperability */
+    //序列化版本号
     private static final long serialVersionUID = 1421746759512286392L;
 
     /**
@@ -177,18 +183,24 @@ public class Hashtable<K,V>
      * @param      loadFactor        the load factor of the hashtable.
      * @exception  IllegalArgumentException  if the initial capacity is less
      *             than zero, or if the load factor is nonpositive.
+     *  使用指定的初始容量和指定的负载因子构造一个新的空哈希表。
      */
     public Hashtable(int initialCapacity, float loadFactor) {
+        //如果指定容量小于0，不用存了直接报错
         if (initialCapacity < 0)
             throw new IllegalArgumentException("Illegal Capacity: "+
                                                initialCapacity);
+        //如果负载因子小于0，或者loadFactor是非数字的数
         if (loadFactor <= 0 || Float.isNaN(loadFactor))
             throw new IllegalArgumentException("Illegal Load: "+loadFactor);
-
+        //如果初始容量为空，则设置为1
         if (initialCapacity==0)
             initialCapacity = 1;
+        //负载因子赋值
         this.loadFactor = loadFactor;
+        //初始化table
         table = new Entry<?,?>[initialCapacity];
+        //扩容阈值赋值
         threshold = (int)Math.min(initialCapacity * loadFactor, MAX_ARRAY_SIZE + 1);
     }
 
@@ -199,6 +211,7 @@ public class Hashtable<K,V>
      * @param     initialCapacity   the initial capacity of the hashtable.
      * @exception IllegalArgumentException if the initial capacity is less
      *              than zero.
+     *  使用指定的初始容量和默认加载因子 (0.75) 构造一个新的空哈希表。
      */
     public Hashtable(int initialCapacity) {
         this(initialCapacity, 0.75f);
@@ -207,6 +220,7 @@ public class Hashtable<K,V>
     /**
      * Constructs a new, empty hashtable with a default initial capacity (11)
      * and load factor (0.75).
+     * 构造一个具有默认初始容量 (11) 和负载因子 (0.75) 的空哈希表。
      */
     public Hashtable() {
         this(11, 0.75f);
@@ -220,9 +234,13 @@ public class Hashtable<K,V>
      * @param t the map whose mappings are to be placed in this map.
      * @throws NullPointerException if the specified map is null.
      * @since   1.2
+     * 构造一个与给定 Map 具有相同映射关系的新哈希表。
+     * 哈希表的初始容量足以容纳给定 Map 中的映射和默认负载因子 (0.75)。
      */
     public Hashtable(Map<? extends K, ? extends V> t) {
+        //设置容量为传入map的两倍，如果还小于默认容量就是用默认容量11
         this(Math.max(2*t.size(), 11), 0.75f);
+        //将传入哈希表t放入table里
         putAll(t);
     }
 
@@ -357,17 +375,23 @@ public class Hashtable<K,V>
      *         {@code null} if this map contains no mapping for the key
      * @throws NullPointerException if the specified key is null
      * @see     #put(Object, Object)
+     * 返回指定键映射到的值，如果此映射不包含键的映射，则返回 null
      */
     @SuppressWarnings("unchecked")
     public synchronized V get(Object key) {
         Entry<?,?> tab[] = table;
+        //计算key的hash值
         int hash = key.hashCode();
+        //计算下标
         int index = (hash & 0x7FFFFFFF) % tab.length;
+        //遍历对应位置的桶，从头结点开始
         for (Entry<?,?> e = tab[index] ; e != null ; e = e.next) {
+            //如果找到hash值和key与传入的相等的则返回对应的值
             if ((e.hash == hash) && e.key.equals(key)) {
                 return (V)e.value;
             }
         }
+        //找不到返回空
         return null;
     }
 
@@ -388,52 +412,76 @@ public class Hashtable<K,V>
      */
     @SuppressWarnings("unchecked")
     protected void rehash() {
+        //保存旧容量
         int oldCapacity = table.length;
+        //oldMap保存旧表
         Entry<?,?>[] oldMap = table;
 
         // overflow-conscious code
+        // 新容量为旧容量的两倍+1
         int newCapacity = (oldCapacity << 1) + 1;
+        //如果新容量>integer的最大值-8
         if (newCapacity - MAX_ARRAY_SIZE > 0) {
+            //如果旧容量为integer的最大值-8
             if (oldCapacity == MAX_ARRAY_SIZE)
                 // Keep running with MAX_ARRAY_SIZE buckets
+                // 使用旧容量继续跑
                 return;
+            //旧容量设置为integer的最大值-8
             newCapacity = MAX_ARRAY_SIZE;
         }
+        //创建容量为newCapacity的hash表
         Entry<?,?>[] newMap = new Entry<?,?>[newCapacity];
-
+        //修改次数+
         modCount++;
+        //重新计算扩容阈值
         threshold = (int)Math.min(newCapacity * loadFactor, MAX_ARRAY_SIZE + 1);
+        //table指向新表
         table = newMap;
-
+        //遍历旧表进行数据转移
         for (int i = oldCapacity ; i-- > 0 ;) {
+            //从最后一个桶开始遍历，old指向链表头结点
             for (Entry<K,V> old = (Entry<K,V>)oldMap[i] ; old != null ; ) {
+                //辅助指针e先指向头结点
                 Entry<K,V> e = old;
+                //old后移
                 old = old.next;
-
+                //计算新位置
                 int index = (e.hash & 0x7FFFFFFF) % newCapacity;
+                //e的next指向新表对应位置的头结点
                 e.next = (Entry<K,V>)newMap[index];
+                //头插法  (e已经连接了原头结点）
                 newMap[index] = e;
             }
         }
     }
 
     private void addEntry(int hash, K key, V value, int index) {
+        //修改次数+1
         modCount++;
-
+        //创建指针保存table地址
         Entry<?,?> tab[] = table;
+        //如果元素个数>扩容阈值
         if (count >= threshold) {
             // Rehash the table if the threshold is exceeded
+            // 如果超过阈值，则重新散列表(扩容)
             rehash();
-
+            //指向新表
             tab = table;
+            //重新计算hash值
             hash = key.hashCode();
+            //计算索引位置
             index = (hash & 0x7FFFFFFF) % tab.length;
         }
-
+        // 创建新结点
+        // 位桶数组index位置
+        // 创建辅助指针e指向头结点
         // Creates the new entry.
         @SuppressWarnings("unchecked")
         Entry<K,V> e = (Entry<K,V>) tab[index];
+        //头插入  结点放入桶中，新结点的next指针指向e(原头结点)  完成头插
         tab[index] = new Entry<>(hash, key, value, e);
+        //元素个数+1
         count++;
     }
 
@@ -453,28 +501,42 @@ public class Hashtable<K,V>
      *               <code>null</code>
      * @see     Object#equals(Object)
      * @see     #get(Object)
+     *
+     * 存入键值对key-value  键和值都不能是 null。
+     * 可以通过使用与原始键相同的键调用 get 方法来检索该值。
      */
     public synchronized V put(K key, V value) {
         // Make sure the value is not null
+        //确保该值不为空
         if (value == null) {
             throw new NullPointerException();
         }
 
         // Makes sure the key is not already in the hashtable.
+        //创建tab数组指向table
         Entry<?,?> tab[] = table;
+        //计算hash值
         int hash = key.hashCode();
+        //key对应的位桶下标(hash值对表长度取余)
         int index = (hash & 0x7FFFFFFF) % tab.length;
+        //创建entry指向对应位置的位桶头结点
         @SuppressWarnings("unchecked")
         Entry<K,V> entry = (Entry<K,V>)tab[index];
+        //遍历链表
         for(; entry != null ; entry = entry.next) {
+            //判断结点的hash值和key是否与传入的相等  相等则保存新值返回旧值
             if ((entry.hash == hash) && entry.key.equals(key)) {
+                //如果相等 保存旧值
                 V old = entry.value;
+                //赋值新值
                 entry.value = value;
+                //返回旧值
                 return old;
             }
         }
-
+        //如果没有找到key相等的结点,调用addEntry方法将结点添加进表里
         addEntry(hash, key, value, index);
+        //返回空
         return null;
     }
 
@@ -486,27 +548,43 @@ public class Hashtable<K,V>
      * @return  the value to which the key had been mapped in this hashtable,
      *          or <code>null</code> if the key did not have a mapping
      * @throws  NullPointerException  if the key is <code>null</code>
+     * 从此哈希表中删除key（及其相应的value）。
+     * 如果key不在哈希表中，则此方法不执行任何操作。
      */
     public synchronized V remove(Object key) {
         Entry<?,?> tab[] = table;
+        //计算hash值
         int hash = key.hashCode();
+        //计算位置
         int index = (hash & 0x7FFFFFFF) % tab.length;
         @SuppressWarnings("unchecked")
+        //辅助指针指向头结点
         Entry<K,V> e = (Entry<K,V>)tab[index];
+        //prev记录前一个结点,e为当前结点
+        //遍历桶
         for(Entry<K,V> prev = null ; e != null ; prev = e, e = e.next) {
+            //如果hash值和key和结点对应相等
             if ((e.hash == hash) && e.key.equals(key)) {
+                //修改次数+1
                 modCount++;
                 if (prev != null) {
+                    //前一个结点指针当前结点的后一个结点(越过当前结点，相当于删除)
                     prev.next = e.next;
                 } else {
+                    //如果是头结点为要删除的结点，将桶头结点设置为头结点的下一个结点
                     tab[index] = e.next;
                 }
+                //元素个数-1
                 count--;
+                //保存旧值
                 V oldValue = e.value;
+                //将e的值设为空
                 e.value = null;
+                //返回旧值
                 return oldValue;
             }
         }
+        //如果没找到对应的 返回空
         return null;
     }
 

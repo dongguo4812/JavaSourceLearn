@@ -91,16 +91,20 @@ public class HashSet<E>
     extends AbstractSet<E>
     implements Set<E>, Cloneable, java.io.Serializable
 {
+    //序列化版本号
     static final long serialVersionUID = -5024744406713321676L;
 
+    //依赖的HashMap实例
     private transient HashMap<E,Object> map;
 
     // Dummy value to associate with an Object in the backing Map
+    //一个static final的空对象，用于填补hashmap的key对应的value
     private static final Object PRESENT = new Object();
 
     /**
      * Constructs a new, empty set; the backing <tt>HashMap</tt> instance has
      * default initial capacity (16) and load factor (0.75).
+     * 默认构造，构造一个空set，内部的HashMap实例容量为初始的16，负载因子0.75
      */
     public HashSet() {
         map = new HashMap<>();
@@ -114,6 +118,7 @@ public class HashSet<E>
      *
      * @param c the collection whose elements are to be placed into this set
      * @throws NullPointerException if the specified collection is null
+     * 用足够的容量和默认的负载因子构造，包含集合里的元素
      */
     public HashSet(Collection<? extends E> c) {
         map = new HashMap<>(Math.max((int) (c.size()/.75f) + 1, 16));
@@ -128,6 +133,7 @@ public class HashSet<E>
      * @param      loadFactor        the load factor of the hash map
      * @throws     IllegalArgumentException if the initial capacity is less
      *             than zero, or if the load factor is nonpositive
+     *  用给定的容量和负载因子构造
      */
     public HashSet(int initialCapacity, float loadFactor) {
         map = new HashMap<>(initialCapacity, loadFactor);
@@ -140,6 +146,7 @@ public class HashSet<E>
      * @param      initialCapacity   the initial capacity of the hash table
      * @throws     IllegalArgumentException if the initial capacity is less
      *             than zero
+     *  用给定的容量和默认的负载因子构造
      */
     public HashSet(int initialCapacity) {
         map = new HashMap<>(initialCapacity);
@@ -199,6 +206,7 @@ public class HashSet<E>
      *
      * @param o element whose presence in this set is to be tested
      * @return <tt>true</tt> if this set contains the specified element
+     * 调用HashMap#containsKey查找，因为set内元素被当做key存储在hashmap中
      */
     public boolean contains(Object o) {
         return map.containsKey(o);
@@ -215,6 +223,7 @@ public class HashSet<E>
      * @param e element to be added to this set
      * @return <tt>true</tt> if this set did not already contain the specified
      * element
+     * 将e当做key插入，因为key是不可重复的，也就保证了e在set中唯一
      */
     public boolean add(E e) {
         return map.put(e, PRESENT)==null;
@@ -231,6 +240,7 @@ public class HashSet<E>
      *
      * @param o object to be removed from this set, if present
      * @return <tt>true</tt> if the set contained the specified element
+     * 在hashmap中根据key删除一个entry,删除成功就会返回之前置入的PRESENT
      */
     public boolean remove(Object o) {
         return map.remove(o)==PRESENT;
@@ -249,6 +259,7 @@ public class HashSet<E>
      * themselves are not cloned.
      *
      * @return a shallow copy of this set
+     * 对内部的HashMap实例做一个深拷贝
      */
     @SuppressWarnings("unchecked")
     public Object clone() {
