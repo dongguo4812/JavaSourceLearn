@@ -3224,6 +3224,7 @@ public class Arrays {
      */
     public static <T,U> T[] copyOf(U[] original, int newLength, Class<? extends T[]> newType) {
         @SuppressWarnings("unchecked")
+                //创建新数组
         T[] copy = ((Object)newType == (Object)Object[].class)
                 //符合条件 创建指定长度的Object数组
             ? (T[]) new Object[newLength]

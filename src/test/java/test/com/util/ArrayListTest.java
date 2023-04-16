@@ -22,6 +22,7 @@ public class ArrayListTest {
         names.add("lisi");
         names.add("wangwu");
         names = names.subList(0, 1);
+        names.toString();
         System.out.println(names);
         names.add("zhaoliu");
         System.out.println(names);

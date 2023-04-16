@@ -610,7 +610,7 @@ public class ArrayList<E> extends AbstractList<E>
     /**
      * Removes all of the elements from this list.  The list will
      * be empty after this call returns.
-     * 清空list，不释放空间 O(n)
+     * 清空list，释放空间 O(n)
      */
     public void clear() {
         modCount++;
@@ -909,28 +909,38 @@ public class ArrayList<E> extends AbstractList<E>
 
     /**
      * An optimized version of AbstractList.Itr
+     * ArrayList的内部类
      */
     private class Itr implements Iterator<E> {
+        //光标 默认值0
         int cursor;       // index of next element to return
+        //记录值  默认值 -1
         int lastRet = -1; // index of last element returned; -1 if no such
+        //修改次数赋值给预期修改次数
         int expectedModCount = modCount;
 
         Itr() {}
 
         public boolean hasNext() {
+            //判断光标是否不等于集合的size
             return cursor != size;
         }
 
         @SuppressWarnings("unchecked")
         public E next() {
+            //校验修改次数与预期修改次数
             checkForComodification();
             int i = cursor;
             if (i >= size)
                 throw new NoSuchElementException();
+            //
             Object[] elementData = ArrayList.this.elementData;
+            //并发修改异常
             if (i >= elementData.length)
                 throw new ConcurrentModificationException();
+            //光标向后移动1
             cursor = i + 1;
+            //取出元素
             return (E) elementData[lastRet = i];
         }
 
