@@ -45,18 +45,21 @@ public final class Short extends Number implements Comparable<Short> {
     /**
      * A constant holding the minimum value a {@code short} can
      * have, -2<sup>15</sup>.
+     * 最小值-32768
      */
     public static final short   MIN_VALUE = -32768;
 
     /**
      * A constant holding the maximum value a {@code short} can
      * have, 2<sup>15</sup>-1.
+     * 最大值32767
      */
     public static final short   MAX_VALUE = 32767;
 
     /**
      * The {@code Class} instance representing the primitive type
-     * {@code short}.
+     * {@code short}
+     * short的原始类型
      */
     @SuppressWarnings("unchecked")
     public static final Class<Short>    TYPE = (Class<Short>) Class.getPrimitiveClass("short");
@@ -200,6 +203,7 @@ public final class Short extends Number implements Comparable<Short> {
         return valueOf(s, 10);
     }
 
+    //缓存-128 到127的short值
     private static class ShortCache {
         private ShortCache(){}
 
@@ -226,6 +230,7 @@ public final class Short extends Number implements Comparable<Short> {
      * @param  s a short value.
      * @return a {@code Short} instance representing {@code s}.
      * @since  1.5
+     * 若s在缓存区间内就从缓存中取，否则将新创建一个对象。
      */
     public static Short valueOf(short s) {
         final int offset = 128;
@@ -290,6 +295,7 @@ public final class Short extends Number implements Comparable<Short> {
      * The value of the {@code Short}.
      *
      * @serial
+     * 存储的short值
      */
     private final short value;
 
@@ -467,6 +473,7 @@ public final class Short extends Number implements Comparable<Short> {
      * The number of bits used to represent a {@code short} value in two's
      * complement binary form.
      * @since 1.5
+     * 占用bit位
      */
     public static final int SIZE = 16;
 
@@ -475,6 +482,7 @@ public final class Short extends Number implements Comparable<Short> {
      * complement binary form.
      *
      * @since 1.8
+     * 占用字节数
      */
     public static final int BYTES = SIZE / Byte.SIZE;
 
@@ -533,5 +541,6 @@ public final class Short extends Number implements Comparable<Short> {
     }
 
     /** use serialVersionUID from JDK 1.1. for interoperability */
+    //序列化版本号
     private static final long serialVersionUID = 7515723908773894738L;
 }

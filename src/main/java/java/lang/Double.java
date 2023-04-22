@@ -51,6 +51,7 @@ public final class Double extends Number implements Comparable<Double> {
      * A constant holding the positive infinity of type
      * {@code double}. It is equal to the value returned by
      * {@code Double.longBitsToDouble(0x7ff0000000000000L)}.
+     * double类型的正无穷大的常量。 它等于0x7ff0000000000000L
      */
     public static final double POSITIVE_INFINITY = 1.0 / 0.0;
 
@@ -58,6 +59,7 @@ public final class Double extends Number implements Comparable<Double> {
      * A constant holding the negative infinity of type
      * {@code double}. It is equal to the value returned by
      * {@code Double.longBitsToDouble(0xfff0000000000000L)}.
+     * double类型的负无穷大的常量。 它等于0xfff0000000000000L
      */
     public static final double NEGATIVE_INFINITY = -1.0 / 0.0;
 
@@ -65,6 +67,7 @@ public final class Double extends Number implements Comparable<Double> {
      * A constant holding a Not-a-Number (NaN) value of type
      * {@code double}. It is equivalent to the value returned by
      * {@code Double.longBitsToDouble(0x7ff8000000000000L)}.
+     * double类型的Not-a-Number（NaN）值的常量。 等于0x7ff8000000000000L
      */
     public static final double NaN = 0.0d / 0.0;
 
@@ -75,6 +78,7 @@ public final class Double extends Number implements Comparable<Double> {
      * the hexadecimal floating-point literal
      * {@code 0x1.fffffffffffffP+1023} and also equal to
      * {@code Double.longBitsToDouble(0x7fefffffffffffffL)}.
+     * double类型的最大正有限值 1.7976931348623157e+308
      */
     public static final double MAX_VALUE = 0x1.fffffffffffffP+1023; // 1.7976931348623157e+308
 
@@ -85,6 +89,7 @@ public final class Double extends Number implements Comparable<Double> {
      * equal to {@code Double.longBitsToDouble(0x0010000000000000L)}.
      *
      * @since 1.6
+     * double类型最小正正常值的常量 2.2250738585072014E-308
      */
     public static final double MIN_NORMAL = 0x1.0p-1022; // 2.2250738585072014E-308
 
@@ -94,6 +99,7 @@ public final class Double extends Number implements Comparable<Double> {
      * hexadecimal floating-point literal
      * {@code 0x0.0000000000001P-1022} and also equal to
      * {@code Double.longBitsToDouble(0x1L)}.
+     * double类型的最小正非零值的常量 4.9e-324
      */
     public static final double MIN_VALUE = 0x0.0000000000001P-1022; // 4.9e-324
 
@@ -103,6 +109,7 @@ public final class Double extends Number implements Comparable<Double> {
      * {@code Math.getExponent(Double.MAX_VALUE)}.
      *
      * @since 1.6
+     * double 变量的最大指数。
      */
     public static final int MAX_EXPONENT = 1023;
 
@@ -112,6 +119,7 @@ public final class Double extends Number implements Comparable<Double> {
      * {@code Math.getExponent(Double.MIN_NORMAL)}.
      *
      * @since 1.6
+     * double 变量的最小指数。
      */
     public static final int MIN_EXPONENT = -1022;
 
@@ -119,6 +127,7 @@ public final class Double extends Number implements Comparable<Double> {
      * The number of bits used to represent a {@code double} value.
      *
      * @since 1.5
+     * double 变量最大的长度
      */
     public static final int SIZE = 64;
 
@@ -126,6 +135,7 @@ public final class Double extends Number implements Comparable<Double> {
      * The number of bytes used to represent a {@code double} value.
      *
      * @since 1.8
+     *表示double值的字节数
      */
     public static final int BYTES = SIZE / Byte.SIZE;
 
@@ -134,6 +144,7 @@ public final class Double extends Number implements Comparable<Double> {
      * {@code double}.
      *
      * @since JDK1.1
+     * double的原始类型
      */
     @SuppressWarnings("unchecked")
     public static final Class<Double>   TYPE = (Class<Double>) Class.getPrimitiveClass("double");
@@ -199,6 +210,7 @@ public final class Double extends Number implements Comparable<Double> {
      *
      * @param   d   the {@code double} to be converted.
      * @return a string representation of the argument.
+     * 将double数据转换成字符串
      */
     public static String toString(double d) {
         return FloatingDecimal.toJavaFormatString(d);
@@ -277,6 +289,8 @@ public final class Double extends Number implements Comparable<Double> {
      * @return a hex string representation of the argument.
      * @since 1.5
      * @author Joseph D. Darcy
+     * 将10进制的double转换成16进制的字符串
+     *
      */
     public static String toHexString(double d) {
         /*
@@ -284,23 +298,28 @@ public final class Double extends Number implements Comparable<Double> {
          * 7.19.6.1; however, the output of this method is more
          * tightly specified.
          */
+        // d的绝对修值大于MAX_VALUE
         if (!isFinite(d) )
             // For infinity and NaN, use the decimal output.
+            // 对于无穷大和NaN，请使用小数输出。
             return Double.toString(d);
         else {
             // Initialized to maximum size of output.
+            // 初始化为最大输出大小。
             StringBuilder answer = new StringBuilder(24);
-
+            // 若d为负，将"-"添加在首位
             if (Math.copySign(1.0, d) == -1.0)    // value is negative,
                 answer.append("-");                  // so append sign info
-
+            // 添加16进制的标志
             answer.append("0x");
 
+            // 求绝对值
             d = Math.abs(d);
-
+            // d是否为0
             if(d == 0.0) {
                 answer.append("0.0p0");
             } else {
+                // 判断是以1开头还是以0开头
                 boolean subnormal = (d < DoubleConsts.MIN_NORMAL);
 
                 // Isolate significand bits and OR in a high-order bit
@@ -318,6 +337,7 @@ public final class Double extends Number implements Comparable<Double> {
                 // representation.  If all the digits are zero,
                 // replace with a single 0; otherwise, remove all
                 // trailing zeros.
+                // 获取小数位的16进制
                 String signif = Long.toHexString(signifBits).substring(3,16);
                 answer.append(signif.equals("0000000000000") ? // 13 zeros
                               "0":
@@ -328,6 +348,7 @@ public final class Double extends Number implements Comparable<Double> {
                 // value for double; otherwise, extract and report d's
                 // exponent (the representation of a subnormal uses
                 // E_min -1).
+                // 计算是2的多少次方
                 answer.append(subnormal ?
                               DoubleConsts.MIN_EXPONENT:
                               Math.getExponent(d));
@@ -580,6 +601,7 @@ public final class Double extends Number implements Comparable<Double> {
      * The value of the Double.
      *
      * @serial
+     * 用来存储double
      */
     private final double value;
 
@@ -736,6 +758,7 @@ public final class Double extends Number implements Comparable<Double> {
      * </blockquote>
      *
      * @return  a {@code hash code} value for this object.
+     * 获取double数据的hashCode
      */
     @Override
     public int hashCode() {
@@ -749,6 +772,7 @@ public final class Double extends Number implements Comparable<Double> {
      * @param value the value to hash
      * @return a hash code value for a {@code double} value.
      * @since 1.8
+     * 计算double数据的hashCode
      */
     public static int hashCode(double value) {
         long bits = doubleToLongBits(value);
@@ -831,11 +855,13 @@ public final class Double extends Number implements Comparable<Double> {
      *
      * @param   value   a {@code double} precision floating-point number.
      * @return the bits that represent the floating-point number.
+     * 将double数据转换为long类型的字节
      */
     public static long doubleToLongBits(double value) {
         long result = doubleToRawLongBits(value);
         // Check for NaN based on values of bit fields, maximum
         // exponent and nonzero significand.
+        //根据位字段，最大指数和非零有效数的值检查NaN。
         if ( ((result & DoubleConsts.EXP_BIT_MASK) ==
               DoubleConsts.EXP_BIT_MASK) &&
              (result & DoubleConsts.SIGNIF_BIT_MASK) != 0L)
@@ -1054,5 +1080,6 @@ public final class Double extends Number implements Comparable<Double> {
     }
 
     /** use serialVersionUID from JDK 1.0.2 for interoperability */
+    //序列化版本号
     private static final long serialVersionUID = -9172774392245257468L;
 }

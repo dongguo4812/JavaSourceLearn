@@ -102,15 +102,19 @@ import java.util.Arrays;
     /**
      * A cache of the last value returned by toString. Cleared
      * whenever the StringBuffer is modified.
+     * 用来缓存toString()方法返回的最近一次的value数组中的字符。
+     * 当修改StringBuffer对象时会被清除
      */
     private transient char[] toStringCache;
 
     /** use serialVersionUID from JDK 1.0.2 for interoperability */
+    //序列化版本号
     static final long serialVersionUID = 3388685877147921107L;
 
     /**
      * Constructs a string buffer with no characters in it and an
      * initial capacity of 16 characters.
+     * 默认构造方法  数组的初始容量为16。
      */
     public StringBuffer() {
         super(16);
@@ -123,6 +127,7 @@ import java.util.Arrays;
      * @param      capacity  the initial capacity.
      * @exception  NegativeArraySizeException  if the {@code capacity}
      *               argument is less than {@code 0}.
+     *  指定数组的初始容量大小
      */
     public StringBuffer(int capacity) {
         super(capacity);
@@ -134,6 +139,8 @@ import java.util.Arrays;
      * {@code 16} plus the length of the string argument.
      *
      * @param   str   the initial contents of the buffer.
+     *                接受一个String对象作为参数，设置了value数组的初始容量为String对象的长+16，
+     *                并把String对象中的字符添加到value数组中。
      */
     public StringBuffer(String str) {
         super(str.length() + 16);
@@ -152,6 +159,8 @@ import java.util.Arrays;
      *
      * @param      seq   the sequence to copy.
      * @since 1.5
+     * 接受一个CharSequence对象作为参数，设置了value数组的初始容CharSequence对象的长度+16，
+     * 并把CharSequence对象中的字符添加到value数组中。
      */
     public StringBuffer(CharSequence seq) {
         this(seq.length() + 16);
@@ -673,6 +682,7 @@ import java.util.Arrays;
 
     /**
      * Serializable fields for StringBuffer.
+     * StringBuffer的可序列化字段
      *
      * @serialField value  char[]
      *              The backing character array of this StringBuffer.
@@ -684,8 +694,11 @@ import java.util.Arrays;
      */
     private static final java.io.ObjectStreamField[] serialPersistentFields =
     {
+            //用来存储字符序列中的字符。value是一个动态的数组，当存储容量不足时，会对它进行扩容
         new java.io.ObjectStreamField("value", char[].class),
+            //表示value数组中已存储的字符数
         new java.io.ObjectStreamField("count", Integer.TYPE),
+            //是否共享
         new java.io.ObjectStreamField("shared", Boolean.TYPE),
     };
 

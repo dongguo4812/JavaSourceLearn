@@ -1,12 +1,10 @@
 package test.com.util;
 
-import org.junit.jupiter.api.Named;
 import org.junit.jupiter.api.Test;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Collectors;
+import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * @author dongguo

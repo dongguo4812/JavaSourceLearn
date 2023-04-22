@@ -46,18 +46,21 @@ public final class Byte extends Number implements Comparable<Byte> {
     /**
      * A constant holding the minimum value a {@code byte} can
      * have, -2<sup>7</sup>.
+     * byte最小值
      */
     public static final byte   MIN_VALUE = -128;
 
     /**
      * A constant holding the maximum value a {@code byte} can
      * have, 2<sup>7</sup>-1.
+     * byte最大值
      */
     public static final byte   MAX_VALUE = 127;
 
     /**
      * The {@code Class} instance representing the primitive type
      * {@code byte}.
+     * 基本类型 byte 的 Class 对象，可用于类反射
      */
     @SuppressWarnings("unchecked")
     public static final Class<Byte>     TYPE = (Class<Byte>) Class.getPrimitiveClass("byte");
@@ -74,6 +77,9 @@ public final class Byte extends Number implements Comparable<Byte> {
         return Integer.toString((int)b, 10);
     }
 
+    /**
+     * 内部类 存储value为-127-128的Byte对象。
+     */
     private static class ByteCache {
         private ByteCache(){}
 
@@ -97,6 +103,7 @@ public final class Byte extends Number implements Comparable<Byte> {
      * @param  b a byte value.
      * @return a {@code Byte} instance representing {@code b}.
      * @since  1.5
+     * 返回缓存对象（注意加上偏移量）
      */
     public static Byte valueOf(byte b) {
         final int offset = 128;
@@ -143,6 +150,7 @@ public final class Byte extends Number implements Comparable<Byte> {
      *                   argument in the specified radix
      * @throws          NumberFormatException If the string does
      *                  not contain a parsable {@code byte}.
+     *                   调用integer的parseInt
      */
     public static byte parseByte(String s, int radix)
         throws NumberFormatException {
@@ -199,6 +207,7 @@ public final class Byte extends Number implements Comparable<Byte> {
      *                  specified radix.
      * @throws          NumberFormatException If the {@code String} does
      *                  not contain a parsable {@code byte}.
+     *    将radix进制的String类型的整数转换为byte类型。
      */
     public static Byte valueOf(String s, int radix)
         throws NumberFormatException {
@@ -272,8 +281,10 @@ public final class Byte extends Number implements Comparable<Byte> {
      * @throws  NumberFormatException  if the {@code String} does not
      *            contain a parsable {@code byte}.
      * @see java.lang.Byte#parseByte(java.lang.String, int)
+     * 将String类型的字符串解码为10进制的Byte类型。
      */
     public static Byte decode(String nm) throws NumberFormatException {
+        //Integer.decode将String类型的字符串解码为10进制的Integer类型。
         int i = Integer.decode(nm);
         if (i < MIN_VALUE || i > MAX_VALUE)
             throw new NumberFormatException(
@@ -285,6 +296,7 @@ public final class Byte extends Number implements Comparable<Byte> {
      * The value of the {@code Byte}.
      *
      * @serial
+     * 用来存储byte
      */
     private final byte value;
 
@@ -378,6 +390,7 @@ public final class Byte extends Number implements Comparable<Byte> {
      *
      * @return  a string representation of the value of this object in
      *          base&nbsp;10.
+     *          强转为Integer后toString
      */
     public String toString() {
         return Integer.toString((int)value);
@@ -473,6 +486,8 @@ public final class Byte extends Number implements Comparable<Byte> {
      * @return the argument converted to {@code int} by an unsigned
      *         conversion
      * @since 1.8
+     * 将byte转换为无符号的int类型，ff的二进制是11111111，
+     * 首先将x强转为int类型，再进行&运算，这里无论正数byte还是负数byte都会转换为低7位的正数。
      */
     public static int toUnsignedInt(byte x) {
         return ((int) x) & 0xff;
@@ -493,6 +508,8 @@ public final class Byte extends Number implements Comparable<Byte> {
      * @return the argument converted to {@code long} by an unsigned
      *         conversion
      * @since 1.8
+     * 将byte转换为无符号的long类型，ff的二进制是11111111，
+     * 首先将x强转为long类型，再进行&运算，这里无论正数byte还是负数byte都会转换为低7位的正数。
      */
     public static long toUnsignedLong(byte x) {
         return ((long) x) & 0xffL;
@@ -504,6 +521,7 @@ public final class Byte extends Number implements Comparable<Byte> {
      * complement binary form.
      *
      * @since 1.5
+     * 以二进制补码形式表示byte值的位数。
      */
     public static final int SIZE = 8;
 
@@ -512,9 +530,11 @@ public final class Byte extends Number implements Comparable<Byte> {
      * complement binary form.
      *
      * @since 1.8
+     * 以二进制补码形式表示byte值的byte数。就是1。
      */
     public static final int BYTES = SIZE / Byte.SIZE;
 
     /** use serialVersionUID from JDK 1.1. for interoperability */
+    //序列化版本号
     private static final long serialVersionUID = -7183698231559129828L;
 }

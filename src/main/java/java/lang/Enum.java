@@ -58,6 +58,7 @@ public abstract class Enum<E extends Enum<E>>
      * The name of this enum constant, as declared in the enum declaration.
      * Most programmers should use the {@link #toString} method rather than
      * accessing this field.
+     * 枚举常量的名称
      */
     private final String name;
 
@@ -85,6 +86,9 @@ public abstract class Enum<E extends Enum<E>>
      * Most programmers will have no use for this field.  It is designed
      * for use by sophisticated enum-based data structures, such as
      * {@link java.util.EnumSet} and {@link java.util.EnumMap}.
+     * 此枚举常量的序数（它在枚举声明中的位置，其中初始常量的序数为零）。
+     * 大多数程序员都不会使用这个领域。 它设计用于复杂的基于枚举的数据结构，、
+     * 例如java.util.EnumSet和java.util.EnumMap。
      */
     private final int ordinal;
 
@@ -98,6 +102,7 @@ public abstract class Enum<E extends Enum<E>>
      * as {@link java.util.EnumSet} and {@link java.util.EnumMap}.
      *
      * @return the ordinal of this enumeration constant
+     *
      */
     public final int ordinal() {
         return ordinal;
@@ -113,6 +118,7 @@ public abstract class Enum<E extends Enum<E>>
      * @param ordinal - The ordinal of this enumeration constant (its position
      *         in the enum declaration, where the initial constant is assigned
      *         an ordinal of zero).
+     *         无法调用此构造函数  由编译器发出的代码用于响应枚举类型声明。
      */
     protected Enum(String name, int ordinal) {
         this.name = name;

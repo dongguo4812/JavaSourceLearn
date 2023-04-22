@@ -46,6 +46,8 @@ public final class Boolean implements java.io.Serializable,
     /**
      * The {@code Boolean} object corresponding to the primitive
      * value {@code true}.
+     * TRUE与FALSE是Boolean提供的两个静态常量，
+     * 在用到true或者false时，可直接用这两个常量，无需再耗费资源来创建类似new Boolean(true)这样的新实例；
      */
     public static final Boolean TRUE = new Boolean(true);
 
@@ -59,6 +61,7 @@ public final class Boolean implements java.io.Serializable,
      * The Class object representing the primitive type boolean.
      *
      * @since   JDK1.1
+     * 基本类型 boolean 的 Class 对象，可用于类反射
      */
     @SuppressWarnings("unchecked")
     public static final Class<Boolean> TYPE = (Class<Boolean>) Class.getPrimitiveClass("boolean");
@@ -67,10 +70,12 @@ public final class Boolean implements java.io.Serializable,
      * The value of the Boolean.
      *
      * @serial
+     * final 定义的私有变量 true/false
      */
     private final boolean value;
 
     /** use serialVersionUID from JDK 1.0.2 for interoperability */
+    //序列化版本号
     private static final long serialVersionUID = -3665804199014368530L;
 
     /**
@@ -83,6 +88,7 @@ public final class Boolean implements java.io.Serializable,
      * likely to yield significantly better space and time performance.</b>
      *
      * @param   value   the value of the {@code Boolean}.
+     *
      */
     public Boolean(boolean value) {
         this.value = value;
@@ -100,6 +106,7 @@ public final class Boolean implements java.io.Serializable,
      * that represents {@code false}.
      *
      * @param   s   the string to be converted to a {@code Boolean}.
+     *   若传入字符串"true" 返回true 否则返回false
      */
     public Boolean(String s) {
         this(parseBoolean(s));
@@ -208,6 +215,7 @@ public final class Boolean implements java.io.Serializable,
      * @param value the value to hash
      * @return a hash code value for a {@code boolean} value.
      * @since 1.8
+     * true的hashCode为1231，false的hashCode为1237
      */
     public static int hashCode(boolean value) {
         return value ? 1231 : 1237;

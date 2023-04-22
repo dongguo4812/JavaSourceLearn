@@ -79,6 +79,7 @@ public final class StringBuilder
 {
 
     /** use serialVersionUID for interoperability */
+    //序列化版本号
     static final long serialVersionUID = 4383685877147921099L;
 
     /**

@@ -51,6 +51,7 @@ public final class Float extends Number implements Comparable<Float> {
      * A constant holding the positive infinity of type
      * {@code float}. It is equal to the value returned by
      * {@code Float.intBitsToFloat(0x7f800000)}.
+     * 正无穷大0x7f800000
      */
     public static final float POSITIVE_INFINITY = 1.0f / 0.0f;
 
@@ -58,6 +59,7 @@ public final class Float extends Number implements Comparable<Float> {
      * A constant holding the negative infinity of type
      * {@code float}. It is equal to the value returned by
      * {@code Float.intBitsToFloat(0xff800000)}.
+     * 负无穷大0xff800000
      */
     public static final float NEGATIVE_INFINITY = -1.0f / 0.0f;
 
@@ -65,6 +67,7 @@ public final class Float extends Number implements Comparable<Float> {
      * A constant holding a Not-a-Number (NaN) value of type
      * {@code float}.  It is equivalent to the value returned by
      * {@code Float.intBitsToFloat(0x7fc00000)}.
+     * Not-a-Number（NaN）值的常量0x7fc00000
      */
     public static final float NaN = 0.0f / 0.0f;
 
@@ -74,6 +77,7 @@ public final class Float extends Number implements Comparable<Float> {
      * It is equal to the hexadecimal floating-point literal
      * {@code 0x1.fffffeP+127f} and also equal to
      * {@code Float.intBitsToFloat(0x7f7fffff)}.
+     * 最大值3.4028235e+38f
      */
     public static final float MAX_VALUE = 0x1.fffffeP+127f; // 3.4028235e+38f
 
@@ -84,6 +88,7 @@ public final class Float extends Number implements Comparable<Float> {
      * equal to {@code Float.intBitsToFloat(0x00800000)}.
      *
      * @since 1.6
+     * 最小正常值1.17549435E-38f
      */
     public static final float MIN_NORMAL = 0x1.0p-126f; // 1.17549435E-38f
 
@@ -92,6 +97,7 @@ public final class Float extends Number implements Comparable<Float> {
      * {@code float}, 2<sup>-149</sup>. It is equal to the
      * hexadecimal floating-point literal {@code 0x0.000002P-126f}
      * and also equal to {@code Float.intBitsToFloat(0x1)}.
+     * 最小正非零值1.4e-45f
      */
     public static final float MIN_VALUE = 0x0.000002P-126f; // 1.4e-45f
 
@@ -101,6 +107,7 @@ public final class Float extends Number implements Comparable<Float> {
      * Math.getExponent(Float.MAX_VALUE)}.
      *
      * @since 1.6
+     * 最大指数
      */
     public static final int MAX_EXPONENT = 127;
 
@@ -110,6 +117,7 @@ public final class Float extends Number implements Comparable<Float> {
      * Math.getExponent(Float.MIN_NORMAL)}.
      *
      * @since 1.6
+     * 最小指数
      */
     public static final int MIN_EXPONENT = -126;
 
@@ -117,6 +125,7 @@ public final class Float extends Number implements Comparable<Float> {
      * The number of bits used to represent a {@code float} value.
      *
      * @since 1.5
+     * 占用bit位
      */
     public static final int SIZE = 32;
 
@@ -124,6 +133,7 @@ public final class Float extends Number implements Comparable<Float> {
      * The number of bytes used to represent a {@code float} value.
      *
      * @since 1.8
+     * 占用字节数
      */
     public static final int BYTES = SIZE / Byte.SIZE;
 
@@ -132,6 +142,7 @@ public final class Float extends Number implements Comparable<Float> {
      * {@code float}.
      *
      * @since JDK1.1
+     * float原始类型
      */
     @SuppressWarnings("unchecked")
     public static final Class<Float> TYPE = (Class<Float>) Class.getPrimitiveClass("float");
@@ -201,6 +212,7 @@ public final class Float extends Number implements Comparable<Float> {
      *
      * @param   f   the float to be converted.
      * @return a string representation of the argument.
+     * 将float数值转成字符串
      */
     public static String toString(float f) {
         return FloatingDecimal.toJavaFormatString(f);
@@ -279,6 +291,7 @@ public final class Float extends Number implements Comparable<Float> {
      * @return a hex string representation of the argument.
      * @since 1.5
      * @author Joseph D. Darcy
+     * 将float数值转成十六进制形式字符串
      */
     public static String toHexString(float f) {
         if (Math.abs(f) < FloatConsts.MIN_NORMAL
@@ -494,6 +507,7 @@ public final class Float extends Number implements Comparable<Float> {
      * The value of the Float.
      *
      * @serial
+     * 用来存储Float
      */
     private final float value;
 
@@ -739,11 +753,13 @@ public final class Float extends Number implements Comparable<Float> {
      *
      * @param   value   a floating-point number.
      * @return the bits that represent the floating-point number.
+     * 对floatToRawIntBits方法获取结果进行再处理，如果value为 NAN 返回 0x7fc00000。
      */
     public static int floatToIntBits(float value) {
         int result = floatToRawIntBits(value);
         // Check for NaN based on values of bit fields, maximum
         // exponent and nonzero significand.
+        // 如果value为 NAN 返回 0x7fc00000
         if ( ((result & FloatConsts.EXP_BIT_MASK) ==
               FloatConsts.EXP_BIT_MASK) &&
              (result & FloatConsts.SIGNIF_BIT_MASK) != 0)
@@ -785,6 +801,8 @@ public final class Float extends Number implements Comparable<Float> {
      * @param   value   a floating-point number.
      * @return the bits that represent the floating-point number.
      * @since 1.3
+     * float和int都占用4个字节，以读取int字节方式，读去float字节，会获取一个整数。
+     * native 修饰的方法是java原生方法
      */
     public static native int floatToRawIntBits(float value);
 
@@ -961,5 +979,6 @@ public final class Float extends Number implements Comparable<Float> {
     }
 
     /** use serialVersionUID from JDK 1.0.2 for interoperability */
+    //序列化版本号
     private static final long serialVersionUID = -2671257302660747028L;
 }

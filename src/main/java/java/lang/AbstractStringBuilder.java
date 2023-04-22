@@ -47,11 +47,13 @@ import java.util.Arrays;
 abstract class AbstractStringBuilder implements Appendable, CharSequence {
     /**
      * The value is used for character storage.
+     * 该字符序列的具体存储
      */
     char[] value;
 
     /**
      * The count is the number of characters used.
+     * 实际存储的数量
      */
     int count;
 
@@ -73,6 +75,7 @@ abstract class AbstractStringBuilder implements Appendable, CharSequence {
      *
      * @return  the length of the sequence of characters currently
      *          represented by this object
+     *          返回已经存储的实际长度（就是count值）
      */
     @Override
     public int length() {
@@ -85,6 +88,7 @@ abstract class AbstractStringBuilder implements Appendable, CharSequence {
      * will occur.
      *
      * @return  the current capacity
+     * 得到目前该value数组的实际大小
      */
     public int capacity() {
         return value.length;
@@ -105,6 +109,8 @@ abstract class AbstractStringBuilder implements Appendable, CharSequence {
      * actual capacity below that requested here.
      *
      * @param   minimumCapacity   the minimum desired capacity.
+     *  确保容量至少等于指定的最小值。如果当前容量小于参数，则分配一个具有更大容量的新数组
+     *
      */
     public void ensureCapacity(int minimumCapacity) {
         if (minimumCapacity > 0)
@@ -170,9 +176,12 @@ abstract class AbstractStringBuilder implements Appendable, CharSequence {
      * characters, then it may be resized to become more space efficient.
      * Calling this method may, but is not required to, affect the value
      * returned by a subsequent call to the {@link #capacity()} method.
+     * 如果value数组的容量有多余的，那么就把多余的全部都释放掉
      */
     public void trimToSize() {
+        //数组的长度大于当前存储的个数
         if (count < value.length) {
+            //拷贝count大小的新数组
             value = Arrays.copyOf(value, count);
         }
     }
@@ -201,13 +210,17 @@ abstract class AbstractStringBuilder implements Appendable, CharSequence {
      * @param      newLength   the new length
      * @throws     IndexOutOfBoundsException  if the
      *               {@code newLength} argument is negative.
+     *  强制增大实际长度count的大小，容量如果不够就用 expandCapacity()扩大；
+     *  将扩大的部分全部用’\0’（ASCII码中的null）来初始化
      */
     public void setLength(int newLength) {
         if (newLength < 0)
             throw new StringIndexOutOfBoundsException(newLength);
+        //判断是否需要扩容
         ensureCapacityInternal(newLength);
 
         if (count < newLength) {
+            //填充数组
             Arrays.fill(value, count, newLength, '\0');
         }
 
@@ -230,6 +243,7 @@ abstract class AbstractStringBuilder implements Appendable, CharSequence {
      * @return     the {@code char} value at the specified index.
      * @throws     IndexOutOfBoundsException  if {@code index} is
      *             negative or greater than or equal to {@code length()}.
+     *             得到下标为index的字符
      */
     @Override
     public char charAt(int index) {
@@ -258,6 +272,7 @@ abstract class AbstractStringBuilder implements Appendable, CharSequence {
      * @exception  IndexOutOfBoundsException  if the {@code index}
      *             argument is negative or not less than the length of this
      *             sequence.
+     *            返回指定索引处的字符(Unicode码点)
      */
     public int codePointAt(int index) {
         if ((index < 0) || (index >= count)) {
@@ -376,6 +391,7 @@ abstract class AbstractStringBuilder implements Appendable, CharSequence {
      *             <li>{@code dstBegin+srcEnd-srcBegin} is greater than
      *             {@code dst.length}
      *             </ul>
+     *             将value[]的[srcBegin, srcEnd)拷贝到dst[]数组的desBegin开始处
      */
     public void getChars(int srcBegin, int srcEnd, char[] dst, int dstBegin)
     {
@@ -876,6 +892,7 @@ abstract class AbstractStringBuilder implements Appendable, CharSequence {
      * @return     The new string.
      * @throws     StringIndexOutOfBoundsException  if {@code start} is
      *             less than zero, or greater than the length of this object.
+     *   得到子字符串
      */
     public String substring(int start) {
         return substring(start, count);
@@ -906,6 +923,7 @@ abstract class AbstractStringBuilder implements Appendable, CharSequence {
      *          if {@code end} is greater than {@code length()},
      *          or if {@code start} is greater than {@code end}
      * @spec JSR-51
+     * 得到一个子字符序列
      */
     @Override
     public CharSequence subSequence(int start, int end) {
@@ -1408,6 +1426,8 @@ abstract class AbstractStringBuilder implements Appendable, CharSequence {
      * a valid surrogate pair.
      *
      * @return  a reference to this object.
+     * 将value给倒序存放
+     * （注意改变的就是本value，而不是创建了一个新的AbstractStringBuilder然后value为倒序）
      */
     public AbstractStringBuilder reverse() {
         boolean hasSurrogates = false;
