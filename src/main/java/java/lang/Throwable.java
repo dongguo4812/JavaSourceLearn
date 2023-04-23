@@ -114,10 +114,12 @@ import java.util.*;
  */
 public class Throwable implements Serializable {
     /** use serialVersionUID from JDK 1.0.2 for interoperability */
+    //序列化版本号
     private static final long serialVersionUID = -3042686055658047285L;
 
     /**
      * Native code saves some indication of the stack backtrace in this slot.
+     * 保存栈信息的轨迹
      */
     private transient Object backtrace;
 
@@ -127,6 +129,7 @@ public class Throwable implements Serializable {
      * the file that could not be found.
      *
      * @serial
+     * 存储异常的简要说明，可以通过e.getMessage()获得。
      */
     private String detailMessage;
 
@@ -156,6 +159,8 @@ public class Throwable implements Serializable {
 
     /**
      * A shared value for an empty stack.
+     *   stackTrace的初始值
+
      */
     private static final StackTraceElement[] UNASSIGNED_STACK = new StackTraceElement[0];
 
@@ -194,6 +199,7 @@ public class Throwable implements Serializable {
      *
      * @serial
      * @since 1.4
+     * 表示产生当前异常的根本原因。可以使用构造方法，或者initCause方法进行设置。
      */
     private Throwable cause = this;
 
@@ -207,11 +213,17 @@ public class Throwable implements Serializable {
      *
      * @serial
      * @since 1.4
+     * 存储异常栈
+     * 代码的行号会在源码编译时一起编译到字节码中。
+     * 在运行发生异常时，方法调用栈会写到stackTrace字段中。
+     * 栈的顶端是异常发生的位置，即throw的位置；栈的底端是线程开始的位置。
+     * 我们可以通过e.printStackTrace、e.getStackTrace等方法查看异常栈，来分析程序出错的位置在源码中的位置。
      */
     private StackTraceElement[] stackTrace = UNASSIGNED_STACK;
 
     // Setting this static field introduces an acceptable
     // initialization dependency on a few java.util classes.
+    //特殊量（sentinel）来表示特定的状态。比如，stackTrace为UNASSIGNED_STACK代表初始值，为null代表不可访问。
     private static final List<Throwable> SUPPRESSED_SENTINEL =
         Collections.unmodifiableList(new ArrayList<Throwable>(0));
 
@@ -224,10 +236,12 @@ public class Throwable implements Serializable {
      *
      * @serial
      * @since 1.7
+     * 用来存储其他的不是强关联的异常，防止异常的丢失。
      */
     private List<Throwable> suppressedExceptions = SUPPRESSED_SENTINEL;
 
     /** Message for trying to suppress a null exception. */
+    //空异常
     private static final String NULL_CAUSE_MESSAGE = "Cannot suppress a null exception.";
 
     /** Message for trying to suppress oneself. */
@@ -644,6 +658,7 @@ public class Throwable implements Serializable {
         printStackTrace(new WrappedPrintStream(s));
     }
 
+    //把Throwable对象和他的异常栈打印到标准错误流中
     private void printStackTrace(PrintStreamOrWriter s) {
         // Guard against malicious overrides of Throwable.equals by
         // using a Set with identity equality semantics.
@@ -653,16 +668,20 @@ public class Throwable implements Serializable {
 
         synchronized (s.lock()) {
             // Print our stack trace
+            // 打印当前异常的详细信息
             s.println(this);
+            // 打印当前堆栈中的栈帧信息
             StackTraceElement[] trace = getOurStackTrace();
             for (StackTraceElement traceElement : trace)
                 s.println("\tat " + traceElement);
 
             // Print suppressed exceptions, if any
+            //打印出suppress异常信息
             for (Throwable se : getSuppressed())
                 se.printEnclosedStackTrace(s, trace, SUPPRESSED_CAPTION, "\t", dejaVu);
 
             // Print cause, if any
+            //// 递归打印出引起当前异常的异常信息
             Throwable ourCause = getCause();
             if (ourCause != null)
                 ourCause.printEnclosedStackTrace(s, trace, CAUSE_CAPTION, "", dejaVu);
@@ -779,8 +798,10 @@ public class Throwable implements Serializable {
      * @see     java.lang.Throwable#printStackTrace()
      */
     public synchronized Throwable fillInStackTrace() {
+        //判断stackTrace、backtrace是否为null
         if (stackTrace != null ||
             backtrace != null /* Out of protocol state */ ) {
+            //将当前线程的栈帧信息记录到此Throwable中
             fillInStackTrace(0);
             stackTrace = UNASSIGNED_STACK;
         }
@@ -1093,6 +1114,7 @@ public class Throwable implements Serializable {
         suppressedExceptions.add(exception);
     }
 
+    //空的异常数组
     private static final Throwable[] EMPTY_THROWABLE_ARRAY = new Throwable[0];
 
     /**

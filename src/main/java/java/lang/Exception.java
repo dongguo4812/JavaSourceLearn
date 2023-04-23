@@ -43,6 +43,7 @@ package java.lang;
  * @since   JDK1.0
  */
 public class Exception extends Throwable {
+    //序列化版本号
     static final long serialVersionUID = -3387516993124229948L;
 
     /**

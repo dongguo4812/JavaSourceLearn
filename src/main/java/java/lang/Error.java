@@ -47,6 +47,7 @@ package java.lang;
  * @since   JDK1.0
  */
 public class Error extends Throwable {
+    //序列化版本号
     static final long serialVersionUID = 4980196508277280342L;
 
     /**

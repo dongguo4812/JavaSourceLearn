@@ -120,8 +120,11 @@ public final class Class<T> implements java.io.Serializable,
                               GenericDeclaration,
                               Type,
                               AnnotatedElement {
+    //标识注解类型
     private static final int ANNOTATION= 0x00002000;
+    //标识枚举类型
     private static final int ENUM      = 0x00004000;
+    //表示该class文件并非由Java源代码所生成
     private static final int SYNTHETIC = 0x00001000;
 
     private static native void registerNatives();
@@ -133,6 +136,7 @@ public final class Class<T> implements java.io.Serializable,
      * Private constructor. Only the Java Virtual Machine creates Class objects.
      * This constructor is not used and prevents the default constructor being
      * generated.
+     * 只能由java虚拟机创建对象
      */
     private Class(ClassLoader loader) {
         // Initialize final field for classLoader.  The initialization value of non-null
@@ -446,7 +450,9 @@ public final class Class<T> implements java.io.Serializable,
             return null;
         }
     }
+    //缓存构造器
     private volatile transient Constructor<T> cachedConstructor;
+    //调用者的缓存构造器
     private volatile transient Class<?>       newInstanceCallerCache;
 
 
@@ -644,6 +650,7 @@ public final class Class<T> implements java.io.Serializable,
     }
 
     // cache the name to reduce the number of calls into the VM
+    //实体的名称
     private transient String name;
     private native String getName0();
 
@@ -691,6 +698,7 @@ public final class Class<T> implements java.io.Serializable,
     // Initialized in JVM not by private constructor
     // This field is filtered from reflection access, i.e. getDeclaredField
     // will throw NoSuchFieldException
+    //类加载器
     private final ClassLoader classLoader;
 
     /**
@@ -2270,6 +2278,7 @@ public final class Class<T> implements java.io.Serializable,
 
 
     /** protection domain returned when the internal domain is null */
+    //null值的安全返回
     private static java.security.ProtectionDomain allPermDomain;
 
 
@@ -2458,6 +2467,7 @@ public final class Class<T> implements java.io.Serializable,
      */
 
     // Caches for certain reflective results
+    //缓存反射结果
     private static boolean useCaches = true;
 
     // reflection data that might get invalidated when JVM TI RedefineClasses() is called
@@ -2480,11 +2490,12 @@ public final class Class<T> implements java.io.Serializable,
             this.redefinedCount = redefinedCount;
         }
     }
-
+    //反射信息
     private volatile transient SoftReference<ReflectionData<T>> reflectionData;
 
     // Incremented by the VM on each call to JVM TI RedefineClasses()
     // that redefines this class or a superclass.
+    //每次调用JVM时由VM递增
     private volatile transient int classRedefinedCount = 0;
 
     // Lazily create and cache ReflectionData
@@ -2528,6 +2539,7 @@ public final class Class<T> implements java.io.Serializable,
     private native String getGenericSignature0();
 
     // Generic info repository; lazily initialized
+    //通用信息
     private volatile transient ClassRepository genericInfo;
 
     // accessor for factory
@@ -3157,6 +3169,7 @@ public final class Class<T> implements java.io.Serializable,
     }
 
     /** use serialVersionUID from JDK 1.1 for interoperability */
+    //序列化版本号
     private static final long serialVersionUID = 3206093459760846163L;
 
 
@@ -3248,9 +3261,12 @@ public final class Class<T> implements java.io.Serializable,
         }
         return reflectionFactory;
     }
+
+    //反射工厂
     private static ReflectionFactory reflectionFactory;
 
     // To be able to query system properties as soon as they're available
+    //是否初始化
     private static boolean initted = false;
     private static void checkInitted() {
         if (initted) return;
@@ -3327,6 +3343,7 @@ public final class Class<T> implements java.io.Serializable,
         }
         return enumConstants;
     }
+    //枚举类常量 null
     private volatile transient T[] enumConstants = null;
 
     /**
@@ -3349,6 +3366,7 @@ public final class Class<T> implements java.io.Serializable,
         }
         return enumConstantDirectory;
     }
+    //枚举类常量目录
     private volatile transient Map<String, T> enumConstantDirectory = null;
 
     /**
@@ -3496,6 +3514,7 @@ public final class Class<T> implements java.io.Serializable,
 
     // Annotations cache
     @SuppressWarnings("UnusedDeclaration")
+    //注解数据
     private volatile transient AnnotationData annotationData;
 
     private AnnotationData annotationData() {
@@ -3551,6 +3570,7 @@ public final class Class<T> implements java.io.Serializable,
     // Annotation types cache their internal (AnnotationType) form
 
     @SuppressWarnings("UnusedDeclaration")
+    //注解类型
     private volatile transient AnnotationType annotationType;
 
     boolean casAnnotationType(AnnotationType oldType, AnnotationType newType) {
