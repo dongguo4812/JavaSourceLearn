@@ -260,6 +260,7 @@ public final class Class<T> implements java.io.Serializable,
      * @exception ExceptionInInitializerError if the initialization provoked
      *            by this method fails
      * @exception ClassNotFoundException if the class cannot be located
+     * 手动加载一个类，
      */
     @CallerSensitive
     public static Class<?> forName(String className)
@@ -329,6 +330,7 @@ public final class Class<T> implements java.io.Serializable,
      * @see       java.lang.Class#forName(String)
      * @see       java.lang.ClassLoader
      * @since     1.2
+     * boolean initialize 是否对类进行初始化
      */
     @CallerSensitive
     public static Class<?> forName(String name, boolean initialize,
@@ -485,6 +487,7 @@ public final class Class<T> implements java.io.Serializable,
      * @return  true if {@code obj} is an instance of this class
      *
      * @since JDK1.1
+     * 用于判断obj对象是否是该Class或该Class子类的一个实例
      */
     public native boolean isInstance(Object obj);
 
@@ -512,6 +515,8 @@ public final class Class<T> implements java.io.Serializable,
      * @exception NullPointerException if the specified Class parameter is
      *            null.
      * @since JDK1.1
+     * 用于判断cls的实例能否赋值给该Class的引用；
+     * 换句话说，该方法可以用来判断cls类是否是该Class的子类或者如果Class是接口表示cls是否实现了该接口。
      */
     public native boolean isAssignableFrom(Class<?> cls);
 

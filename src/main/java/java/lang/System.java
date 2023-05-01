@@ -79,6 +79,7 @@ public final class System {
      * open and ready to supply input data. Typically this stream
      * corresponds to keyboard input or another input source specified by
      * the host environment or user.
+     *  标准输入流，默认为键盘
      */
     public final static InputStream in = null;
 
@@ -106,6 +107,7 @@ public final class System {
      * @see     java.io.PrintStream#println(long)
      * @see     java.io.PrintStream#println(java.lang.Object)
      * @see     java.io.PrintStream#println(java.lang.String)
+     * 标识输出流，默认为控制台
      */
     public final static PrintStream out = null;
 
@@ -120,10 +122,12 @@ public final class System {
      * of a user even if the principal output stream, the value of the
      * variable <code>out</code>, has been redirected to a file or other
      * destination that is typically not continuously monitored.
+     * 标准错误流，默认为控制台
      */
     public final static PrintStream err = null;
 
     /* The security manager for the system.
+        系统的安全管理器
      */
     private static volatile SecurityManager security = null;
 
@@ -199,7 +203,7 @@ public final class System {
         checkIO();
         setErr0(err);
     }
-
+    //控制台
     private static volatile Console cons = null;
     /**
      * Returns the unique {@link java.io.Console Console} object associated
@@ -489,6 +493,7 @@ public final class System {
      *               because of a type mismatch.
      * @exception  NullPointerException if either <code>src</code> or
      *               <code>dest</code> is <code>null</code>.
+     *               将源数组的子数组拷贝到目标数组中
      */
     public static native void arraycopy(Object src,  int  srcPos,
                                         Object dest, int destPos,
@@ -526,8 +531,8 @@ public final class System {
      * <dt>user.home            <dd>User home directory
      * <dt>user.dir             <dd>User's current working directory
      * </dl>
+     * 系统属性值
      */
-
     private static Properties props;
     private static native Properties initProperties(Properties props);
 
@@ -647,7 +652,7 @@ public final class System {
     public static String lineSeparator() {
         return lineSeparator;
     }
-
+    //行分隔符
     private static String lineSeparator;
 
     /**

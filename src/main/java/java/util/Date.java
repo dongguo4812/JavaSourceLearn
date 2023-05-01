@@ -131,6 +131,7 @@ import sun.util.calendar.ZoneInfo;
 public class Date
     implements java.io.Serializable, Cloneable, Comparable<Date>
 {
+    //公历
     private static final BaseCalendar gcal =
                                 CalendarSystem.getGregorianCalendar();
     private static BaseCalendar jcal;
@@ -160,6 +161,7 @@ public class Date
      * nearest millisecond.
      *
      * @see     java.lang.System#currentTimeMillis()
+     * 获取当前系统时间
      */
     public Date() {
         this(System.currentTimeMillis());
@@ -173,6 +175,7 @@ public class Date
      *
      * @param   date   the milliseconds since January 1, 1970, 00:00:00 GMT.
      * @see     java.lang.System#currentTimeMillis()
+     * 获取指定日期时间
      */
     public Date(long date) {
         fastTime = date;
@@ -616,6 +619,7 @@ public class Date
         // syntax error
         throw new IllegalArgumentException();
     }
+    //用于存储与时间相关的字符
     private final static String wtb[] = {
         "am", "pm",
         "monday", "tuesday", "wednesday", "thursday", "friday",
@@ -625,6 +629,8 @@ public class Date
         "gmt", "ut", "utc", "est", "edt", "cst", "cdt",
         "mst", "mdt", "pst", "pdt"
     };
+
+    //用于存储时间相关数字
     private final static int ttb[] = {
         14, 1, 0, 0, 0, 0, 0, 0, 0,
         2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13,
@@ -912,6 +918,7 @@ public class Date
      *            earlier than the instant represented by <tt>when</tt>;
      *          <code>false</code> otherwise.
      * @exception NullPointerException if <code>when</code> is null.
+     * 比较毫秒值
      */
     public boolean before(Date when) {
         return getMillisOf(this) < getMillisOf(when);
@@ -926,6 +933,7 @@ public class Date
      *          instant represented by <tt>when</tt>;
      *          <code>false</code> otherwise.
      * @exception NullPointerException if <code>when</code> is null.
+     * 比较毫秒值
      */
     public boolean after(Date when) {
         return getMillisOf(this) > getMillisOf(when);
@@ -953,6 +961,7 @@ public class Date
     /**
      * Returns the millisecond value of this <code>Date</code> object
      * without affecting its internal state.
+     * 返回日期对象的毫秒值
      */
     static final long getMillisOf(Date date) {
         if (date.cdate == null || date.cdate.isNormalized()) {
@@ -972,6 +981,7 @@ public class Date
      *      <code>0</code> if this Date is after the Date argument.
      * @since   1.2
      * @exception NullPointerException if <code>anotherDate</code> is null.
+     * 比较毫秒值
      */
     public int compareTo(Date anotherDate) {
         long thisTime = getMillisOf(this);

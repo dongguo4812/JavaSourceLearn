@@ -92,6 +92,7 @@ public final class Compiler  {
      *
      * @throws  NullPointerException
      *          If {@code clazz} is {@code null}
+     *  编译指定的类
      */
     public static native boolean compileClass(Class<?> clazz);
 
@@ -106,6 +107,7 @@ public final class Compiler  {
      *
      * @throws  NullPointerException
      *          If {@code string} is {@code null}
+     *          编译名称与指定字符串匹配的所有类
      */
     public static native boolean compileClasses(String string);
 
@@ -121,16 +123,19 @@ public final class Compiler  {
      *
      * @throws  NullPointerException
      *          If {@code any} is {@code null}
+     *          检查参数类型及字段，并执行一些文档化操作， 不需要具体的操作。
      */
     public static native Object command(Object any);
 
     /**
      * Cause the Compiler to resume operation.
+     * 使编译器恢复运行
      */
     public static native void enable();
 
     /**
      * Cause the Compiler to cease operation.
+     * 使编译器停止运行
      */
     public static native void disable();
 }

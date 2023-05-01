@@ -174,6 +174,7 @@ import sun.security.util.SecurityConstants;
  *
  * @see      #resolveClass(Class)
  * @since 1.0
+ * 所有类加载器的祖先，主要用于加载类和加载资源
  */
 public abstract class ClassLoader {
 
@@ -185,6 +186,7 @@ public abstract class ClassLoader {
     // The parent class loader for delegation
     // Note: VM hardcoded the offset of this field, thus all new fields
     // must be added *after* it.
+    //父类加载器，需要与BuiltinClassLoader中的parent区分
     private final ClassLoader parent;
 
     /**
@@ -237,9 +239,11 @@ public abstract class ClassLoader {
     // class loader is parallel capable.
     // Note: VM also uses this field to decide if the current class loader
     // is parallel capable and the appropriate lock object for class loading.
+    //当前类加载器具有并行功能时，将其下的类名映射到锁对象
     private final ConcurrentHashMap<String, Object> parallelLockMap;
 
     // Hashtable that maps packages to certs
+    // 将包名映射到身份证书
     private final Map <String, Certificate[]> package2certs;
 
     // Shared among all packages with unsigned classes
@@ -247,6 +251,7 @@ public abstract class ClassLoader {
 
     // The classes loaded by this class loader. The only purpose of this table
     // is to keep the classes from being GC'ed until the loader is GC'ed.
+    // 记录当前类加载器加载的类
     private final Vector<Class<?>> classes = new Vector<>();
 
     // The "default" domain. Set as the default ProtectionDomain on newly
@@ -263,6 +268,7 @@ public abstract class ClassLoader {
     // The packages defined in this class loader.  Each package name is mapped
     // to its corresponding Package object.
     // @GuardedBy("itself")
+    // 记录当前类加载器定义的包
     private final HashMap<String, Package> packages = new HashMap<>();
 
     private static Void checkCreateClassLoader() {
@@ -275,6 +281,7 @@ public abstract class ClassLoader {
 
     private ClassLoader(Void unused, ClassLoader parent) {
         this.parent = parent;
+        //类加载器是否可并行
         if (ParallelLoaders.isRegistered(this.getClass())) {
             parallelLockMap = new ConcurrentHashMap<>();
             package2certs = new ConcurrentHashMap<>();
@@ -397,13 +404,16 @@ public abstract class ClassLoader {
     {
         synchronized (getClassLoadingLock(name)) {
             // First, check if the class has already been loaded
+            //校验class是否被加载
             Class<?> c = findLoadedClass(name);
             if (c == null) {
                 long t0 = System.nanoTime();
                 try {
                     if (parent != null) {
+                        //递归，调用父类加载器的loadClass
                         c = parent.loadClass(name, false);
                     } else {
+                        //调用启动类加载器（虚拟机提供的加载器,即为BootStrapClassLoader）
                         c = findBootstrapClassOrNull(name);
                     }
                 } catch (ClassNotFoundException e) {
@@ -415,6 +425,7 @@ public abstract class ClassLoader {
                     // If still not found, then invoke findClass in order
                     // to find the class.
                     long t1 = System.nanoTime();
+                    //父类加载器没有找到，再调用本身（这个本身包括ext和app）的findClass(name)来查找父类
                     c = findClass(name);
 
                     // this is the defining class loader; record the stats
@@ -424,6 +435,7 @@ public abstract class ClassLoader {
                 }
             }
             if (resolve) {
+                //链接
                 resolveClass(c);
             }
             return c;
@@ -1525,6 +1537,7 @@ public abstract class ClassLoader {
 
     // The class loader for the system
     // @GuardedBy("ClassLoader.class")
+    //system class loader，可能是内置的AppClassLoader(默认)，也可能是自定义的类加载器
     private static ClassLoader scl;
 
     // Set to true once the system class loader has been set

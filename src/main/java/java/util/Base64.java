@@ -183,6 +183,7 @@ public class Base64 {
      * a method of this class will cause a
      * {@link java.lang.NullPointerException NullPointerException} to
      * be thrown.
+     * 编码器
      *
      * @see     Decoder
      * @since   1.8
@@ -463,6 +464,7 @@ public class Base64 {
      *
      * @see     Encoder
      * @since   1.8
+     * 解码器
      */
     public static class Decoder {
 
