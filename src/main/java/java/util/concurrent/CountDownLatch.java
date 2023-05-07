@@ -157,22 +157,27 @@ public class CountDownLatch {
     /**
      * Synchronization control For CountDownLatch.
      * Uses AQS state to represent count.
+     * 内部类Sync完成同步器的实现，Sync继承自AQS实现.
      */
     private static final class Sync extends AbstractQueuedSynchronizer {
+        //序列化版本
         private static final long serialVersionUID = 4982264981922014374L;
-
+        //Sync的构造函数
         Sync(int count) {
+            //设置AQS的同步状态
             setState(count);
         }
 
+        //获得AQS的同步状态
         int getCount() {
             return getState();
         }
-
+        //尝试获取共享锁 当state=0时，获取锁成功state=1，当state=1时，获取锁失败state=-1进入阻塞
         protected int tryAcquireShared(int acquires) {
             return (getState() == 0) ? 1 : -1;
         }
 
+        // 尝试释放共享锁.
         protected boolean tryReleaseShared(int releases) {
             // Decrement count; signal when transition to zero
             for (;;) {
@@ -186,6 +191,7 @@ public class CountDownLatch {
         }
     }
 
+    //同步器
     private final Sync sync;
 
     /**
@@ -194,6 +200,7 @@ public class CountDownLatch {
      * @param count the number of times {@link #countDown} must be invoked
      *        before threads can pass through {@link #await}
      * @throws IllegalArgumentException if {@code count} is negative
+     * 指定计数器总数.
      */
     public CountDownLatch(int count) {
         if (count < 0) throw new IllegalArgumentException("count < 0");
@@ -226,6 +233,7 @@ public class CountDownLatch {
      *
      * @throws InterruptedException if the current thread is interrupted
      *         while waiting
+     *   阻塞线程，调用AQS的可中断获取共享锁.
      */
     public void await() throws InterruptedException {
         sync.acquireSharedInterruptibly(1);
@@ -271,6 +279,7 @@ public class CountDownLatch {
      *         if the waiting time elapsed before the count reached zero
      * @throws InterruptedException if the current thread is interrupted
      *         while waiting
+     *     指定超时时间阻塞线程.
      */
     public boolean await(long timeout, TimeUnit unit)
         throws InterruptedException {
@@ -286,6 +295,7 @@ public class CountDownLatch {
      * thread scheduling purposes.
      *
      * <p>If the current count equals zero then nothing happens.
+     * 递减计数器.
      */
     public void countDown() {
         sync.releaseShared(1);
