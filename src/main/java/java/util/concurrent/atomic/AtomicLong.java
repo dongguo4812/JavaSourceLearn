@@ -52,10 +52,13 @@ import sun.misc.Unsafe;
  * @author Doug Lea
  */
 public class AtomicLong extends Number implements java.io.Serializable {
+    //序列化版本号
     private static final long serialVersionUID = 1927816293512124184L;
 
     // setup to use Unsafe.compareAndSwapLong for updates
+    //unsafe常量，设置为使用Unsafe.compareAndSwapInt进行更新
     private static final Unsafe unsafe = Unsafe.getUnsafe();
+    //AtomicLong的值在内存地址的偏移量
     private static final long valueOffset;
 
     /**
@@ -64,6 +67,9 @@ public class AtomicLong extends Number implements java.io.Serializable {
      * method works in either case, some constructions should be
      * handled at Java level to avoid locking user-visible locks.
      */
+    // 记录底层JVM是否支持无锁比较和交换long。
+    // 虽然Unsafe.compareAndSwapLong方法在这两种情况下都可以工作
+    // 但是一些结构应该在Java级别进行处理，以避免锁定用户可见的锁。
     static final boolean VM_SUPPORTS_LONG_CAS = VMSupportsCS8();
 
     /**
@@ -72,6 +78,7 @@ public class AtomicLong extends Number implements java.io.Serializable {
      */
     private static native boolean VMSupportsCS8();
 
+    //objectFieldOffset是一个本地方法，返回属性相对于对象的偏移量，这里使用反射获取属性。
     static {
         try {
             valueOffset = unsafe.objectFieldOffset
@@ -79,6 +86,7 @@ public class AtomicLong extends Number implements java.io.Serializable {
         } catch (Exception ex) { throw new Error(ex); }
     }
 
+    //AtomicLong当前值
     private volatile long value;
 
     /**

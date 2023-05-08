@@ -47,18 +47,20 @@ import sun.misc.Unsafe;
  * @param <V> The type of object referred to by this reference
  */
 public class AtomicReference<V> implements java.io.Serializable {
+    //序列化版本号
     private static final long serialVersionUID = -1848883965231344442L;
-
+    //unsafe常量，设置为使用Unsafe.compareAndSwapInt进行更新
     private static final Unsafe unsafe = Unsafe.getUnsafe();
+    //AtomicReference的值在内存地址的偏移量
     private static final long valueOffset;
-
+    //objectFieldOffset是一个本地方法，返回属性相对于对象的偏移量，这里使用反射获取属性。
     static {
         try {
             valueOffset = unsafe.objectFieldOffset
                 (AtomicReference.class.getDeclaredField("value"));
         } catch (Exception ex) { throw new Error(ex); }
     }
-
+    //AtomicReference当前值
     private volatile V value;
 
     /**

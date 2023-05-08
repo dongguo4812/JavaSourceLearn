@@ -48,9 +48,12 @@ import sun.misc.Unsafe;
  * @author Doug Lea
  */
 public class AtomicBoolean implements java.io.Serializable {
+    //序列化版本号
     private static final long serialVersionUID = 4654671469794556979L;
     // setup to use Unsafe.compareAndSwapInt for updates
+    //创建一个Unsafe对象，它与底层联系密切，可以直接操作内存
     private static final Unsafe unsafe = Unsafe.getUnsafe();
+    //存储value属性据对象地址的偏移量
     private static final long valueOffset;
 
     static {
@@ -59,7 +62,7 @@ public class AtomicBoolean implements java.io.Serializable {
                 (AtomicBoolean.class.getDeclaredField("value"));
         } catch (Exception ex) { throw new Error(ex); }
     }
-
+    // 值属性，注意这里使用volatile关键字修饰，任何修改都会刷新到内存中
     private volatile int value;
 
     /**
@@ -73,6 +76,8 @@ public class AtomicBoolean implements java.io.Serializable {
 
     /**
      * Creates a new {@code AtomicBoolean} with initial value {@code false}.
+     * 0代表false，1代表true
+     * 默认是0，false
      */
     public AtomicBoolean() {
     }
@@ -94,9 +99,12 @@ public class AtomicBoolean implements java.io.Serializable {
      * @param update the new value
      * @return {@code true} if successful. False return indicates that
      * the actual value was not equal to the expected value.
+     * 比较并交换
      */
     public final boolean compareAndSet(boolean expect, boolean update) {
+        //预期值
         int e = expect ? 1 : 0;
+        //更新值
         int u = update ? 1 : 0;
         return unsafe.compareAndSwapInt(this, valueOffset, e, u);
     }
@@ -149,6 +157,7 @@ public class AtomicBoolean implements java.io.Serializable {
         boolean prev;
         do {
             prev = get();
+            //比较并交换
         } while (!compareAndSet(prev, newValue));
         return prev;
     }
