@@ -39,6 +39,7 @@ import sun.reflect.generics.repository.ConstructorRepository;
  * and {@link Constructor}.
  *
  * @since 1.8
+ * 方法和构造函数的公共功能的共享超类。
  */
 public abstract class Executable extends AccessibleObject
     implements Member, GenericDeclaration {
@@ -346,6 +347,7 @@ public abstract class Executable extends AccessibleObject
      * a MethodParameters attribute that is improperly formatted.
      * @return an array of {@code Parameter} objects representing all
      * the parameters to the executable this object represents.
+     * 对象的数组，表示由该对象表示的底层可执行文件的所有参数。如果可执行文件没有参数，则返回长度为0的数组
      */
     public Parameter[] getParameters() {
         // TODO: This may eventually need to be guarded by security
@@ -544,6 +546,17 @@ public abstract class Executable extends AccessibleObject
      *    the formal and implicit parameters, in declaration order, of
      *    the executable represented by this object
      */
+    /*
+    * 返回一个由注解数组组成的数组，这些注解以声明顺序表示由此对象表示的可执行文件的形式参数上的注解。
+    * 合成参数和强制参数(参见下面的解释)，例如内部类构造函数的外部“this”参数将在返回的数组中表示。
+    * 如果可执行文件没有参数(即没有正式参数、没有合成参数和没有强制参数)，将返回一个零长度的数组。
+    * 如果可执行文件有一个或多个参数，则为每个参数返回一个长度为零的嵌套数组，不带注释。
+    * 返回数组中包含的注释对象是可序列化的。此方法的调用者可以自由地修改返回的数组;
+    * 它对返回给其他调用者的数组没有影响。
+    * 编译器可以向方法的参数列表中添加在source中隐式声明的额外参数(“强制”)，
+    * 以及在source中既没有隐式声明也没有显式声明的参数(“合成”)。有关更多信息，请参见参数。
+    *  注意，此方法返回的任何注释都是声明注释。
+    */
     public abstract Annotation[][] getParameterAnnotations();
 
     Annotation[][] sharedGetParameterAnnotations(Class<?>[] parameterTypes,
