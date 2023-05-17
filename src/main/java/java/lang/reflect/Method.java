@@ -258,6 +258,7 @@ public final class Method extends Executable {
 
     /**
      * {@inheritDoc}
+     * 获取所有参数列表类型
      */
     @Override
     public Class<?>[] getParameterTypes() {
@@ -485,12 +486,14 @@ public final class Method extends Executable {
         throws IllegalAccessException, IllegalArgumentException,
            InvocationTargetException
     {
+        //校验权限
         if (!override) {
             if (!Reflection.quickCheckMemberAccess(clazz, modifiers)) {
                 Class<?> caller = Reflection.getCallerClass();
                 checkAccess(caller, clazz, obj, modifiers);
             }
         }
+        //方法访问器
         MethodAccessor ma = methodAccessor;             // read volatile
         if (ma == null) {
             ma = acquireMethodAccessor();
