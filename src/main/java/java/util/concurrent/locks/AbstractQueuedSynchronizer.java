@@ -1714,11 +1714,13 @@ public abstract class AbstractQueuedSynchronizer
      * @param node the node
      * @return true if successfully transferred (else the node was
      * cancelled before signal)
+     * transferForSignal把头节点发送到同步队列中，然后使用LockSupport.unpark唤醒节点线程:
      */
     final boolean transferForSignal(Node node) {
         /*
          * If cannot change waitStatus, the node has been cancelled.
          */
+         //通过CAS将状态为CONDITION节点的状态修改为0
         if (!compareAndSetWaitStatus(node, Node.CONDITION, 0))
             return false;
 
@@ -1728,8 +1730,12 @@ public abstract class AbstractQueuedSynchronizer
          * attempt to set waitStatus fails, wake up to resync (in which
          * case the waitStatus can be transiently and harmlessly wrong).
          */
+        //将该节点移入到同步队列中去，p是node的前缀节点
         Node p = enq(node);
         int ws = p.waitStatus;
+        //以下情况进行唤醒节点
+        //1、node的前缀节点状态为0或者节点状态不为零
+        //2、node的前缀节点状态修改为SIGNAL状态失败
         if (ws > 0 || !compareAndSetWaitStatus(p, ws, Node.SIGNAL))
             LockSupport.unpark(node.thread);
         return true;
@@ -1926,9 +1932,11 @@ public abstract class AbstractQueuedSynchronizer
          */
         private void doSignal(Node first) {
             do {
+                //新的头节点为空则，队列为空
                 if ( (firstWaiter = first.nextWaiter) == null)
                     lastWaiter = null;
                 first.nextWaiter = null;
+             //将头节点从等待队列中移除   
             } while (!transferForSignal(first) &&
                      (first = firstWaiter) != null);
         }
@@ -1990,12 +1998,17 @@ public abstract class AbstractQueuedSynchronizer
          *
          * @throws IllegalMonitorStateException if {@link #isHeldExclusively}
          *         returns {@code false}
+         * signal的作用就是将await中Condition队列的第一个节点唤醒；
          */
         public final void signal() {
+            //isHeldExclusively是需要子类继承的，在lock中判断当前线程是否是获得锁的线程,是则返回true，如何当前线程不是获取锁的线程则抛出异常
             if (!isHeldExclusively())
                 throw new IllegalMonitorStateException();
+            //获取Condition队列中第一个Node    
             Node first = firstWaiter;
+            //队首的节点不为null
             if (first != null)
+                //唤醒队首的节点
                 doSignal(first);
         }
 
