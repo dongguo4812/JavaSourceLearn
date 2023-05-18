@@ -659,8 +659,10 @@ public abstract class AbstractQueuedSynchronizer
          * to clear in anticipation of signalling.  It is OK if this
          * fails or if status is changed by waiting thread.
          */
+         //获取头节点的状态
         int ws = node.waitStatus;
         if (ws < 0)
+            //如果头节点状态小于0，cas修改为0
             compareAndSetWaitStatus(node, ws, 0);
 
         /*
@@ -669,15 +671,20 @@ public abstract class AbstractQueuedSynchronizer
          * traverse backwards from tail to find the actual
          * non-cancelled successor.
          */
+        //当前节点的next节点
         Node s = node.next;
+        //如果s == null ，或者s的状态为1
         if (s == null || s.waitStatus > 0) {
+        // next节点不需要唤醒，需要唤醒next的next
             s = null;
+            // 从尾部往前找，找到状态正常的节点。（小于等于0代表正常状态）
             for (Node t = tail; t != null && t != node; t = t.prev)
                 if (t.waitStatus <= 0)
                     s = t;
         }
+        //经过循环的获取，如果拿到状态正常的节点，并且不为null
         if (s != null)
-            //唤醒
+            //线程唤醒
             LockSupport.unpark(s.thread);
     }
 
@@ -821,6 +828,7 @@ public abstract class AbstractQueuedSynchronizer
      * @param pred node's predecessor holding status
      * @param node the node
      * @return {@code true} if thread should block
+     * 确保上一个节点的状态是正确的
      */
     private static boolean shouldParkAfterFailedAcquire(Node pred, Node node) {
         //获取当前节点的前置节点的状态
@@ -840,6 +848,7 @@ public abstract class AbstractQueuedSynchronizer
              * indicate retry.
              */
             //如果是cancelled
+            //循环往前找，找到一个状态小于等于0的节点
             do {
                 //则从后往前依此跳过cancelled状态的节点
                 node.prev = pred = pred.prev;
@@ -852,6 +861,7 @@ public abstract class AbstractQueuedSynchronizer
              * need a signal, but don't park yet.  Caller will need to
              * retry to make sure it cannot acquire before parking.
              */
+            // 如果不是-1，但是小于等于0，将状态修改为-1
             //则将前置节点等待状态设置为SIGNAL-1
             compareAndSetWaitStatus(pred, ws, Node.SIGNAL);
         }
@@ -898,13 +908,18 @@ public abstract class AbstractQueuedSynchronizer
         try {
             boolean interrupted = false;
             for (;;) {
+                // 获取node的前一个节点
                 final Node p = node.predecessor();
+                //如果前一个节点为head并尝试获取锁资源
                 if (p == head && tryAcquire(arg)) {
+                   // 尝试获取锁资源成功，将node节点设置为头节点，thread和prev属性置位null
                     setHead(node);
+                    // 将之前的头节点的next指向null，帮助快速GC
                     p.next = null; // help GC
                     failed = false;
                     return interrupted;
                 }
+                //如果前一个节点不是head或者获取锁资源失败
                 if (shouldParkAfterFailedAcquire(p, node) &&
                     parkAndCheckInterrupt())
                     interrupted = true;
@@ -1313,8 +1328,9 @@ public abstract class AbstractQueuedSynchronizer
         //释放锁，这个方法是ReentrantLock继承AQS实现的方法
         if (tryRelease(arg)) {
             Node h = head;
-            //如果节点状态不是CANCELLED，也就是线程没有被取消，也就是不为0的，就进行唤醒
+            //头节点不为如果节点状态不是CANCELLED，也就是线程没有被取消，也就是不为0的，就进行唤醒
             if (h != null && h.waitStatus != 0)
+                //唤醒线程
                 unparkSuccessor(h);
             return true;
         }
