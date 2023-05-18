@@ -29,6 +29,8 @@ import java.net.URI;
 import java.net.URL;
 import java.net.MalformedURLException;
 import java.net.URISyntaxException;
+import java.nio.file.LinkOption;
+import java.nio.file.attribute.FileAttribute;
 import java.util.List;
 import java.util.ArrayList;
 import java.security.AccessController;
@@ -152,6 +154,8 @@ public class File
 
     /**
      * The FileSystem object representing the platform's local file system.
+     *  文件系统对象
+     *  后面很多方法也用到了文件系统类的方法，比如系统创建文件的时间等，这里简称fs，后面多处都用到了
      */
     private static final FileSystem fs = DefaultFileSystem.getFileSystem();
 
@@ -161,16 +165,20 @@ public class File
      * contain any duplicate or redundant separators.
      *
      * @serial
+     * 路径名
      */
     private final String path;
 
     /**
      * Enum type that indicates the status of a file path.
+     * 枚举类型
+     * file类对象的地址是否合法通过枚举类判定
      */
     private static enum PathStatus { INVALID, CHECKED };
 
     /**
      * The flag indicating whether the file path is invalid.
+     * 文件路径是否无效的标志
      */
     private transient PathStatus status = null;
 
@@ -181,6 +189,7 @@ public class File
      * returning false does not guarantee that the path is valid.
      *
      * @return true if the file path is invalid.
+     * 检查路径是否有效 但只涉及null字符，true绝对无效，false不一定有效
      */
     final boolean isInvalid() {
         if (status == null) {
@@ -193,6 +202,7 @@ public class File
     /**
      * The length of this abstract pathname's prefix, or zero if it has no
      * prefix.
+     * 路径名前缀长度
      */
     private final transient int prefixLength;
 
@@ -211,6 +221,7 @@ public class File
      * field is <code>'/'</code>; on Microsoft Windows systems it is <code>'\\'</code>.
      *
      * @see     java.lang.System#getProperty(java.lang.String)
+     * 依赖系统分隔符
      */
     public static final char separatorChar = fs.getSeparator();
 
@@ -218,6 +229,7 @@ public class File
      * The system-dependent default name-separator character, represented as a
      * string for convenience.  This string contains a single character, namely
      * <code>{@link #separatorChar}</code>.
+     * 将系统分隔符转换为字符串表示
      */
     public static final String separator = "" + separatorChar;
 
@@ -230,6 +242,7 @@ public class File
      * is <code>';'</code>.
      *
      * @see     java.lang.System#getProperty(java.lang.String)
+     * 路径分隔符
      */
     public static final char pathSeparatorChar = fs.getPathSeparator();
 
@@ -237,6 +250,7 @@ public class File
      * The system-dependent path-separator character, represented as a string
      * for convenience.  This string contains a single character, namely
      * <code>{@link #pathSeparatorChar}</code>.
+     * 路径分隔符字符串表示
      */
     public static final String pathSeparator = "" + pathSeparatorChar;
 
@@ -271,6 +285,7 @@ public class File
      * @param   pathname  A pathname string
      * @throws  NullPointerException
      *          If the <code>pathname</code> argument is <code>null</code>
+     *          创建路径名实例
      */
     public File(String pathname) {
         if (pathname == null) {
@@ -311,6 +326,11 @@ public class File
      * @param   child   The child pathname string
      * @throws  NullPointerException
      *          If <code>child</code> is <code>null</code>
+     *          父+子路径，创建实例
+     *          如果parent为null，则将通过调用给定子路径名字符串上的单参数文件构造函数来创建新的文件实例。
+     *          否则，父路径名字符串表示目录，子路径名字符串表示目录或文件。如果子路径名字符串是绝对的，则会以系统相关的方式将其转换为相对路径名。
+     *          如果parent是空字符串，则通过将child转换为抽象路径名并根据系统相关的默认目录解析结果来创建新的文件实例。
+     *          否则，每个路径名字符串将转换为抽象路径名，子抽象路径名将根据父路径名进行解析
      */
     public File(String parent, String child) {
         if (child == null) {
@@ -408,6 +428,7 @@ public class File
      * @see #toURI()
      * @see java.net.URI
      * @since 1.4
+     * 根据URI 路径创建一个新的 File 实例
      */
     public File(URI uri) {
 
@@ -449,9 +470,12 @@ public class File
      * @return  The name of the file or directory denoted by this abstract
      *          pathname, or the empty string if this pathname's name sequence
      *          is empty
+     *          返回文件或者目录的名称
      */
     public String getName() {
+        //此处的separatorChar 为系统分割符号，也就是获取最后一个分割符的名字
         int index = path.lastIndexOf(separatorChar);
+        // 判断索引，防止异常
         if (index < prefixLength) return path.substring(prefixLength);
         return path.substring(index + 1);
     }
@@ -468,11 +492,13 @@ public class File
      * @return  The pathname string of the parent directory named by this
      *          abstract pathname, or <code>null</code> if this pathname
      *          does not name a parent
+     *          获取上级目录
      */
     public String getParent() {
         int index = path.lastIndexOf(separatorChar);
         if (index < prefixLength) {
             if ((prefixLength > 0) && (path.length() > prefixLength))
+                // 截取上级目录的关键部分
                 return path.substring(0, prefixLength);
             return null;
         }
@@ -494,8 +520,10 @@ public class File
      *          does not name a parent
      *
      * @since 1.2
+     * 获取上级目录的实例对象
      */
     public File getParentFile() {
+        //通过this指针获取上级目录
         String p = this.getParent();
         if (p == null) return null;
         if (getClass() != File.class) {
@@ -510,6 +538,7 @@ public class File
      * separate the names in the name sequence.
      *
      * @return  The string form of this abstract pathname
+     * 返回路径，抽象路径的字符串形式
      */
     public String getPath() {
         return path;
@@ -527,6 +556,10 @@ public class File
      *
      * @return  <code>true</code> if this abstract pathname is absolute,
      *          <code>false</code> otherwise
+     *          测试是否是绝对路径
+     *          在 UNIX 系统上，如果路径名的前缀为“/”，则该路径名是绝对的。
+     * 在 Microsoft Windows 系统上，如果路径名的前缀是后跟“”的驱动器说明符，
+     * 或者其前缀是“”，则路径名是绝对的
      */
     public boolean isAbsolute() {
         return fs.isAbsolute(this);
@@ -554,6 +587,7 @@ public class File
      *          If a required system property value cannot be accessed.
      *
      * @see     java.io.File#isAbsolute()
+     * 获取绝对路径
      */
     public String getAbsolutePath() {
         return fs.resolve(this);
@@ -570,10 +604,12 @@ public class File
      *          If a required system property value cannot be accessed.
      *
      * @since 1.2
+     * 获取绝对路径，相当于new File（this.getAbsolutePath）
      */
     public File getAbsoluteFile() {
         String absPath = getAbsolutePath();
         if (getClass() != File.class) {
+            // 给定的路径字符串转换为正常形式，如果字符串已经是正常形式 无需转换
             absPath = fs.normalize(absPath);
         }
         return new File(absPath, fs.prefixLength(absPath));
@@ -765,6 +801,7 @@ public class File
      *          If a security manager exists and its <code>{@link
      *          java.lang.SecurityManager#checkRead(java.lang.String)}</code>
      *          method denies read access to the file
+     *          文件或者目录可否被读取
      */
     public boolean canRead() {
         SecurityManager security = System.getSecurityManager();
@@ -793,6 +830,7 @@ public class File
      *          If a security manager exists and its <code>{@link
      *          java.lang.SecurityManager#checkWrite(java.lang.String)}</code>
      *          method denies write access to the file
+     *          文件或者目录可否被修改
      */
     public boolean canWrite() {
         SecurityManager security = System.getSecurityManager();
@@ -816,6 +854,7 @@ public class File
      *          If a security manager exists and its <code>{@link
      *          java.lang.SecurityManager#checkRead(java.lang.String)}</code>
      *          method denies read access to the file or directory
+     *          判断文件或者路径是否存在
      */
     public boolean exists() {
         SecurityManager security = System.getSecurityManager();
@@ -835,7 +874,7 @@ public class File
      * <p> Where it is required to distinguish an I/O exception from the case
      * that the file is not a directory, or where several attributes of the
      * same file are required at the same time, then the {@link
-     * java.nio.file.Files#readAttributes(Path,Class,LinkOption[])
+     * java.nio.file.Files#readAttributes(Path,Class, LinkOption[])
      * Files.readAttributes} method may be used.
      *
      * @return <code>true</code> if and only if the file denoted by this
@@ -846,6 +885,7 @@ public class File
      *          If a security manager exists and its <code>{@link
      *          java.lang.SecurityManager#checkRead(java.lang.String)}</code>
      *          method denies read access to the file
+     *          判断此抽象路径名表示的是否为目录
      */
     public boolean isDirectory() {
         SecurityManager security = System.getSecurityManager();
@@ -879,6 +919,7 @@ public class File
      *          If a security manager exists and its <code>{@link
      *          java.lang.SecurityManager#checkRead(java.lang.String)}</code>
      *          method denies read access to the file
+     *          判断此抽象路径名表示的是否为文件
      */
     public boolean isFile() {
         SecurityManager security = System.getSecurityManager();
@@ -908,6 +949,7 @@ public class File
      *          method denies read access to the file
      *
      * @since 1.2
+     * 路径名命名的文件是否为隐藏文件，取决于操作系统
      */
     public boolean isHidden() {
         SecurityManager security = System.getSecurityManager();
@@ -940,6 +982,7 @@ public class File
      *          If a security manager exists and its <code>{@link
      *          java.lang.SecurityManager#checkRead(java.lang.String)}</code>
      *          method denies read access to the file
+     *          最后修改日期
      */
     public long lastModified() {
         SecurityManager security = System.getSecurityManager();
@@ -949,6 +992,8 @@ public class File
         if (isInvalid()) {
             return 0L;
         }
+        // 获取的系统文件时间
+        // 等同于 调用的最终函数 public native long getLastModifiedTime(File f);
         return fs.getLastModifiedTime(this);
     }
 
@@ -971,6 +1016,7 @@ public class File
      *          If a security manager exists and its <code>{@link
      *          java.lang.SecurityManager#checkRead(java.lang.String)}</code>
      *          method denies read access to the file
+     *          路径名表示的文件的长度。如果此路径名表示目录，则返回值未指定
      */
     public long length() {
         SecurityManager security = System.getSecurityManager();
@@ -980,6 +1026,8 @@ public class File
         if (isInvalid()) {
             return 0L;
         }
+        // 获取系统文件长度
+        // 等同于 调用的最终函数 public native long getLength(File f);
         return fs.getLength(this);
     }
 
@@ -1011,6 +1059,7 @@ public class File
      *          method denies write access to the file
      *
      * @since 1.2
+     * 创建文件
      */
     public boolean createNewFile() throws IOException {
         SecurityManager security = System.getSecurityManager();
@@ -1018,6 +1067,8 @@ public class File
         if (isInvalid()) {
             throw new IOException("Invalid file path");
         }
+        // 获取系统文件长度
+        // 等同于 调用的最终函数 public native boolean createFileExclusively(String path) throws IOException;
         return fs.createFileExclusively(path);
     }
 
@@ -1038,6 +1089,8 @@ public class File
      *          If a security manager exists and its <code>{@link
      *          java.lang.SecurityManager#checkDelete}</code> method denies
      *          delete access to the file
+     *          删除此抽象路径名所表示的文件或目录。
+     *          如果此路径名表示一个目录，则该目录必须为空才能删除
      */
     public boolean delete() {
         SecurityManager security = System.getSecurityManager();
@@ -1076,6 +1129,9 @@ public class File
      * @see #delete
      *
      * @since 1.2
+     * 请求在虚拟机终止时删除此抽象路径名所表示的文件或目录。
+     * 文件（或目录）的删除顺序与注册顺序相反。
+     * 调用此方法删除已注册删除的文件或目录不起作用。只有在虚拟机正常终止时才会尝试删除
      */
     public void deleteOnExit() {
         SecurityManager security = System.getSecurityManager();
@@ -1239,6 +1295,7 @@ public class File
      *          the directory
      *
      * @since  1.2
+     * 返回一个数组表示文件
      */
     public File[] listFiles() {
         String[] ss = normalizedList();
@@ -1286,6 +1343,9 @@ public class File
         if (ss == null) return null;
         ArrayList<File> files = new ArrayList<>();
         for (String s : ss)
+        // 区别在于这个核心代码中，filter为null 或者对应过滤相应文件，this表示当前路径
+        // accept 主要是 测试是否应将指定的文件包含在文件列表中
+        // 核心函数 boolean accept(File dir, String name); 重构这个函数即可
             if ((filter == null) || filter.accept(this, s))
                 files.add(new File(s, this));
         return files.toArray(new File[files.size()]);
@@ -1325,6 +1385,8 @@ public class File
         ArrayList<File> files = new ArrayList<>();
         for (String s : ss) {
             File f = new File(s, this);
+            //测试指定的抽象路径名是否应包含在路径名列表中
+            // 核心函数 boolean accept(File pathname);重构这个函数即可
             if ((filter == null) || filter.accept(f))
                 files.add(f);
         }
@@ -1341,6 +1403,7 @@ public class File
      *          If a security manager exists and its <code>{@link
      *          java.lang.SecurityManager#checkWrite(java.lang.String)}</code>
      *          method does not permit the named directory to be created
+     *          创建以此抽象路径名命名的目录
      */
     public boolean mkdir() {
         SecurityManager security = System.getSecurityManager();
@@ -1350,6 +1413,7 @@ public class File
         if (isInvalid()) {
             return false;
         }
+        // 此为Filesystem类下的抽象方法
         return fs.createDirectory(this);
     }
 
@@ -1372,6 +1436,7 @@ public class File
      *          java.lang.SecurityManager#checkWrite(java.lang.String)}</code>
      *          method does not permit the named directory and all necessary
      *          parent directories to be created
+     *           由该路径名命名的目录
      */
     public boolean mkdirs() {
         if (exists()) {
@@ -1382,11 +1447,12 @@ public class File
         }
         File canonFile = null;
         try {
+            // 返回此抽象路径名的规范形式
             canonFile = getCanonicalFile();
         } catch (IOException e) {
             return false;
         }
-
+        // 返回此抽象路径名的父目录的抽象路径名，如果此路径名未命名父目录，则返回null
         File parent = canonFile.getParentFile();
         return (parent != null && (parent.mkdirs() || parent.exists()) &&
                 canonFile.mkdir());
@@ -1752,6 +1818,7 @@ public class File
      *          method denies execute access to the file
      *
      * @since 1.6
+     * 文件或者目录可否被执行
      */
     public boolean canExecute() {
         SecurityManager security = System.getSecurityManager();
@@ -1830,6 +1897,8 @@ public class File
      *          read access to the file named by this abstract pathname
      *
      * @since  1.6
+     * 返回由此抽象路径名命名的分区的大小
+     * 分区的大小（以字节为单位），如果此抽象路径名未命名分区，则为0L
      */
     public long getTotalSpace() {
         SecurityManager sm = System.getSecurityManager();
@@ -1868,6 +1937,7 @@ public class File
      *          read access to the file named by this abstract pathname
      *
      * @since  1.6
+     * 此抽象路径名命名的分区中未分配的字节数 注意区别，就一行代码不同
      */
     public long getFreeSpace() {
         SecurityManager sm = System.getSecurityManager();
@@ -1909,6 +1979,7 @@ public class File
      *          read access to the file named by this abstract pathname
      *
      * @since  1.6
+     * 返回此抽象路径名命名的分区上此虚拟机可用的字节数 注意区别，就一行代码不同
      */
     public long getUsableSpace() {
         SecurityManager sm = System.getSecurityManager();
@@ -2029,21 +2100,28 @@ public class File
      *          method does not allow a file to be created
      *
      * @since 1.2
+     * 指定目录创建新的空文件，使用给定的前缀和后缀字符串生成器名称，成功即返回
      */
     public static File createTempFile(String prefix, String suffix,
                                       File directory)
         throws IOException
     {
+        // 前缀长度小于3 会抛出异常，必须至少是3的长度以上
         if (prefix.length() < 3)
             throw new IllegalArgumentException("Prefix string too short");
+        // 如果后缀为null，则默认给予赋值
         if (suffix == null)
             suffix = ".tmp";
 
+        // 判断目录是否为空，为空则创建一个临时的文件目录
+        // 具体文件目录有系统决定，unix默认值为 /tmp 或 /var/tmp，windiow下为C：WINNTTEMP
         File tmpdir = (directory != null) ? directory
                                           : TempDirectory.location();
+        // 此函数与安全管理器有关
         SecurityManager sm = System.getSecurityManager();
         File f;
         do {
+            // 该方法调用在上方
             f = TempDirectory.generateFile(prefix, suffix, tmpdir);
 
             if (sm != null) {
@@ -2099,7 +2177,11 @@ public class File
      *          method does not allow a file to be created
      *
      * @since 1.2
-     * @see java.nio.file.Files#createTempDirectory(String,FileAttribute[])
+     * @see java.nio.file.Files#createTempDirectory(String, FileAttribute[])
+     * 默认临时文件目录中创建一个空文件， 并使用给定的前缀和后缀生成其名称
+     * 调用此方法等效于调用 createTempFile（前缀、后缀、空值）
+     * 通过该方法创建的文件可能对此方法创建的文件具有更严格的访问权限
+     * 因此可能更适合安全敏感的应用程序
      */
     public static File createTempFile(String prefix, String suffix)
         throws IOException
@@ -2125,6 +2207,8 @@ public class File
      *          greater than the argument
      *
      * @since   1.2
+     *  比较两个抽象路径名，通过字典顺序的方法
+     *  具体比较还是根据操作系统，毕竟unix字母大小写很重要
      */
     public int compareTo(File pathname) {
         return fs.compare(this, pathname);
@@ -2143,8 +2227,10 @@ public class File
      *
      * @return  <code>true</code> if and only if the objects are the same;
      *          <code>false</code> otherwise
+     *          测试路径名与给定的对象是否相等，是否相等取决于操作系统
      */
     public boolean equals(Object obj) {
+        // instanceof 判断是否是这个实例对象
         if ((obj != null) && (obj instanceof File)) {
             return compareTo((File)obj) == 0;
         }
@@ -2230,6 +2316,7 @@ public class File
 
 
     /** use serialVersionUID from JDK 1.0.2 for interoperability */
+    //序列化版本号
     private static final long serialVersionUID = 301077366599181567L;
 
     // -- Integration with java.nio.file --
