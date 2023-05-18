@@ -1290,10 +1290,13 @@ public abstract class AbstractQueuedSynchronizer
      *        {@link #tryRelease} but is otherwise uninterpreted and
      *        can represent anything you like.
      * @return the value returned from {@link #tryRelease}
+     * release利用tryRelease先进行释放锁，tryRealse是ReentrantLock继承AQS实现的方法，可以确保线程是获取到锁的，并进行释放锁，unparkSuccessor主要是利用LockSupport.unpark唤醒线程;
      */
     public final boolean release(int arg) {
+        //释放锁，这个方法是ReentrantLock继承AQS实现的方法
         if (tryRelease(arg)) {
             Node h = head;
+            //如果节点状态不是CANCELLED，也就是线程没有被取消，也就是不为0的，就进行唤醒
             if (h != null && h.waitStatus != 0)
                 unparkSuccessor(h);
             return true;
@@ -1754,11 +1757,14 @@ public abstract class AbstractQueuedSynchronizer
      * Cancels node and throws exception on failure.
      * @param node the condition node for this wait
      * @return previous sync state
+     * 使用release确保线程释放
      */
     final int fullyRelease(Node node) {
         boolean failed = true;
         try {
+            //获取到锁   代表getState()大于0
             int savedState = getState();
+            //这里会确保线程释放
             if (release(savedState)) {
                 failed = false;
                 return savedState;
@@ -1884,18 +1890,24 @@ public abstract class AbstractQueuedSynchronizer
          * Adds a new waiter to wait queue.
          * @return its new wait node
          */
+        //将当前线程封装为节点并设置为CONDITION加入到Condition队列中，这里如果lastWaiter不为CONDITION状态，那么会把它踢出Condition队列; 
         private Node addConditionWaiter() {
             Node t = lastWaiter;
             // If lastWaiter is cancelled, clean out.
+            //遍历队列,将状态不为CONDITION的节点剔除出队列
             if (t != null && t.waitStatus != Node.CONDITION) {
                 unlinkCancelledWaiters();
                 t = lastWaiter;
             }
+            //将当前线程封装成节点并且设置为CONDITION加入到Condition队列中去
             Node node = new Node(Thread.currentThread(), Node.CONDITION);
+            //尾节点为空则表明队列为空，将新节点设置为头节点
             if (t == null)
                 firstWaiter = node;
+            //尾节点不为空则表明队列不为空，将新节点设置为尾节点的后续节点    
             else
                 t.nextWaiter = node;
+            //将新节点设置为尾节点    
             lastWaiter = node;
             return node;
         }
@@ -2083,6 +2095,7 @@ public abstract class AbstractQueuedSynchronizer
             //释放node节点线程的锁
             int savedState = fullyRelease(node);
             int interruptMode = 0;
+            //判断节点是否在同步队列中，在则使用LockSupport.park将其挂起
             while (!isOnSyncQueue(node)) {
                 LockSupport.park(this);
                 if ((interruptMode = checkInterruptWhileWaiting(node)) != 0)
