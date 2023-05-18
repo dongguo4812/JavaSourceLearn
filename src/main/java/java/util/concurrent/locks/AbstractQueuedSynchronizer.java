@@ -1229,8 +1229,12 @@ public abstract class AbstractQueuedSynchronizer
      *        can represent anything you like.
      */
     public final void acquire(int arg) {
+        //尝试获取锁
         if (!tryAcquire(arg) &&
+            //addWaiter:将线程封装到 Node 节点并添加到队列尾部
+            //acquireQueued查看当前排队的 Node 是否在队列的前面，如果在前面，尝试获取锁资源。如果没在前面，线程进入到阻塞状态。
             acquireQueued(addWaiter(Node.EXCLUSIVE), arg))
+            //中断当前线程，唤醒
             selfInterrupt();
     }
 
