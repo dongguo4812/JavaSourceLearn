@@ -486,10 +486,12 @@ public final class Method extends Executable {
         throws IllegalAccessException, IllegalArgumentException,
            InvocationTargetException
     {
-        //校验权限
+        // 表示此对象是否重写语言级访问检查，初始化为false
         if (!override) {
+            //检查是否为public
             if (!Reflection.quickCheckMemberAccess(clazz, modifiers)) {
                 Class<?> caller = Reflection.getCallerClass();
+                //校验权限 判断caller是否有权限访问该方法
                 checkAccess(caller, clazz, obj, modifiers);
             }
         }
@@ -558,12 +560,14 @@ public final class Method extends Executable {
     private MethodAccessor acquireMethodAccessor() {
         // First check to see if one has been created yet, and take it
         // if so
+        //检查是否已经创建
         MethodAccessor tmp = null;
         if (root != null) tmp = root.getMethodAccessor();
         if (tmp != null) {
             methodAccessor = tmp;
         } else {
             // Otherwise fabricate one and propagate it up to the root
+            //否则就制造一个并传播到根部
             tmp = reflectionFactory.newMethodAccessor(this);
             setMethodAccessor(tmp);
         }
