@@ -234,17 +234,29 @@ public class ReentrantLock implements Lock, java.io.Serializable {
          * recursive call or no waiters or is first.
          */
         protected final boolean tryAcquire(int acquires) {
+            //获取当前线程
             final Thread current = Thread.currentThread();
+            //获取AQS当前state值
             int c = getState();
+            // 判断state是否为0，为0则代表当前没有线程持有锁
             if (c == 0) {
+                // 首先判断是否有线程在排队，如果有，tryAcquie()方法直接返回false
+                // 如果没有，则尝试获取锁资源
                 if (!hasQueuedPredecessors() &&
+                    //将state设置为acquires
                     compareAndSetState(0, acquires)) {
+                    //将当前线程设置为锁持有者线程
                     setExclusiveOwnerThread(current);
                     return true;
                 }
             }
+            // 如果state != 0，则代表有线程持有锁资源
+            // 判断占有锁的线程是不是当前线程，如果是，则进行可重入操作
             else if (current == getExclusiveOwnerThread()) {
+                // 可重入state的预期值
                 int nextc = c + acquires;
+                // 检查锁重入是否超过最大值，二进制第一位表示符号
+                //01111111 11111111 11111111 11111111  超过最大值为负值
                 if (nextc < 0)
                     throw new Error("Maximum lock count exceeded");
                 setState(nextc);
