@@ -581,16 +581,20 @@ public abstract class AbstractQueuedSynchronizer
      * @return node's predecessor
      */
     private Node enq(final Node node) {
+        // 死循环，直到插入成功
         for (;;) {
             Node t = tail;
             //尾节点为null 即等待队列为空
             if (t == null) { // Must initialize
-                //创建哨兵节点
+                //创建哨兵节点  如果尾节点为null，说明同步队列还未初始化，则CAS操作新建头节点
                 if (compareAndSetHead(new Node()))
                     tail = head;
             } else {
+              // 将node的prev指向当前的tail节点
                 node.prev = t;
+                // CAS尝试将node变成tail节点
                 if (compareAndSetTail(t, node)) {
+                    // 将之前尾节点的next指向要插入的节点
                     t.next = node;
                     return t;
                 }
@@ -605,19 +609,28 @@ public abstract class AbstractQueuedSynchronizer
      * @return the new node
      */
     private Node addWaiter(Node mode) {
-        //创建节点
+        //创建节点 将当前线程封装为Node对象，当mode为null，代表互斥锁
         Node node = new Node(Thread.currentThread(), mode);
         // Try the fast path of enq; backup to full enq on failure
+        //pred指向tail
+        /**
+          +------+       +-----+       +-----+             prev  +-----+
+      head |      | <---- |     | <---- |     |  tail    <----  |     |  
+           +------+       +-----+       +-----+                 +-----+
+        */
         Node pred = tail;
         //如果队列没有节点 创建一个哨兵节点
         if (pred != null) {
+            // 当前线程Node节点的prev指向pred节点
             node.prev = pred;
+            // 以CAS方式，尝试将node节点变成tail
             if (compareAndSetTail(pred, node)) {
+                // 将pred的next指向node
                 pred.next = node;
                 return node;
             }
         }
-        //当前节点入队
+        // 如果上述方式，CAS操作失败，导致加入到AQS末尾失败，就基于enq的方式添加到AQS队列
         enq(node);
         return node;
     }
