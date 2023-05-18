@@ -2067,11 +2067,20 @@ public abstract class AbstractQueuedSynchronizer
          *      {@link #acquire} with saved state as argument.
          * <li> If interrupted while blocked in step 4, throw InterruptedException.
          * </ol>
+         *等候机制：
+         *  等候机制的操作分为如下几步：
+         *  1.调用addConditionWaiter方法，将节点添加到等候队列
+         *  2.调用fullyRelease方法，释放锁机制
+         *  3.while循环，判断当前节点是否在同步队列中，如果不在则挂起当前线程
+         *  4.获取锁，并判断线程是否中断
          */
         public final void await() throws InterruptedException {
+            //await()方法对中断敏感，线程中断为true时调用await()就会抛出异常
             if (Thread.interrupted())
                 throw new InterruptedException();
+            //将当前线程封装成节点并且设置为CONDITION加入到Condition队列中去，这里如果lastWaiter不为CONDITION状态，那么会把它踢出Condition队列。    
             Node node = addConditionWaiter();
+            //释放node节点线程的锁
             int savedState = fullyRelease(node);
             int interruptMode = 0;
             while (!isOnSyncQueue(node)) {
