@@ -104,8 +104,10 @@ import java.util.Collection;
  * @author Doug Lea
  */
 public class ReentrantLock implements Lock, java.io.Serializable {
+    //序列化版本号
     private static final long serialVersionUID = 7373984872572414699L;
     /** Synchronizer providing all implementation mechanics */
+    //同步器
     private final Sync sync;
 
     /**
