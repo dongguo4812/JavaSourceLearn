@@ -1669,10 +1669,15 @@ public abstract class AbstractQueuedSynchronizer
      * a condition queue, is now waiting to reacquire on sync queue.
      * @param node the node
      * @return true if is reacquiring
+     * isOnSyncQueue主要使用于判断node是否在同步队列中
      */
     final boolean isOnSyncQueue(Node node) {
+        //判断节点的状态，如果状态是CONDITION，说明节点肯定不在同步队列中，哪怕同步队列是刚刚初始化的，也会有一个冗余的头节点存在，
+        //所以节点的前驱节点如果为null，那么节点也肯定不在同步队列中，返回fasle
         if (node.waitStatus == Node.CONDITION || node.prev == null)
             return false;
+        //节点的后继节点不为null，说明节点肯定在队列中，返回true，
+        //这里很重要的一点要明白，prev和next都是针对同步队列的节点    
         if (node.next != null) // If has successor, it must be on queue
             return true;
         /*
@@ -1683,6 +1688,7 @@ public abstract class AbstractQueuedSynchronizer
          * unless the CAS failed (which is unlikely), it will be
          * there, so we hardly ever traverse much.
          */
+        //调用findNodeFromTail，查找node是否在同步队列中
         return findNodeFromTail(node);
     }
 
