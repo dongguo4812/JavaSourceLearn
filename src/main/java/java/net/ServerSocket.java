@@ -52,19 +52,26 @@ public
 class ServerSocket implements java.io.Closeable {
     /**
      * Various states of this socket.
+     * 套接字的状态
      */
+    //已创建
     private boolean created = false;
+    //已绑定
     private boolean bound = false;
+    //已关闭
     private boolean closed = false;
+    //关闭锁
     private Object closeLock = new Object();
 
     /**
      * The implementation of this Socket.
+     * 套接字的实现
      */
     private SocketImpl impl;
 
     /**
      * Are we using an older SocketImpl?
+     * 是否使用旧的套接字的实现
      */
     private boolean oldImpl = false;
 
@@ -227,13 +234,17 @@ class ServerSocket implements java.io.Closeable {
      * @since   JDK1.1
      */
     public ServerSocket(int port, int backlog, InetAddress bindAddr) throws IOException {
+        // 默认是 SocksSocketImpl 实现
         setImpl();
+        // 端口必须大于 0，小于 65535
         if (port < 0 || port > 0xFFFF)
             throw new IllegalArgumentException(
                        "Port value out of range: " + port);
         if (backlog < 1)
+          // 最大可连接数如果小于1，那么采取默认的 50
           backlog = 50;
         try {
+            // 底层 navtive 方法
             bind(new InetSocketAddress(bindAddr, port), backlog);
         } catch(SecurityException e) {
             close();
@@ -296,6 +307,7 @@ class ServerSocket implements java.io.Closeable {
      *
      * @throws IOException if creation fails
      * @since 1.4
+     * 将建立 socket 网络套接字的任务直接委任给了对应的 impl 实现类
      */
     void createImpl() throws SocketException {
         if (impl == null)
@@ -353,13 +365,16 @@ class ServerSocket implements java.io.Closeable {
      * @throws  IllegalArgumentException if endpoint is a
      *          SocketAddress subclass not supported by this socket
      * @since 1.4
+     * 将套接字绑定到指定的地址和端口上
      */
     public void bind(SocketAddress endpoint, int backlog) throws IOException {
         if (isClosed())
             throw new SocketException("Socket is closed");
         if (!oldImpl && isBound())
             throw new SocketException("Already bound");
+        //地址和端口都不指定，此时系统会将套接字绑定到全部有效的本地地址，且动态生成一个端口
         if (endpoint == null)
+            //建立一个 InetSocketAddress，默认是全部有效的本地地址
             endpoint = new InetSocketAddress(0);
         if (!(endpoint instanceof InetSocketAddress))
             throw new IllegalArgumentException("Unsupported address type");
@@ -505,10 +520,13 @@ class ServerSocket implements java.io.Closeable {
      * @spec JSR-51
      */
     public Socket accept() throws IOException {
+        //一是判断套接字是否已经关闭
         if (isClosed())
             throw new SocketException("Socket is closed");
+        //二是判断套接字是否已经绑定
         if (!isBound())
             throw new SocketException("Socket is not bound yet");
+        //三是建立 Socket 对象，并调用 implAccept 接收链接
         Socket s = new Socket((SocketImpl) null);
         implAccept(s);
         return s;
@@ -531,17 +549,22 @@ class ServerSocket implements java.io.Closeable {
      * @spec JSR-51
      */
     protected final void implAccept(Socket s) throws IOException {
+        // 1. 建立一个空的 Socket 对象，用于接收 Socket 链接
         SocketImpl si = null;
         try {
+            //传入的 Socket 对象里面的套接字实现若是为空
             if (s.impl == null)
+              //经过 setImpl 方法设置套接字实现
               s.setImpl();
             else {
+                //非空就执行 reset操作
                 s.impl.reset();
             }
             si = s.impl;
             s.impl = null;
             si.address = new InetAddress();
             si.fd = new FileDescriptor();
+            //2. 最关键的一步，接收请求
             getImpl().accept(si);
 
             SecurityManager security = System.getSecurityManager();
@@ -560,7 +583,10 @@ class ServerSocket implements java.io.Closeable {
             s.impl = si;
             throw e;
         }
+        // 3. 调用 Socket.postAccept 通知链接已经完成
+        //获得完整的 SocketImpl 对象，赋值给 Socket 对象
         s.impl = si;
+        //将 Socket 对象设置为已建立、已链接、已绑定。
         s.postAccept();
     }
 
@@ -765,6 +791,7 @@ class ServerSocket implements java.io.Closeable {
 
     /**
      * The factory for all server sockets.
+     * 服务端套接字工厂
      */
     private static SocketImplFactory factory = null;
 

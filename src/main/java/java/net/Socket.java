@@ -1688,6 +1688,7 @@ class Socket implements java.io.Closeable {
 
     /**
      * The factory for all client sockets.
+     * 客户端套接字工厂
      */
     private static SocketImplFactory factory = null;
 
