@@ -267,14 +267,16 @@ public abstract class ByteBuffer
     // These fields are declared here rather than in Heap-X-Buffer in order to
     // reduce the number of virtual method invocations needed to access these
     // values, which is especially costly when coding small buffers.
-    //
+    //不为空，仅用于JVM堆缓存区
     final byte[] hb;                  // Non-null only for heap buffers
+    //数组的偏移量
     final int offset;
+    //是否仅支持读，已R结尾的buffer就是仅支持读 ， 仅对堆缓冲区有效
     boolean isReadOnly;                 // Valid only for heap buffers
 
     // Creates a new buffer with the given mark, position, limit, capacity,
     // backing array, and array offset
-    //
+    //仅用于HeapByteBuffer实例化时使用
     ByteBuffer(int mark, int pos, int lim, int cap,   // package-private
                  byte[] hb, int offset)
     {
@@ -284,8 +286,9 @@ public abstract class ByteBuffer
     }
 
     // Creates a new buffer with the given mark, position, limit, and capacity
-    //
+    //仅用于MappedByteBuffer实例化使用
     ByteBuffer(int mark, int pos, int lim, int cap) { // package-private
+        // 不需要堆数组，因为是直接操作物理内存
         this(mark, pos, lim, cap, null, 0);
     }
 
@@ -306,6 +309,7 @@ public abstract class ByteBuffer
      *
      * @throws  IllegalArgumentException
      *          If the <tt>capacity</tt> is a negative integer
+     *          创建堆外直接物理内存 缓存区（仅Byte支持）
      */
     public static ByteBuffer allocateDirect(int capacity) {
         return new DirectByteBuffer(capacity);
@@ -328,6 +332,7 @@ public abstract class ByteBuffer
      *
      * @throws  IllegalArgumentException
      *          If the <tt>capacity</tt> is a negative integer
+     *          创建JVM堆内 缓存区，自定义容量
      */
     public static ByteBuffer allocate(int capacity) {
         if (capacity < 0)
@@ -365,6 +370,8 @@ public abstract class ByteBuffer
      * @throws  IndexOutOfBoundsException
      *          If the preconditions on the <tt>offset</tt> and <tt>length</tt>
      *          parameters do not hold
+     *          创建JVM堆内 缓存区
+     *          自定义数组，offset其实读写索引，length 支持读写长度
      */
     public static ByteBuffer wrap(byte[] array,
                                     int offset, int length)
@@ -391,6 +398,8 @@ public abstract class ByteBuffer
      *         The array that will back this buffer
      *
      * @return  The new byte buffer
+     * 创建JVM堆内 缓存区，
+     * 自定义数组，默认offset为0，length 为数组的长度
      */
     public static ByteBuffer wrap(byte[] array) {
         return wrap(array, 0, array.length);
@@ -681,13 +690,20 @@ public abstract class ByteBuffer
      * @throws  IndexOutOfBoundsException
      *          If the preconditions on the <tt>offset</tt> and <tt>length</tt>
      *          parameters do not hold
+     *   dst，用于存储读取内容
+     *   offset，读取内容写入到dst数组的其实索引
+     *   length，本次读取的数据大小
      */
     public ByteBuffer get(byte[] dst, int offset, int length) {
+        // Buffer的边界检测，检测dst是否有足够存放容量的空间
         checkBounds(offset, length, dst.length);
+        // 如果读取的大小 大于剩余的容量大小，则抛出BufferUnderflowException异常
         if (length > remaining())
             throw new BufferUnderflowException();
+        // 本次读取结束索引位
         int end = offset + length;
         for (int i = offset; i < end; i++)
+            // 模板模式，根据不同的构造调用不同的get方法
             dst[i] = get();
         return this;
     }
@@ -710,8 +726,10 @@ public abstract class ByteBuffer
      * @throws  BufferUnderflowException
      *          If there are fewer than <tt>length</tt> bytes
      *          remaining in this buffer
+     *          直接获取dst数组大小的数据，但是如果剩余的数量小于dst.length 则会抛出异常哦
      */
     public ByteBuffer get(byte[] dst) {
+        //默认从0下写入，写入数组的最大长度
         return get(dst, 0, dst.length);
     }
 
@@ -758,8 +776,13 @@ public abstract class ByteBuffer
      *
      * @throws  ReadOnlyBufferException
      *          If this buffer is read-only
+     *          读取缓存块(堆内或堆外)中的数据到自身，仅支持数据写入到JVM缓存快
      */
     public ByteBuffer put(ByteBuffer src) {
+        // 参数效验
+        // 1.不可是自身
+        // 2.不可是只读（也就是通过asReadOnlyBuffer方法获取的只读缓冲区）
+        // 3.待读取的src缓存快 剩余可读取的容量 不可大于自身 可写入的容量
         if (src == this)
             throw new IllegalArgumentException();
         if (isReadOnly())
@@ -767,6 +790,7 @@ public abstract class ByteBuffer
         int n = src.remaining();
         if (n > remaining())
             throw new BufferOverflowException();
+        // 开始读取src中的数据，写入到自身
         for (int i = 0; i < n; i++)
             put(src.get());
         return this;
@@ -822,12 +846,18 @@ public abstract class ByteBuffer
      *
      * @throws  ReadOnlyBufferException
      *          If this buffer is read-only
+     *   src 待读取的数组
+     *   offset 读取的开始位置
+     *   length 本次读取的长度
      */
     public ByteBuffer put(byte[] src, int offset, int length) {
+        // 参数效验，是否超出src的可读写边界
         checkBounds(offset, length, src.length);
+        // 从数组中读取的容量大小不可超过缓存快剩余可写入的容量大小
         if (length > remaining())
             throw new BufferOverflowException();
         int end = offset + length;
+        // 开始读取scr中的数组，写入到自身
         for (int i = offset; i < end; i++)
             this.put(src[i]);
         return this;
@@ -854,6 +884,7 @@ public abstract class ByteBuffer
      *
      * @throws  ReadOnlyBufferException
      *          If this buffer is read-only
+     *          默认从0开始，读取数组的最大长度
      */
     public final ByteBuffer put(byte[] src) {
         return put(src, 0, src.length);
@@ -1240,218 +1271,16 @@ public abstract class ByteBuffer
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
     // -- Other byte stuff: Access to binary data --
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    // 是否采用默认排序
+    // 默认true为ByteOrder.BIG_ENDIAN，将字节排序的顺序按照高位开始
+    // false为 ByteOrder.LITTLE_ENDIAN，讲字节排序的顺序按照低位开始
+    // 统一字节的排序，不然会导致数据读取异常
     boolean bigEndian                                   // package-private
         = true;
+    //本缓存的字节数据排列的顺序
     boolean nativeByteOrder                             // package-private
         = (Bits.byteOrder() == ByteOrder.BIG_ENDIAN);
 
