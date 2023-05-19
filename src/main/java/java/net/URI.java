@@ -468,17 +468,22 @@ public final class URI
     // Note: Comments containing the word "ASSERT" indicate places where a
     // throw of an InternalError should be replaced by an appropriate assertion
     // statement once asserts are enabled in the build.
-
+    //序列化版本号
     static final long serialVersionUID = -6052424284110960213L;
 
 
     // -- Properties and components of this instance --
 
     // Components of all URIs: [<scheme>:]<scheme-specific-part>[#<fragment>]
+    //所有URI，不管其是否为URL，需遵循形式：scheme:[//authority][/path][?query][#fragment]
+
+    // 对于 URL, 是访问资源的协议名称；对其他URI,是分配标识符的规范的名称
     private transient String scheme;            // null ==> relative URI
+    //资源特定部分的可选标识符
     private transient String fragment;
 
     // Hierarchical URI components: [//<authority>]<path>[?<query>]
+    //可选的组成用户授权信息部分，主机及端口（可选）
     private transient String authority;         // Registry or server
 
     // Server-based authority: [<userInfo>@]<host>[:<port>]
@@ -487,7 +492,9 @@ public final class URI
     private transient int port = -1;            // -1 ==> undefined
 
     // Remaining components of hierarchical URIs
+    //用于在scheme和authority内标识资源
     private transient String path;              // null ==> opaque
+    //与路径一起的附加数据用于标识资源。对于url是查询字符串
     private transient String query;
 
     // The remaining fields may be computed on demand
