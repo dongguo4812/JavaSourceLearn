@@ -58,6 +58,7 @@ public abstract class OutputStream implements Closeable, Flushable {
      * @exception  IOException  if an I/O error occurs. In particular,
      *             an <code>IOException</code> may be thrown if the
      *             output stream has been closed.
+     *             将指定的字节写入输出流
      */
     public abstract void write(int b) throws IOException;
 
@@ -70,6 +71,8 @@ public abstract class OutputStream implements Closeable, Flushable {
      * @param      b   the data.
      * @exception  IOException  if an I/O error occurs.
      * @see        java.io.OutputStream#write(byte[], int, int)
+     * 将指定的byte数组的字节全部写入输出流
+     *
      */
     public void write(byte b[]) throws IOException {
         write(b, 0, b.length);
@@ -102,6 +105,7 @@ public abstract class OutputStream implements Closeable, Flushable {
      * @exception  IOException  if an I/O error occurs. In particular,
      *             an <code>IOException</code> is thrown if the output
      *             stream is closed.
+     *             将指定的byte数组中从偏移量off开始的len个字节写入输出流
      */
     public void write(byte b[], int off, int len) throws IOException {
         if (b == null) {
@@ -134,6 +138,7 @@ public abstract class OutputStream implements Closeable, Flushable {
      * The <code>flush</code> method of <code>OutputStream</code> does nothing.
      *
      * @exception  IOException  if an I/O error occurs.
+     * 刷新输出流，并强制写出所有缓冲的输出字节
      */
     public void flush() throws IOException {
     }
@@ -147,6 +152,7 @@ public abstract class OutputStream implements Closeable, Flushable {
      * The <code>close</code> method of <code>OutputStream</code> does nothing.
      *
      * @exception  IOException  if an I/O error occurs.
+     * 关闭输出流，并释放与该流有关的所有资源
      */
     public void close() throws IOException {
     }
