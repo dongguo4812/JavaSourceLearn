@@ -56,12 +56,14 @@ public abstract class Reader implements Readable, Closeable {
      * itself to protect critical sections.  A subclass should therefore use
      * the object in this field rather than <tt>this</tt> or a synchronized
      * method.
+     * 用于同步针对此流的操作的对象。
      */
     protected Object lock;
 
     /**
      * Creates a new character-stream reader whose critical sections will
      * synchronize on the reader itself.
+     * 创建一个新的字符流 reader，其重要部分将同步其自身的 reader。
      */
     protected Reader() {
         this.lock = this;
@@ -72,6 +74,7 @@ public abstract class Reader implements Readable, Closeable {
      * synchronize on the given object.
      *
      * @param lock  The Object to synchronize on.
+     * 创建一个新的字符流 reader，其重要部分将同步给定的对象。
      */
     protected Reader(Object lock) {
         if (lock == null) {
@@ -93,6 +96,7 @@ public abstract class Reader implements Readable, Closeable {
      * @throws NullPointerException if target is null
      * @throws java.nio.ReadOnlyBufferException if target is a read only buffer
      * @since 1.5
+     * 试图将字符读入指定的字符缓冲区。
      */
     public int read(java.nio.CharBuffer target) throws IOException {
         int len = target.remaining();
@@ -115,6 +119,7 @@ public abstract class Reader implements Readable, Closeable {
      *             been reached
      *
      * @exception  IOException  If an I/O error occurs
+     * 读取单个字符。
      */
     public int read() throws IOException {
         char cb[] = new char[1];
@@ -135,6 +140,7 @@ public abstract class Reader implements Readable, Closeable {
      *              has been reached
      *
      * @exception   IOException  If an I/O error occurs
+     * 将字符读入数组 从下标 0 处开始存入
      */
     public int read(char cbuf[]) throws IOException {
         return read(cbuf, 0, cbuf.length);
@@ -153,13 +159,16 @@ public abstract class Reader implements Readable, Closeable {
      *             stream has been reached
      *
      * @exception  IOException  If an I/O error occurs
+     * 将字符读入缓冲数组 cbuf 中，从 off 下标开始存放，共 len 个字符。
      */
     abstract public int read(char cbuf[], int off, int len) throws IOException;
 
     /** Maximum skip-buffer size */
+    //最大跳过缓冲区大小
     private static final int maxSkipBufferSize = 8192;
 
     /** Skip buffer, null until allocated */
+    //跳过缓冲区，在分配之前为空
     private char skipBuffer[] = null;
 
     /**
@@ -172,15 +181,22 @@ public abstract class Reader implements Readable, Closeable {
      *
      * @exception  IllegalArgumentException  If <code>n</code> is negative.
      * @exception  IOException  If an I/O error occurs
+     * 跳过字符
      */
     public long skip(long n) throws IOException {
+        // 跳过的字符数不能为负
         if (n < 0L)
             throw new IllegalArgumentException("skip value is negative");
+        //跳过的字符数量nn，取需求n和最大可跳过之间的较小值
         int nn = (int) Math.min(n, maxSkipBufferSize);
+        //同步对象锁
         synchronized (lock) {
+            //如果跳过数组为空或者长度小于目标跳过的数量nn，重建跳过数组长度为nn
             if ((skipBuffer == null) || (skipBuffer.length < nn))
                 skipBuffer = new char[nn];
             long r = n;
+            // 如果正常情况下，跳过n个（while循环），r最终是为0的
+            // 如果遇到末尾没有那么多字符可以跳过，那么r就是剩余不能跳过的，实际跳过n-r个
             while (r > 0) {
                 int nc = read(skipBuffer, 0, (int)Math.min(r, nn));
                 if (nc == -1)
@@ -199,6 +215,7 @@ public abstract class Reader implements Readable, Closeable {
      * next read will block.
      *
      * @exception  IOException  If an I/O error occurs
+     * 判断是否准备读取此流
      */
     public boolean ready() throws IOException {
         return false;
@@ -256,6 +273,8 @@ public abstract class Reader implements Readable, Closeable {
      * Closing a previously closed stream has no effect.
      *
      * @exception  IOException  If an I/O error occurs
+     * 关闭该流并释放与之关联的所有资源。在关闭该流后，再调用 read()、ready()、mark()、reset() 或 skip() 将抛出 IOException。
+     * 关闭已经关闭了的流无效。
      */
      abstract public void close() throws IOException;
 
