@@ -1443,6 +1443,10 @@ public abstract class CharBuffer
      * byte buffer at the moment that the view is created.  </p>
      *
      * @return  This buffer's byte order
+     * 检索该缓冲区的字节顺序。
+     * 通过分配或包装现有的char数组创建的char缓冲区的字节顺序是底层硬件的ByteOrder.nativeOrder。
+     * 	作为一个字节缓冲区的视图创建的char缓冲区的字节顺序
+     * 	就是在视图被创建时的字节缓冲区的字节顺序。
      */
     public abstract ByteOrder order();
 
