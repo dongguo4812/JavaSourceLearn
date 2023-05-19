@@ -177,33 +177,54 @@ public abstract class Buffer {
     /**
      * The characteristics of Spliterators that traverse and split elements
      * maintained in Buffers.
+     * 在缓冲区中维护遍历和分割元素的拆分特征 TODO
      */
     static final int SPLITERATOR_CHARACTERISTICS =
         Spliterator.SIZED | Spliterator.SUBSIZED | Spliterator.ORDERED;
 
     // Invariants: mark <= position <= limit <= capacity
+    /**
+     * 一个新创建的 Buffer 具有以下几个性质：
+     *
+     * 它的 position 是 0；
+     * mark 没有被定义（实际上是 -1）；
+     * 而 limit 值可能是 0，也可能是其他值，这取决于这个 Buffer 的类型；
+     * Buffer 中每一个元素值都被初始化为 0
+     */
+    //当调用 reset() 方法被调用时，一个 Buffer 的 mark 值会被设定为当前的 position 值的大小。
+    //如果mark=-1 ，会reset失败
     private int mark = -1;
+    //它是下一个要读或者写的元素的索引，它是非负的且不会超过 limit 的大小。
     private int position = 0;
+    //它是可以读或者写的最后一个元素的索引，它是非负的且不会超过 capacity 的大小。
     private int limit;
+    //它表示一个 Buffer 包含的元素数量，它是非负且恒定不变的
     private int capacity;
 
     // Used only by direct buffers
     // NOTE: hoisted here for speed in JNI GetDirectBufferAddress
+    //这个属性只有在当前 Buffer 为 Direct Buffer 时才会使用
     long address;
 
     // Creates a new buffer with the given mark, position, limit, and capacity,
     // after checking invariants.
-    //
+    //包内私有的构造器
     Buffer(int mark, int pos, int lim, int cap) {       // package-private
+        //缓冲区容量小于0时抛出异常
         if (cap < 0)
             throw new IllegalArgumentException("Negative capacity: " + cap);
+        //根据传参设置缓冲区大小
         this.capacity = cap;
+        //设置limit
         limit(lim);
+        //设置position
         position(pos);
         if (mark >= 0) {
             if (mark > pos)
+                //mark大于pos并且mark大于等于0时会抛出异常
                 throw new IllegalArgumentException("mark > position: ("
                                                    + mark + " > " + pos + ")");
+            //设置mark
             this.mark = mark;
         }
     }
@@ -212,6 +233,7 @@ public abstract class Buffer {
      * Returns this buffer's capacity.
      *
      * @return  The capacity of this buffer
+     * 返回缓冲区容量
      */
     public final int capacity() {
         return capacity;
@@ -221,6 +243,7 @@ public abstract class Buffer {
      * Returns this buffer's position.
      *
      * @return  The position of this buffer
+     * 返回缓冲区下一次要读取或者写入的数组下标
      */
     public final int position() {
         return position;
@@ -238,11 +261,15 @@ public abstract class Buffer {
      *
      * @throws  IllegalArgumentException
      *          If the preconditions on <tt>newPosition</tt> do not hold
+     *          设置缓冲区的游标
      */
     public final Buffer position(int newPosition) {
+        //要设置的position值不能大于limit值或者小于0，否则就抛出异常。
         if ((newPosition > limit) || (newPosition < 0))
             throw createPositionException(newPosition);
+        //如果设置的新的游标值比mark值小，就重置mark值为-1.
         if (mark > newPosition) mark = -1;
+        //设置游标
         position = newPosition;
         return this;
     }
@@ -273,6 +300,7 @@ public abstract class Buffer {
      * Returns this buffer's limit.
      *
      * @return  The limit of this buffer
+     * 返回缓冲区的可用数据长度。
      */
     public final int limit() {
         return limit;
@@ -291,12 +319,17 @@ public abstract class Buffer {
      *
      * @throws  IllegalArgumentException
      *          If the preconditions on <tt>newLimit</tt> do not hold
+     *           设置缓冲区的limit值，同时会保证position和mark值保证这几个值的关系符合规则。
      */
     public final Buffer limit(int newLimit) {
+        //对要设置的新limit进行检查，如果大于缓冲区容量或者小于0就抛出异常
         if ((newLimit > capacity) || (newLimit < 0))
             throw new IllegalArgumentException();
+        //设置limit
         limit = newLimit;
+        //如果游标比可操作的最大数组下标还大的话，就把游标设置为limit
         if (position > newLimit) position = newLimit;
+        //如果mark > limit，重置mark。
         if (mark > newLimit) mark = -1;
         return this;
     }
@@ -305,6 +338,7 @@ public abstract class Buffer {
      * Sets this buffer's mark at its position.
      *
      * @return  This buffer
+     * 标记当前position位置。
      */
     public final Buffer mark() {
         mark = position;
@@ -321,11 +355,14 @@ public abstract class Buffer {
      *
      * @throws  InvalidMarkException
      *          If the mark has not been set
+     *          把游标恢复到标记的位置
      */
     public final Buffer reset() {
         int m = mark;
+        //标记小于0时抛出异常
         if (m < 0)
             throw new InvalidMarkException();
+        //重置游标至标记处
         position = m;
         return this;
     }
@@ -346,6 +383,7 @@ public abstract class Buffer {
      * in which that might as well be the case. </p>
      *
      * @return  This buffer
+     * 清空缓冲区，其实就设置游标为0，limit设置回capacity值，mark重置，数据还是存在的。
      */
     public final Buffer clear() {
         position = 0;
@@ -374,6 +412,8 @@ public abstract class Buffer {
      * one place to another.  </p>
      *
      * @return  This buffer
+     *  缓冲区创建时默认是写模式的，这个方法把缓冲区改为读模式。
+     *  每次通过通道往存储设备中写数据都需要调用此方法把缓冲区设置为读模式。读取缓冲区的数据。
      */
     public final Buffer flip() {
         limit = position;
@@ -396,6 +436,7 @@ public abstract class Buffer {
      * buf.get(array);    // Copy data into array</pre></blockquote>
      *
      * @return  This buffer
+     * 重置游标，从新开始读、写数据。
      */
     public final Buffer rewind() {
         position = 0;
@@ -408,6 +449,7 @@ public abstract class Buffer {
      * limit.
      *
      * @return  The number of elements remaining in this buffer
+     * 读模式下，返回剩余可读的数据长度，写模式下，返回剩余可写的缓冲区长度。
      */
     public final int remaining() {
         int rem = limit - position;
@@ -420,6 +462,7 @@ public abstract class Buffer {
      *
      * @return  <tt>true</tt> if, and only if, there is at least one element
      *          remaining in this buffer
+     *          返回是否还有数据可读或者可写。
      */
     public final boolean hasRemaining() {
         return position < limit;
@@ -517,20 +560,32 @@ public abstract class Buffer {
      * increments the position.
      *
      * @return  The current position value, before it is incremented
+     * 读模式下游标往右移一位，也就是跳过一个数据。
+     * 返回移动前的游标值。
      */
     final int nextGetIndex() {                          // package-private
         int p = position;
+        //因为游标加一 所以要确保游标加一前要小于等于limit
         if (p >= limit)
+            //当前游标>=limit抛出异常
             throw new BufferUnderflowException();
         position = p + 1;
         return p;
     }
 
+    /**
+     * 读模式下游标往右移动n位。
+     * 返回移动前的游标
+     * @param nb
+     * @return
+     */
     final int nextGetIndex(int nb) {                    // package-private
         int p = position;
         if (limit - p < nb)
+            //判断加n后的游标是否大于limit，大于就抛出异常
             throw new BufferUnderflowException();
         position = p + nb;
+        //返回移动前的游标。
         return p;
     }
 
@@ -540,6 +595,8 @@ public abstract class Buffer {
      * increments the position.
      *
      * @return  The current position value, before it is incremented
+     * 写模式下游标往右移动1位。
+     *  返回移动前的游标
      */
     final int nextPutIndex() {                          // package-private
         int p = position;
@@ -549,6 +606,12 @@ public abstract class Buffer {
         return p;
     }
 
+    /**
+     * 写模式下游标往右移动n位。
+     *  返回移动前的游标
+     * @param nb
+     * @return
+     */
     final int nextPutIndex(int nb) {                    // package-private
         int p = position;
         if (limit - p < nb)
@@ -578,8 +641,13 @@ public abstract class Buffer {
         return mark;
     }
 
+    /**
+     * 把缓冲区置为不可用
+     */
     final void truncate() {                             // package-private
+        //重置mark为-1
         mark = -1;
+        //其余都置零
         position = 0;
         limit = 0;
         capacity = 0;
