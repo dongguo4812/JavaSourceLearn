@@ -299,7 +299,7 @@ public class Object {
      * （4）非数组非基本数据封装类型的对象类型：
      *      返回getClass().getName() + "@" + Integer.toHexString(hashCode())
      *      Person p = new Person();
-     *      System.out.println(p.toString());//com.david.object.object.Person@74a14482
+     *      System.out.println(p.toString());//com.dongguo.object.Person@74a14482
      */
     public String toString() {
         // 返回类的全限定名+"@"+由对象内存地址计算出来的hashCode的十六进制形式
