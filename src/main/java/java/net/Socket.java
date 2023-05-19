@@ -56,22 +56,32 @@ public
 class Socket implements java.io.Closeable {
     /**
      * Various states of this socket.
+     * 套接字的状态
      */
+    //已创建
     private boolean created = false;
+    //已绑定
     private boolean bound = false;
+    //已连接
     private boolean connected = false;
+    //已关闭
     private boolean closed = false;
+    //关闭锁
     private Object closeLock = new Object();
+    //读是否关闭
     private boolean shutIn = false;
+    //写是否关闭
     private boolean shutOut = false;
 
     /**
      * The implementation of this Socket.
+     * 套接字的实现
      */
     SocketImpl impl;
 
     /**
      * Are we using an older SocketImpl?
+     * 是否使用旧的套接字的实现
      */
     private boolean oldImpl = false;
 
@@ -81,6 +91,7 @@ class Socket implements java.io.Closeable {
      *
      * @since   JDK1.1
      * @revised 1.4
+     * 创建一个未连接的Socket
      */
     public Socket() {
         setImpl();
@@ -113,6 +124,7 @@ class Socket implements java.io.Closeable {
      * @see java.net.Proxy
      *
      * @since   1.5
+     * 创建一个未连接的套接字，并指定代理的类型
      */
     public Socket(Proxy proxy) {
         // Create a copy of Proxy as a security measure
@@ -162,8 +174,10 @@ class Socket implements java.io.Closeable {
      * @exception SocketException if there is an error in the underlying protocol,
      * such as a TCP error.
      * @since   JDK1.1
+     * 使用用户指定的SocketImpl创建未连接的套接字
      */
     protected Socket(SocketImpl impl) throws SocketException {
+        //checkPermission 权限校验
         this(checkPermission(impl), impl);
     }
 
@@ -221,6 +235,7 @@ class Socket implements java.io.Closeable {
      * @see        java.net.SocketImpl
      * @see        java.net.SocketImplFactory#createSocketImpl()
      * @see        SecurityManager#checkConnect
+     * 创建套接字并将其连接到指定主机上的指定端口号
      */
     public Socket(String host, int port)
         throws UnknownHostException, IOException
@@ -256,6 +271,7 @@ class Socket implements java.io.Closeable {
      * @see        java.net.SocketImpl
      * @see        java.net.SocketImplFactory#createSocketImpl()
      * @see        SecurityManager#checkConnect
+     * 利用网络地址和端口号创建Socket
      */
     public Socket(InetAddress address, int port) throws IOException {
         this(address != null ? new InetSocketAddress(address, port) : null,
@@ -297,6 +313,7 @@ class Socket implements java.io.Closeable {
      *             which is between 0 and 65535, inclusive.
      * @see        SecurityManager#checkConnect
      * @since   JDK1.1
+     * 创建本地和联网的Socket
      */
     public Socket(String host, int port, InetAddress localAddr,
                   int localPort) throws IOException {
@@ -436,6 +453,13 @@ class Socket implements java.io.Closeable {
              new InetSocketAddress(0), stream);
     }
 
+    /**
+     * 定义实现本地连接和本地数据流
+     * @param address
+     * @param localAddr
+     * @param stream
+     * @throws IOException
+     */
     private Socket(SocketAddress address, SocketAddress localAddr,
                    boolean stream) throws IOException {
         setImpl();
@@ -466,6 +490,7 @@ class Socket implements java.io.Closeable {
      *               {@code false} for UDP.
      * @throws IOException if creation fails
      * @since 1.4
+     * 创建套接字实现
      */
      void createImpl(boolean stream) throws SocketException {
         if (impl == null)
@@ -478,6 +503,7 @@ class Socket implements java.io.Closeable {
         }
     }
 
+    //检查旧的嵌套字
     private void checkOldImpl() {
         if (impl == null)
             return;
@@ -638,8 +664,10 @@ class Socket implements java.io.Closeable {
      * @see #isBound
      */
     public void bind(SocketAddress bindpoint) throws IOException {
+        //判断socket是否关闭
         if (isClosed())
             throw new SocketException("Socket is closed");
+        //判断socket的监听状态  已经绑定
         if (!oldImpl && isBound())
             throw new SocketException("Already bound");
 
