@@ -125,26 +125,32 @@
 ## **新建测试**
 
 ```java
-import java.util.HashMap;
-import java.util.Map;
-
 /**
  * @author Dongguo
- * @date 2021/8/19 0019-19:05
+ * @date 2021/8/20 0020-9:47
  * @description:
  */
-public class Test {
-    public static void main(String[] args) {
-        Map<Integer,String> hashMap = new HashMap<>();
-        hashMap.put(1,"张三");
-        hashMap.put(2,"李四");
-        hashMap.put(3,"王五");
+class MyTest {
+    @Test
+    public void test1() {
+        String array[] = {"hello", "world", "java"};
+        List<String> list = new ArrayList<String>(Arrays.asList(array));
+        list.add("zhangsan");
+        System.out.println(list);
+        list.remove("zhangsan");
+        System.out.println(list);
     }
 }
 ```
 
 启动调试，F7调试进入源码内部
 
-![image-20230520094349950](https://gitee.com/dongguo4812_admin/image/raw/master/image/202305200955811.png)
+![image-20230520114200277](https://gitee.com/dongguo4812_admin/image/raw/master/image/202305201142843.png)
 
 此时进入到我们自己搭建的源码阅读环境中。并且可以在源码中添加自己的注释。
+
+
+
+
+
+如果文章有问题请留言。
