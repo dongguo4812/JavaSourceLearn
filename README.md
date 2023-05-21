@@ -6,6 +6,7 @@ jdk8源码学习
 ## 二、[源码阅读](https://github.com/dongguo4812/JavaSourceLearn/blob/master/%E9%98%85%E8%AF%BB%E6%BA%90%E7%A0%81%E6%8A%80%E5%B7%A7.md)<br>
 2.1 java.lang<br>
   [Object 源码](https://github.com/dongguo4812/JavaSourceLearn/blob/master/doc/java.lang/Object%E6%BA%90%E7%A0%81.md)<br>
+  [String源码](https://github.com/dongguo4812/JavaSourceLearn/blob/master/doc/java.lang/String%E6%BA%90%E7%A0%81.md)<br>
 2.2 java.util<br>
 2.3 java.util.concurrent<br>
 2.4 java.util.concurrent.atomic<br>
