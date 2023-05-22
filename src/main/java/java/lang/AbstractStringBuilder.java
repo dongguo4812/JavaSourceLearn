@@ -65,6 +65,7 @@ abstract class AbstractStringBuilder implements Appendable, CharSequence {
 
     /**
      * Creates an AbstractStringBuilder of the specified capacity.
+     * 创建指定容量的AbstractStringBuilder。
      */
     AbstractStringBuilder(int capacity) {
         value = new char[capacity];
@@ -88,7 +89,7 @@ abstract class AbstractStringBuilder implements Appendable, CharSequence {
      * will occur.
      *
      * @return  the current capacity
-     * 得到目前该value数组的实际大小
+     * 得到目前该value数组的实际大小，容量超过可插入字符的存储量将进行分配（扩容）
      */
     public int capacity() {
         return value.length;
@@ -109,7 +110,7 @@ abstract class AbstractStringBuilder implements Appendable, CharSequence {
      * actual capacity below that requested here.
      *
      * @param   minimumCapacity   the minimum desired capacity.
-     *  确保容量至少等于指定的最小值。如果当前容量小于参数，则分配一个具有更大容量的新数组
+     *  确保容量至少等于指定的最小值。如果当前容量小于参数，则分配一个具有更大容量的新数组:max(minimumCapacity,扩容2N+2）
      *
      */
     public void ensureCapacity(int minimumCapacity) {
@@ -126,7 +127,9 @@ abstract class AbstractStringBuilder implements Appendable, CharSequence {
      */
     private void ensureCapacityInternal(int minimumCapacity) {
         // overflow-conscious code
+        //扩容的实现
         if (minimumCapacity - value.length > 0) {
+            //拷贝一个minimumCapacity大小的新数组
             value = Arrays.copyOf(value,
                     newCapacity(minimumCapacity));
         }
@@ -153,6 +156,7 @@ abstract class AbstractStringBuilder implements Appendable, CharSequence {
      */
     private int newCapacity(int minCapacity) {
         // overflow-conscious code
+        //新数组的容量
         int newCapacity = (value.length << 1) + 2;
         if (newCapacity - minCapacity < 0) {
             newCapacity = minCapacity;
