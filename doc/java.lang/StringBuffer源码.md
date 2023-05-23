@@ -10,7 +10,7 @@
     implements java.io.Serializable, CharSequence
 ```
 
-![image-20230524072522709](F:\note\image\image-20230524072522709.png)
+![image-20230524072522709](https://gitee.com/dongguo4812_admin/image/raw/master/image/202305240731400.png)
 
 # **常量&变量**
 

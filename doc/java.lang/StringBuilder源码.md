@@ -12,7 +12,7 @@ public final class StringBuilder
     implements java.io.Serializable, CharSequence
 ```
 
-![image-20230524072806690](F:\note\image\image-20230524072806690.png)
+![image-20230524072806690](https://gitee.com/dongguo4812_admin/image/raw/master/image/202305240731683.png)
 
 # **构造方法**
 
