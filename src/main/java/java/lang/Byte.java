@@ -154,10 +154,13 @@ public final class Byte extends Number implements Comparable<Byte> {
      */
     public static byte parseByte(String s, int radix)
         throws NumberFormatException {
+        //parseInt将字符串解析成指定进制的int
         int i = Integer.parseInt(s, radix);
+        //边界判断
         if (i < MIN_VALUE || i > MAX_VALUE)
             throw new NumberFormatException(
                 "Value out of range. Value:\"" + s + "\" Radix:" + radix);
+        //强转成byte
         return (byte)i;
     }
 
@@ -235,6 +238,7 @@ public final class Byte extends Number implements Comparable<Byte> {
      *                  represented by the string argument
      * @throws          NumberFormatException If the {@code String} does
      *                  not contain a parsable {@code byte}.
+     *                  10进制
      */
     public static Byte valueOf(String s) throws NumberFormatException {
         return valueOf(s, 10);
@@ -286,6 +290,7 @@ public final class Byte extends Number implements Comparable<Byte> {
     public static Byte decode(String nm) throws NumberFormatException {
         //Integer.decode将String类型的字符串解码为10进制的Integer类型。
         int i = Integer.decode(nm);
+        //边界判断
         if (i < MIN_VALUE || i > MAX_VALUE)
             throw new NumberFormatException(
                     "Value " + i + " out of range from input " + nm);
