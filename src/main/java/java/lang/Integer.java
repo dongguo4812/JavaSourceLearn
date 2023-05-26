@@ -156,7 +156,7 @@ public final class Integer extends Number implements Comparable<Integer> {
             i = i / radix;
         }
         buf[charPos] = digits[-i];
-
+        //i小于0，符号标志位为'-'
         if (negative) {
             buf[--charPos] = '-';
         }
@@ -451,7 +451,7 @@ public final class Integer extends Number implements Comparable<Integer> {
         char sign = 0;
         //当i小于0时，
         if (i < 0) {
-            //定义符号位"-"
+            //定义符号位‘-’
             sign = '-';
             //将负值i取反
             i = -i;
@@ -465,21 +465,30 @@ public final class Integer extends Number implements Comparable<Integer> {
         // really: r = i - (q * 100);
             //②计算后两位的值，如果i为65537，那么r为37，公式 r = 65537 - (655 * 100)
             r = i - ((q << 6) + (q << 5) + (q << 2));
+            //去除后两位重新赋值i
             i = q;
+            //通过DigitOnes和DigitTens获取r的个位和十位对应的char。
             buf [--charPos] = DigitOnes[r];
             buf [--charPos] = DigitTens[r];
         }
 
         // Fall thru to fast mode for smaller numbers
         // assert(i <= 65536, i);
+        //经过上面循环，i小于等于65536
         for (;;) {
+            //③就是q = i/10，如果i=655，那么q=65
             q = (i * 52429) >>> (16+3);
+            //取i的最后一位  r= 655 - (65 * 10) = 5
             r = i - ((q << 3) + (q << 1));  // r = i-(q*10) ...
+            //通过digits数组获取对应的char
             buf [--charPos] = digits [r];
+            // q=65，并赋值给i，进入下一个循环
             i = q;
             if (i == 0) break;
         }
+        //符号标志为不为0 即为‘-’
         if (sign != 0) {
+            //数组下标为0的char为‘-’
             buf [--charPos] = sign;
         }
     }
