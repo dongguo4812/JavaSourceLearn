@@ -132,23 +132,26 @@ public final class Integer extends Number implements Comparable<Integer> {
      * @see     java.lang.Character#MIN_RADIX
      */
     public static String toString(int i, int radix) {
+        //当基数小于2或大于36，radix默认为10进制
         if (radix < Character.MIN_RADIX || radix > Character.MAX_RADIX)
             radix = 10;
 
         /* Use the faster version */
+        //当基数为10时，直接调用toString方法后返回
         if (radix == 10) {
             return toString(i);
         }
-
+        //因为int最大为32位(2进制占的位数)，所以只需要33位就可以存储int+符号位
         char buf[] = new char[33];
         boolean negative = (i < 0);
         int charPos = 32;
-
+        //将正数转换为负数
         if (!negative) {
             i = -i;
         }
-
+        //循环 当负值i 依然小于 负值radix
         while (i <= -radix) {
+            //buf[32] = digits[]
             buf[charPos--] = digits[-(i % radix)];
             i = i / radix;
         }
@@ -401,10 +404,14 @@ public final class Integer extends Number implements Comparable<Integer> {
      * @return  a string representation of the argument in base&nbsp;10.
      */
     public static String toString(int i) {
+        //int的最小值
         if (i == Integer.MIN_VALUE)
             return "-2147483648";
+        //调用stringSize计算int值对应字符串的长度，负数有一个符号位所以要+1
         int size = (i < 0) ? stringSize(-i) + 1 : stringSize(i);
+        //新建一个临时数组，用来存放int值每一位转成char后的值
         char[] buf = new char[size];
+        //将int值每一位转成char放到buf中
         getChars(i, size, buf);
         return new String(buf, true);
     }
@@ -438,18 +445,25 @@ public final class Integer extends Number implements Comparable<Integer> {
      */
     static void getChars(int i, int index, char[] buf) {
         int q, r;
+        //buf数组的长度
         int charPos = index;
+        //符号标志位
         char sign = 0;
-
+        //当i小于0时，
         if (i < 0) {
+            //定义符号位"-"
             sign = '-';
+            //将负值i取反
             i = -i;
         }
 
         // Generate two digits per iteration
+        //①如果i大于65536（两个字节的长度）那么就去除i的后两位
         while (i >= 65536) {
+            //去除i的后两位赋值给q  比如i为65536，那么q为655
             q = i / 100;
         // really: r = i - (q * 100);
+            //②计算后两位的值，如果i为65537，那么r为37，公式 r = 65537 - (655 * 100)
             r = i - ((q << 6) + (q << 5) + (q << 2));
             i = q;
             buf [--charPos] = DigitOnes[r];
