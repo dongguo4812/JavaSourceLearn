@@ -15,6 +15,7 @@ jdk8源码学习
   [Double源码](https://github.com/dongguo4812/JavaSourceLearn/blob/master/doc/java.lang/Double%E6%BA%90%E7%A0%81.md)<br>
   [Float源码](https://github.com/dongguo4812/JavaSourceLearn/blob/master/doc/java.lang/Float%E6%BA%90%E7%A0%81.md)<br>
   [Integer源码](https://github.com/dongguo4812/JavaSourceLearn/blob/master/doc/java.lang/Integer%E6%BA%90%E7%A0%81.md)<br>
+  [Long源码](https://github.com/dongguo4812/JavaSourceLearn/blob/master/doc/java.lang/Long%E6%BA%90%E7%A0%81.md)<br>
 2.2 java.util<br>
 2.3 java.util.concurrent<br>
 2.4 java.util.concurrent.atomic<br>
