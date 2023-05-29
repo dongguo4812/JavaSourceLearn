@@ -118,10 +118,12 @@ public final class Short extends Number implements Comparable<Short> {
      */
     public static short parseShort(String s, int radix)
         throws NumberFormatException {
+        //转成int
         int i = Integer.parseInt(s, radix);
         if (i < MIN_VALUE || i > MAX_VALUE)
             throw new NumberFormatException(
                 "Value out of range. Value:\"" + s + "\" Radix:" + radix);
+        //强转成short
         return (short)i;
     }
 
@@ -235,6 +237,7 @@ public final class Short extends Number implements Comparable<Short> {
     public static Short valueOf(short s) {
         final int offset = 128;
         int sAsInt = s;
+        //返回缓存中的short值
         if (sAsInt >= -128 && sAsInt <= 127) { // must cache
             return ShortCache.cache[sAsInt + offset];
         }
@@ -428,7 +431,9 @@ public final class Short extends Number implements Comparable<Short> {
      *                  {@code false} otherwise.
      */
     public boolean equals(Object obj) {
+        //short类型
         if (obj instanceof Short) {
+            //将obj强转成short后，调用shortValue
             return value == ((Short)obj).shortValue();
         }
         return false;
