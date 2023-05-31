@@ -124,9 +124,9 @@ public final class Class<T> implements java.io.Serializable,
     private static final int ANNOTATION= 0x00002000;
     //标识枚举类型
     private static final int ENUM      = 0x00004000;
-    //表示该class文件并非由Java源代码所生成
+    //表示合成类型   表示该class文件并非由Java源代码所生成
     private static final int SYNTHETIC = 0x00001000;
-
+    //注册本地方法
     private static native void registerNatives();
     static {
         registerNatives();
@@ -156,6 +156,7 @@ public final class Class<T> implements java.io.Serializable,
      * @return a string representation of this class object.
      */
     public String toString() {
+        //用于区别接口和类
         return (isInterface() ? "interface " : (isPrimitive() ? "" : "class "))
             + getName();
     }
@@ -260,7 +261,7 @@ public final class Class<T> implements java.io.Serializable,
      * @exception ExceptionInInitializerError if the initialization provoked
      *            by this method fails
      * @exception ClassNotFoundException if the class cannot be located
-     * 手动加载一个类，
+     * 通过类全限定名获得该类（或接口）的Class对象（加载该类）
      */
     @CallerSensitive
     public static Class<?> forName(String className)
@@ -331,6 +332,7 @@ public final class Class<T> implements java.io.Serializable,
      * @see       java.lang.ClassLoader
      * @since     1.2
      * boolean initialize 是否对类进行初始化
+     *
      */
     @CallerSensitive
     public static Class<?> forName(String name, boolean initialize,
@@ -338,14 +340,18 @@ public final class Class<T> implements java.io.Serializable,
         throws ClassNotFoundException
     {
         Class<?> caller = null;
+        //获取安全管理器
         SecurityManager sm = System.getSecurityManager();
         if (sm != null) {
             // Reflective call to get caller class is only needed if a security manager
             // is present.  Avoid the overhead of making this call otherwise.
+            //调用者类
             caller = Reflection.getCallerClass();
             if (sun.misc.VM.isSystemDomainLoader(loader)) {
+                //获取调用者类的类加载器
                 ClassLoader ccl = ClassLoader.getClassLoader(caller);
                 if (!sun.misc.VM.isSystemDomainLoader(ccl)) {
+                    //使用安全管理器检查是否有获取类加载器的权限
                     sm.checkPermission(
                         SecurityConstants.GET_CLASSLOADER_PERMISSION);
                 }
@@ -355,6 +361,7 @@ public final class Class<T> implements java.io.Serializable,
     }
 
     /** Called after security check for system loader access checks have been made. */
+    //根据指定类完全限定名，以及类加载器完成类的加载，如果需要，还将执行类的初始化操作。
     private static native Class<?> forName0(String name, boolean initialize,
                                             ClassLoader loader,
                                             Class<?> caller)
@@ -394,11 +401,13 @@ public final class Class<T> implements java.io.Serializable,
      *          invocation of {@link SecurityManager#checkPackageAccess
      *          s.checkPackageAccess()} denies access to the package
      *          of this class.
+     *          获取类的实例
      */
     @CallerSensitive
     public T newInstance()
         throws InstantiationException, IllegalAccessException
     {
+        //安全检查
         if (System.getSecurityManager() != null) {
             checkMemberAccess(Member.PUBLIC, Reflection.getCallerClass(), false);
         }
@@ -655,8 +664,9 @@ public final class Class<T> implements java.io.Serializable,
     }
 
     // cache the name to reduce the number of calls into the VM
-    //实体的名称
+    //实体的名称 全限定名(包名 + 类名)
     private transient String name;
+    //获取name属性
     private native String getName0();
 
     /**
@@ -741,6 +751,13 @@ public final class Class<T> implements java.io.Serializable,
      * returned.
      *
      * @return the superclass of the class represented by this object.
+     * 获得该Class的直接父类对应的Class对象，如果该Class是基本类型（包括void，注意是小写的关键字void，不是大写的类Void）、接口、注释，则返回null。
+     * 类 : class java.lang.Object
+     * 枚举 : class java.lang.Enum
+     * 基本类型 : null
+     * 数组 : class java.lang.Object
+     * 接口 : null
+     * 注释 : null
      */
     public native Class<? super T> getSuperclass();
 
@@ -1981,6 +1998,7 @@ public final class Class<T> implements java.io.Serializable,
      * @jls 8.2 Class Members
      * @jls 8.4 Method Declarations
      * @since JDK1.1
+     * 返回类中声明的方法，核心实现在privateGetDeclaredMethods和copyMethods中
      */
     @CallerSensitive
     public Method[] getDeclaredMethods() throws SecurityException {
@@ -2706,17 +2724,23 @@ public final class Class<T> implements java.io.Serializable,
     // Returns an array of "root" methods. These Method objects must NOT
     // be propagated to the outside world, but must instead be copied
     // via ReflectionFactory.copyMethod.
+    //获取类中声明方法具体的实现
+    //publicOnly 是否只获取public方法
     private Method[] privateGetDeclaredMethods(boolean publicOnly) {
+        //等待系统内部类初始化完成，系统属性(sun.reflect.noCaches)被解析完成
         checkInitted();
         Method[] res;
         ReflectionData<T> rd = reflectionData();
         if (rd != null) {
+            //获取对应的方法
             res = publicOnly ? rd.declaredPublicMethods : rd.declaredMethods;
             if (res != null) return res;
         }
         // No cached value available; request value from VM
+        //调用本地方法进行获取
         res = Reflection.filterMethods(this, getDeclaredMethods0(publicOnly));
         if (rd != null) {
+            //缓存获取的方法
             if (publicOnly) {
                 rd.declaredPublicMethods = res;
             } else {
@@ -3133,7 +3157,8 @@ public final class Class<T> implements java.io.Serializable,
         }
         return out;
     }
-
+    // 拷贝方法数组，使用ReflectionFactory来拷贝
+    //通过拷贝避免原方法被获取后随意修改
     private static Method[] copyMethods(Method[] arg) {
         Method[] out = new Method[arg.length];
         ReflectionFactory fact = getReflectionFactory();
@@ -3385,6 +3410,7 @@ public final class Class<T> implements java.io.Serializable,
      * null and is not assignable to the type T.
      *
      * @since 1.5
+     * 将给定的类转换为当前Class所代表的类
      */
     @SuppressWarnings("unchecked")
     public T cast(Object obj) {
@@ -3418,9 +3444,11 @@ public final class Class<T> implements java.io.Serializable,
      *    represent a subclass of the specified class (here "subclass" includes
      *    the class itself).
      * @since 1.5
+     * 将类转换为它的子类Class
      */
     @SuppressWarnings("unchecked")
     public <U> Class<? extends U> asSubclass(Class<U> clazz) {
+        //判断clazz是否是当前类，或者是当前类的父类
         if (clazz.isAssignableFrom(this))
             return (Class<? extends U>) this;
         else
