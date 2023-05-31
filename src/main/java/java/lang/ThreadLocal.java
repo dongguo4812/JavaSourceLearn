@@ -127,6 +127,7 @@ public class ThreadLocal<T> {
      * anonymous inner class will be used.
      *
      * @return the initial value for this thread-local
+     * 返回当前线程的这个线程局部变量的“初始值”  由子类重写该方法
      */
     protected T initialValue() {
         return null;
@@ -141,6 +142,7 @@ public class ThreadLocal<T> {
      * @return a new thread local variable
      * @throws NullPointerException if the specified supplier is null
      * @since 1.8
+     * 创建线程局部变量
      */
     public static <S> ThreadLocal<S> withInitial(Supplier<? extends S> supplier) {
         return new SuppliedThreadLocal<>(supplier);
@@ -290,13 +292,13 @@ public class ThreadLocal<T> {
      * the specified {@code Supplier}.
      */
     static final class SuppliedThreadLocal<T> extends ThreadLocal<T> {
-
+        //函数接口
         private final Supplier<? extends T> supplier;
-
+        //在构造函数中赋值该函数接口
         SuppliedThreadLocal(Supplier<? extends T> supplier) {
             this.supplier = Objects.requireNonNull(supplier);
         }
-
+        //开接口，触发函数接口实现调用
         @Override
         protected T initialValue() {
             return supplier.get();
