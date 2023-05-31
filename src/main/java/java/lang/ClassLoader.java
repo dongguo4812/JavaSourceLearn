@@ -177,7 +177,7 @@ import sun.security.util.SecurityConstants;
  * 所有类加载器的祖先，主要用于加载类和加载资源
  */
 public abstract class ClassLoader {
-
+    //注册本地方法
     private static native void registerNatives();
     static {
         registerNatives();
