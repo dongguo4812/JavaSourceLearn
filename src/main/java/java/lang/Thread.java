@@ -472,6 +472,7 @@ class Thread implements Runnable {
      * {@code (null, null, gname)}, where {@code gname} is a newly generated
      * name. Automatically generated names are of the form
      * {@code "Thread-"+}<i>n</i>, where <i>n</i> is an integer.
+     *  默认生成的线程名为 Thread- 加自增编号
      */
     public Thread() {
         init(null, null, "Thread-" + nextThreadNum(), 0);
@@ -535,6 +536,7 @@ class Thread implements Runnable {
      *
      * @param   name
      *          the name of the new thread
+     *          指定线程名
      */
     public Thread(String name) {
         init(null, null, name, 0);
