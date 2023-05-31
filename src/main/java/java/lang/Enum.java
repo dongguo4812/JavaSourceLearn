@@ -179,11 +179,14 @@ public abstract class Enum<E extends Enum<E>>
      * method is the order in which the constants are declared.
      */
     public final int compareTo(E o) {
+        //强转
         Enum<?> other = (Enum<?>)o;
+        //本身
         Enum<E> self = this;
         if (self.getClass() != other.getClass() && // optimization
             self.getDeclaringClass() != other.getDeclaringClass())
             throw new ClassCastException();
+        //通过ordinal值比价
         return self.ordinal - other.ordinal;
     }
 
