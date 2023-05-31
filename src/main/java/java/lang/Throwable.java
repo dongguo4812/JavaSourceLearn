@@ -159,7 +159,7 @@ public class Throwable implements Serializable {
 
     /**
      * A shared value for an empty stack.
-     *   stackTrace的初始值
+     *   stackTrace的初始值 空数组
 
      */
     private static final StackTraceElement[] UNASSIGNED_STACK = new StackTraceElement[0];
@@ -213,7 +213,7 @@ public class Throwable implements Serializable {
      *
      * @serial
      * @since 1.4
-     * 存储异常栈
+     * 存储异常栈信息
      * 代码的行号会在源码编译时一起编译到字节码中。
      * 在运行发生异常时，方法调用栈会写到stackTrace字段中。
      * 栈的顶端是异常发生的位置，即throw的位置；栈的底端是线程开始的位置。
@@ -299,6 +299,7 @@ public class Throwable implements Serializable {
      * @since  1.4
      */
     public Throwable(String message, Throwable cause) {
+        //填充堆栈信息
         fillInStackTrace();
         detailMessage = message;
         this.cause = cause;
@@ -465,6 +466,7 @@ public class Throwable implements Serializable {
      *         {@link #Throwable(String,Throwable)}, or this method has already
      *         been called on this throwable.
      * @since  1.4
+     * 设置异常的原因。这个方法最多只能被调用一次。 它通常从构造函数内部调用，或者在创建throwable之后立即调用。
      */
     public synchronized Throwable initCause(Throwable cause) {
         if (this.cause != this)
@@ -644,6 +646,7 @@ public class Throwable implements Serializable {
      *          at Resource2$CloseFailException.&lt;init&gt;(Resource2.java:45)
      *          ... 2 more
      * </pre>
+     * 将此throwable及其回溯信息打印到标准错误流。
      */
     public void printStackTrace() {
         printStackTrace(System.err);
@@ -664,6 +667,7 @@ public class Throwable implements Serializable {
         // using a Set with identity equality semantics.
         Set<Throwable> dejaVu =
             Collections.newSetFromMap(new IdentityHashMap<Throwable, Boolean>());
+        //第一行为异常的toString
         dejaVu.add(this);
 
         synchronized (s.lock()) {
@@ -807,7 +811,7 @@ public class Throwable implements Serializable {
         }
         return this;
     }
-
+    //native
     private native Throwable fillInStackTrace(int dummy);
 
     /**
