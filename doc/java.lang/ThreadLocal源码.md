@@ -664,6 +664,22 @@ ThreadLocal是通过空间换时间的做法。
 
 ![image-20230531190833007](https://gitee.com/dongguo4812_admin/image/raw/master/image/202305311908265.png)
 
+每个Thread线程都有一个ThreadLocal，
+
+ThreadLocalMap是ThreadLocal的一个静态内部类
+
+ThreadLocalMap又有一个静态内部类Entry
+
+threadLocalMap实际上有一个以threadLocal实例为key，任意缓存对象为value的Entry对象数组。
+当我们为threadLocal变量赋值，实际上就是以当前threadLocal实例为key，值为value的Entry往这个threadLocalMap中存放
+
+
+
+一个Thread最多只有一个ThreadLocalMap，ThreadLocalMap底层是一个Entry数组，
+
+但是一个Thread可以有多个ThreadLocal，一个ThreadLocal对应一个变量数据，封装成Entry存到ThreadLocalMap中，所以就有多个Entry。
+
+
 # **常用方法**
 
 ## **get**
@@ -698,6 +714,10 @@ ThreadLocal是通过空间换时间的做法。
         return setInitialValue();
     }
 ```
+
+- 获取当前线程Thread对象，进而获取此线程对象中维护的ThreadLocalMap对象。
+- 判断当前的ThreadLocalMap是否存在,如果存在，则以当前的ThreadLocal 为 key，调用ThreadLocalMap中的getEntry方法获取对应的存储实体 e。找到对应的存储实体 e，获取存储实体 e 对应的 value值，即为我们想要的当前线程对应此ThreadLocal的值，返回结果值。
+- 如果不存在，则证明此线程没有维护的ThreadLocalMap对象，调用setInitialValue方法进行初始化。返回setInitialValue初始化的值。
 
 ### 1.3getEntry
 
@@ -927,6 +947,13 @@ ThreadLocal是通过空间换时间的做法。
             createMap(t, value);
     }
 ```
+
+- 获取当前线程Thread对象，进而获取此线程对象中维护的ThreadLocalMap对象。
+- 判断当前的ThreadLocalMap是否存在：
+- 如果存在，则调用map.set设置此实体entry。
+- 如果不存在，则调用createMap进行ThreadLocalMap对象的初始化，并将此实体entry作为第一个值存放至ThreadLocalMap中。
+
+
 
 ### 1.3set
 
@@ -1283,14 +1310,61 @@ ThreadLocal是通过空间换时间的做法。
 
 # **答疑**
 
-### **ThreadLocal内存溢出问题**
+## **ThreadLocal内存溢出问题**
 
-通过上面的分析，我们知道expungeStaleEntry() 方法是帮助垃圾回收的，根据源码，我们可以发现 get 和set 方法都可能触发清理方法expungeStaleEntry()，所以正常情况下是不会有内存溢出的。
+### 为什么会出现内存泄漏
+
+![image-20210908111735622](https://gitee.com/dongguo4812_admin/image/raw/master/image/202305312021566.png)
+
+
+
+ThreadLocalMap从字面上就可以看出这是一个保存ThreadLocal对象的map(其实是以它为Key)，不过是经过了两层包装的ThreadLocal对象：
+（1）第一层包装是使用 WeakReference<ThreadLocal<?>> 将ThreadLocal对象变成一个弱引用的对象；
+（2）第二层包装是定义了一个专门的类 Entry 来扩展 WeakReference<ThreadLocal<?>>：
+![image-20210908152402197](https://gitee.com/dongguo4812_admin/image/raw/master/image/202305312021673.png)
+
+每个Thread对象维护着一个ThreadLocalMap的强引用
+ThreadLocalMap是ThreadLocal的内部类，用Entry来进行存储
+调用ThreadLocal的set()方法时，实际上就是往ThreadLocalMap设置值，key是ThreadLocal对象，值Value是传递进来的对象
+调用ThreadLocal的get()方法时，实际上就是从ThreadLocalMap获取值，key是ThreadLocal对象
+ThreadLocal本身并不存储值，它只是自己作为一个key来让线程从ThreadLocalMap获取value，正因为这个原理，所以ThreadLocal能够实现“数据隔离”，获取当前线程的局部变量值，不受其他线程影响
+
+### 为什么要用弱引用?不用如何？
+
+```java
+public void function01()
+{
+    ThreadLocal tl = new ThreadLocal<Integer>();    //line1
+    tl.set(2021);                                   //line2
+    tl.get();                                       //line3
+}
+
+```
+
+line1新建了一个ThreadLocal对象，t1 是强引用指向这个对象；
+line2调用set()方法后新建一个Entry，通过源码可知Entry对象里的k是弱引用指向这个对象。
+
+![image-20210908152746626](https://gitee.com/dongguo4812_admin/image/raw/master/image/202305312022072.png)
+
+为什么源代码用弱引用?
+当function01方法执行完毕后，栈帧销毁强引用 tl 也就没有了。但此时线程的ThreadLocalMap里某个entry的key引用还指向这个对象
+若这个key引用是强引用，就会导致key指向的ThreadLocal对象及v指向的对象不能被gc回收，造成内存泄漏；
+若这个key引用是弱引用就大概率会减少内存泄漏的问题(还有一个key为null的问题)。
+
+**使用弱引用，就可以使ThreadLocal对象在方法执行完毕后顺利被回收 ，此时Entry的key引用就指向为null。**
+
+**因为map是允许存在空key的，那如何回收这些entry呢？**
+
+此后我们调用get,set或remove方法时，就会尝试删除key为null的entry，可以释放value对象所占用的内存。
+
+### 总结
+
+根据源码，我们可以发现 get,set或remove方法都可能触发清理方法expungeStaleEntry()，所以正常情况下是不会有内存溢出的。
 
 但是如果我们没有调用get和set的时候就会可能面临着内存溢出。
-
-养成好习惯在使用的时候调用remove()，加快垃圾回收，避免内存溢出。
 
 退一步说，就算我们没有调用get和set和remove方法，线程结束的时候，也就没有强引用再指向ThreadLocal中的ThreadLocalMap了，这样ThreadLocalMap和里面的元素也会被回收掉。
 
 但是有一种危险是，如果线程是线程池的，在线程执行完代码的时候并没有结束，只是归还给线程池，这个时候ThreadLocalMap和里面的元素是不会回收掉的，可能导致内存溢出。
+
+养成好习惯在使用的时候调用remove()，加快垃圾回收，避免内存溢出。
