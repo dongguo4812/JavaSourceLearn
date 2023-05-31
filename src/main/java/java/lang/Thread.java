@@ -1663,12 +1663,15 @@ class Thread implements Runnable {
     /** cache of subclass security audit results */
     /* Replace with ConcurrentReferenceHashMap when/if it appears in a future
      * release */
+    //Caches缓存了子类安全检查结果。如果未来要进行使用，采用ConcurrentReferenceHashMap替换。
     private static class Caches {
         /** cache of subclass security audit results */
+        //缓存安全检查结果
         static final ConcurrentMap<WeakClassKey,Boolean> subclassAudits =
             new ConcurrentHashMap<>();
 
         /** queue for WeakReferences to audited subclasses */
+        //队列
         static final ReferenceQueue<Class<?>> subclassAuditsQueue =
             new ReferenceQueue<>();
     }
@@ -1684,13 +1687,15 @@ class Thread implements Runnable {
             return false;
 
         processQueue(Caches.subclassAuditsQueue, Caches.subclassAudits);
+        // 生成key
         WeakClassKey key = new WeakClassKey(cl, Caches.subclassAuditsQueue);
+        // 从缓存查找
         Boolean result = Caches.subclassAudits.get(key);
         if (result == null) {
             result = Boolean.valueOf(auditSubclass(cl));
             Caches.subclassAudits.putIfAbsent(key, result);
         }
-
+        // 返回结果
         return result.booleanValue();
     }
 
@@ -1775,10 +1780,12 @@ class Thread implements Runnable {
      *
      * @since   1.5
      * @see #getState
+     * Java语言使用Thread类及其子类的对象来表示线程，在它的一个完整的声明周期通常要经历以下状态
      */
     public enum State {
         /**
          * Thread state for a thread which has not yet started.
+         *  新建 初始态
          */
         NEW,
 
@@ -1787,6 +1794,7 @@ class Thread implements Runnable {
          * state is executing in the Java virtual machine but it may
          * be waiting for other resources from the operating system
          * such as processor.
+         * 运行态
          */
         RUNNABLE,
 
@@ -1796,6 +1804,7 @@ class Thread implements Runnable {
          * to enter a synchronized block/method or
          * reenter a synchronized block/method after calling
          * {@link Object#wait() Object.wait}.
+         * 锁阻塞  阻塞态
          */
         BLOCKED,
 
@@ -1817,6 +1826,7 @@ class Thread implements Runnable {
          * <tt>Object.notify()</tt> or <tt>Object.notifyAll()</tt> on
          * that object. A thread that has called <tt>Thread.join()</tt>
          * is waiting for a specified thread to terminate.
+         * 等待态
          */
         WAITING,
 
@@ -1831,12 +1841,14 @@ class Thread implements Runnable {
          *   <li>{@link LockSupport#parkNanos LockSupport.parkNanos}</li>
          *   <li>{@link LockSupport#parkUntil LockSupport.parkUntil}</li>
          * </ul>
+         * 超时等待态
          */
         TIMED_WAITING,
 
         /**
          * Thread state for a terminated thread.
          * The thread has completed execution.
+         * 死亡 终止态
          */
         TERMINATED;
     }
