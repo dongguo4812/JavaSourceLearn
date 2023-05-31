@@ -1891,6 +1891,7 @@ class Thread implements Runnable {
      * @see #setUncaughtExceptionHandler
      * @see ThreadGroup#uncaughtException
      * @since 1.5
+     * 内部异常处理接口
      */
     @FunctionalInterface
     public interface UncaughtExceptionHandler {
@@ -1978,6 +1979,7 @@ class Thread implements Runnable {
      * @return the uncaught exception handler for this thread
      */
     public UncaughtExceptionHandler getUncaughtExceptionHandler() {
+        //返回handle本身或线程组
         return uncaughtExceptionHandler != null ?
             uncaughtExceptionHandler : group;
     }
