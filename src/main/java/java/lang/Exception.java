@@ -50,6 +50,7 @@ public class Exception extends Throwable {
      * Constructs a new exception with {@code null} as its detail message.
      * The cause is not initialized, and may subsequently be initialized by a
      * call to {@link #initCause}.
+     * 调用父类Throwable的构造函数
      */
     public Exception() {
         super();
