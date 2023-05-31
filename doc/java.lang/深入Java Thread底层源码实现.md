@@ -1,12 +1,21 @@
 ﻿# 深入Java Thread底层实现
 ##  **介绍**
+Thread就是程序中一个线程的执行.JVM允许一个应用中多个线程并发执行
 
+每个线程都有优先级.高优先级线程优先于低优先级线程执行
+每个线程都可以(不可以)被标记为守护线程
+当线程中的run()方法代码里面又创建了一个新的线程对象时,新创建的线程优先级和父线程优先级一样
+当且仅当父线程为守护线程时,新创建的线程才会是守护线程
+
+当JVM启动时,通常会有唯一的一个非守护线程(这一线程用于调用指定类的main()方法)
+JVM会持续执行线程直到下面某一个情况发生为止:
+1.类运行时exit()方法被调用且安全机制允许此exit()方法的调用.
+2.所有非守护类型的线程均已经终止,或者run()方法调用返回或者在run()方法外部抛出了一些可传播性的异常.
 ```java
 public
 class Thread implements Runnable
 ```
-![image-20230531074602154](https://gitee.com/dongguo4812_admin/image/raw/master/image/202305310746302.png)
-
+![在这里插入图片描述](https://img-blog.csdnimg.cn/a740023473234438ab6f1c6c58b6f94f.png)
 ## 常量&变量
 
 ```java
@@ -526,6 +535,315 @@ class Thread implements Runnable
         tid = nextThreadID();
     }
 ```
+### 内部类
+#### UncaughtExceptionHandler 
+未捕获异常处理器，在线程由于未捕获的异常终止时，JVM会进行一些处理，处理流程如下：
+
+  - JVM调用终止线程的getUncaughtExceptionHandler方法获取终止线程的uncaughtExceptionHandler
+   - 非null则调用uncaughtExceptionHandler的uncaughtException方法，同时将此终止线程和其异常作为参数传入
+   - null则找到终止线程所在的最上级线程组，调用其uncaughtException方法，同时将此终止线程和其异常作为参数传入
+   - 调用Thread.getDefaultUncaughtExceptionHandler获取handle，非空则调用其uncaughtException方法，空则判断调用e.printStackTrace(System.err)处理
+
+```java
+    /**
+     * Interface for handlers invoked when a <tt>Thread</tt> abruptly
+     * terminates due to an uncaught exception.
+     * <p>When a thread is about to terminate due to an uncaught exception
+     * the Java Virtual Machine will query the thread for its
+     * <tt>UncaughtExceptionHandler</tt> using
+     * {@link #getUncaughtExceptionHandler} and will invoke the handler's
+     * <tt>uncaughtException</tt> method, passing the thread and the
+     * exception as arguments.
+     * If a thread has not had its <tt>UncaughtExceptionHandler</tt>
+     * explicitly set, then its <tt>ThreadGroup</tt> object acts as its
+     * <tt>UncaughtExceptionHandler</tt>. If the <tt>ThreadGroup</tt> object
+     * has no
+     * special requirements for dealing with the exception, it can forward
+     * the invocation to the {@linkplain #getDefaultUncaughtExceptionHandler
+     * default uncaught exception handler}.
+     *
+     * @see #setDefaultUncaughtExceptionHandler
+     * @see #setUncaughtExceptionHandler
+     * @see ThreadGroup#uncaughtException
+     * @since 1.5
+     * 内部异常处理接口
+     */
+    @FunctionalInterface
+    public interface UncaughtExceptionHandler {
+        /**
+         * Method invoked when the given thread terminates due to the
+         * given uncaught exception.
+         * <p>Any exception thrown by this method will be ignored by the
+         * Java Virtual Machine.
+         * @param t the thread
+         * @param e the exception
+         */
+        void uncaughtException(Thread t, Throwable e);
+    }
+    
+    /**
+     * Returns the handler invoked when this thread abruptly terminates
+     * due to an uncaught exception. If this thread has not had an
+     * uncaught exception handler explicitly set then this thread's
+     * <tt>ThreadGroup</tt> object is returned, unless this thread
+     * has terminated, in which case <tt>null</tt> is returned.
+     * @since 1.5
+     * @return the uncaught exception handler for this thread
+     */
+    public UncaughtExceptionHandler getUncaughtExceptionHandler() {
+        //返回handle本身或线程组
+        return uncaughtExceptionHandler != null ?
+            uncaughtExceptionHandler : group;
+    }
+```
+#### Caches&WeakClassKey 
+我们可以看到WeakClassKey这个内部类继承了WeakReference，而WeakClassKey被Caches所使用，从名字我们也能明白其部分含义，本地缓存，WeakClassKey是弱引用相关类.
+subclassAudits提供了一个哈希表缓存，该缓存的键类型为java.lang.Thread.WeakClassKey，注意看它的值类型是一个java.lang.Boolean类型的，从其代码注释可以知道这个哈希表缓存中保存的是所有子类的代码执行安全性检测结果
+subclassAuditsQueue定义了一个Queue队列，保存已经审核过的子类弱引用
+```java
+    /** cache of subclass security audit results */
+    /* Replace with ConcurrentReferenceHashMap when/if it appears in a future
+     * release */
+    //Caches缓存了子类安全检查结果。如果未来要进行使用，采用ConcurrentReferenceHashMap替换。
+    private static class Caches {
+        /** cache of subclass security audit results */
+        //缓存安全检查结果
+        static final ConcurrentMap<WeakClassKey,Boolean> subclassAudits =
+            new ConcurrentHashMap<>();
+
+        /** queue for WeakReferences to audited subclasses */
+        //队列
+        static final ReferenceQueue<Class<?>> subclassAuditsQueue =
+            new ReferenceQueue<>();
+    }
+
+    /**
+     *  Weak key for Class objects.
+     **/
+    static class WeakClassKey extends WeakReference<Class<?>> {
+        /**
+         * saved value of the referent's identity hash code, to maintain
+         * a consistent hash code after the referent has been cleared
+         */
+        private final int hash;
+
+        /**
+         * Create a new WeakClassKey to the given object, registered
+         * with a queue.
+         */
+        WeakClassKey(Class<?> cl, ReferenceQueue<Class<?>> refQueue) {
+            super(cl, refQueue);
+            hash = System.identityHashCode(cl);
+        }
+
+        /**
+         * Returns the identity hash code of the original referent.
+         */
+        @Override
+        public int hashCode() {
+            return hash;
+        }
+
+        /**
+         * Returns true if the given object is this identical
+         * WeakClassKey instance, or, if this object's referent has not
+         * been cleared, if the given object is another WeakClassKey
+         * instance with the identical non-null referent as this one.
+         */
+        @Override
+        public boolean equals(Object obj) {
+            if (obj == this)
+                return true;
+
+            if (obj instanceof WeakClassKey) {
+                Object referent = get();
+                return (referent != null) &&
+                       (referent == ((WeakClassKey) obj).get());
+            } else {
+                return false;
+            }
+        }
+    }
+    /**
+     * Verifies that this (possibly subclass) instance can be constructed
+     * without violating security constraints: the subclass must not override
+     * security-sensitive non-final methods, or else the
+     * "enableContextClassLoaderOverride" RuntimePermission is checked.
+     */
+    private static boolean isCCLOverridden(Class<?> cl) {
+        if (cl == Thread.class)
+            return false;
+
+        processQueue(Caches.subclassAuditsQueue, Caches.subclassAudits);
+        // 生成key
+        WeakClassKey key = new WeakClassKey(cl, Caches.subclassAuditsQueue);
+        // 从缓存查找
+        Boolean result = Caches.subclassAudits.get(key);
+        if (result == null) {
+            result = Boolean.valueOf(auditSubclass(cl));
+            Caches.subclassAudits.putIfAbsent(key, result);
+        }
+        // 返回结果
+        return result.booleanValue();
+    }
+```
+#### State
+
+```java
+    /**
+     * A thread state.  A thread can be in one of the following states:
+     * <ul>
+     * <li>{@link #NEW}<br>
+     *     A thread that has not yet started is in this state.
+     *     </li>
+     * <li>{@link #RUNNABLE}<br>
+     *     A thread executing in the Java virtual machine is in this state.
+     *     </li>
+     * <li>{@link #BLOCKED}<br>
+     *     A thread that is blocked waiting for a monitor lock
+     *     is in this state.
+     *     </li>
+     * <li>{@link #WAITING}<br>
+     *     A thread that is waiting indefinitely for another thread to
+     *     perform a particular action is in this state.
+     *     </li>
+     * <li>{@link #TIMED_WAITING}<br>
+     *     A thread that is waiting for another thread to perform an action
+     *     for up to a specified waiting time is in this state.
+     *     </li>
+     * <li>{@link #TERMINATED}<br>
+     *     A thread that has exited is in this state.
+     *     </li>
+     * </ul>
+     *
+     * <p>
+     * A thread can be in only one state at a given point in time.
+     * These states are virtual machine states which do not reflect
+     * any operating system thread states.
+     *
+     * @since   1.5
+     * @see #getState
+     * Java语言使用Thread类及其子类的对象来表示线程，在它的一个完整的声明周期通常要经历以下状态
+     */
+    public enum State {
+        /**
+         * Thread state for a thread which has not yet started.
+         *  新建 初始态
+         */
+        NEW,
+
+        /**
+         * Thread state for a runnable thread.  A thread in the runnable
+         * state is executing in the Java virtual machine but it may
+         * be waiting for other resources from the operating system
+         * such as processor.
+         * 运行态
+         */
+        RUNNABLE,
+
+        /**
+         * Thread state for a thread blocked waiting for a monitor lock.
+         * A thread in the blocked state is waiting for a monitor lock
+         * to enter a synchronized block/method or
+         * reenter a synchronized block/method after calling
+         * {@link Object#wait() Object.wait}.
+         * 锁阻塞  阻塞态
+         */
+        BLOCKED,
+
+        /**
+         * Thread state for a waiting thread.
+         * A thread is in the waiting state due to calling one of the
+         * following methods:
+         * <ul>
+         *   <li>{@link Object#wait() Object.wait} with no timeout</li>
+         *   <li>{@link #join() Thread.join} with no timeout</li>
+         *   <li>{@link LockSupport#park() LockSupport.park}</li>
+         * </ul>
+         *
+         * <p>A thread in the waiting state is waiting for another thread to
+         * perform a particular action.
+         *
+         * For example, a thread that has called <tt>Object.wait()</tt>
+         * on an object is waiting for another thread to call
+         * <tt>Object.notify()</tt> or <tt>Object.notifyAll()</tt> on
+         * that object. A thread that has called <tt>Thread.join()</tt>
+         * is waiting for a specified thread to terminate.
+         * 等待态
+         */
+        WAITING,
+
+        /**
+         * Thread state for a waiting thread with a specified waiting time.
+         * A thread is in the timed waiting state due to calling one of
+         * the following methods with a specified positive waiting time:
+         * <ul>
+         *   <li>{@link #sleep Thread.sleep}</li>
+         *   <li>{@link Object#wait(long) Object.wait} with timeout</li>
+         *   <li>{@link #join(long) Thread.join} with timeout</li>
+         *   <li>{@link LockSupport#parkNanos LockSupport.parkNanos}</li>
+         *   <li>{@link LockSupport#parkUntil LockSupport.parkUntil}</li>
+         * </ul>
+         * 超时等待态
+         */
+        TIMED_WAITING,
+
+        /**
+         * Thread state for a terminated thread.
+         * The thread has completed execution.
+         * 死亡 终止态
+         */
+        TERMINATED;
+    }
+```
+![在这里插入图片描述](https://img-blog.csdnimg.cn/66183a0c7ec44391a71f3b568acaa7a7.png)
+**初始态（NEW）**：
+
+- 创建一个Thread对象，但还未调用start()启动线程时，线程处于初始态
+
+**运行态（RUNNABLE）**：
+
+运行态在Java中包括就绪态和运行态
+
+1.就绪态：
+
+- 该状态下的线程已经获得执行所需的所有资源，只要CPU分配执行权就能运行
+- 所有就绪态的线程存放在就绪队列中
+
+2.运行态：
+
+- 获得CPU执行权，正在执行的线程
+- 由于一个CPU同一时刻只能执行一条线程，因此每个CPU每个时刻只有一个运行态的线程
+
+**阻塞态（BLOCKED）**
+
+- 当一条正在执行的线程请求某一资源失败时，就会进入阻塞态
+- 而在Java中，阻塞态专指请求锁失败时进入的状态
+- 由一个阻塞队列存放所有阻塞态的线程。处于阻塞态的线程会不断请求资源，一旦请求成功，就会进入就绪队列，等待执行
+
+**等待态（WAITING）**
+
+- 当前线程中调用wait、join、park函数时，当前线程就会进入等待态
+- 也有一个等待队列存放所有等待态的线程
+- 线程处于等待态表示它需要等待其他线程的指示才能继续运行
+- 进入等待态的线程会释放CPU执行权，并释放资源（如：锁）
+
+**超时等待态（TIMED_WAITING）**
+
+- 当运行中的线程调用sleep(time)、wait、join、parkNanos、parkUntil时，就会进入该状态
+- 它和等待态一样，并不是因为请求不到资源，而是主动进入，并且进入后被其他线程唤醒或超时自动唤醒
+- 进入该状态后释放CPU执行权和占有的资源，其中wait()方法会释放CPU执行权和占有的锁，sleep(long)方法仅释放CPU使用权，锁仍然占用
+- 与等待态的区别：到了超时时间后自动进入阻塞队列，开始竞争锁
+
+**终止态（TERMINATED）**
+
+- 线程执行结束后的状态
+
+其中有几点需要注意的：
+
+- yield方法仅释放CPU执行权，锁仍然占用，线程会被放入就绪队列，会在短时间内再次执行
+- wait和notify必须配套使用，即必须使用同一把锁调用
+- wait和notify必须放在一个同步块中调用，wait和notify的对象必须是他们所处同步块的锁对象
 ## 常用方法
 ### start
 
