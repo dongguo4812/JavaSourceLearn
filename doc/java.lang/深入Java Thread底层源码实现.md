@@ -5,7 +5,8 @@
 public
 class Thread implements Runnable
 ```
-![在这里插入图片描述](https://img-blog.csdnimg.cn/a740023473234438ab6f1c6c58b6f94f.png)
+![image-20230531074602154](https://gitee.com/dongguo4812_admin/image/raw/master/image/202305310746302.png)
+
 ## 常量&变量
 
 ```java
