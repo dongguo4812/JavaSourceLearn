@@ -5,6 +5,8 @@ Throwable类是Java语言中所有错误（errors）和异常（exceptions）的
 ```java
 public class Throwable implements Serializable
 ```
+![image](https://github.com/dongguo4812/JavaSourceLearn/assets/87865453/f47c4cab-0689-4ed6-9efc-7cd627ca8fd1)
+
 
 # **常量&变量**
 
