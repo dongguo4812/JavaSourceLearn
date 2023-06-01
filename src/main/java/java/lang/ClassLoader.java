@@ -353,6 +353,7 @@ public abstract class ClassLoader {
      *
      * @throws  ClassNotFoundException
      *          If the class was not found
+     *          加载指定二进制名称的类
      */
     public Class<?> loadClass(String name) throws ClassNotFoundException {
         return loadClass(name, false);
@@ -393,7 +394,7 @@ public abstract class ClassLoader {
      *
      * @param  resolve
      *         If <tt>true</tt> then resolve the class
-     *
+     *          如果为true则解析该类
      * @return  The resulting <tt>Class</tt> object
      *
      * @throws  ClassNotFoundException
@@ -435,7 +436,7 @@ public abstract class ClassLoader {
                 }
             }
             if (resolve) {
-                //链接
+                //链接 解析
                 resolveClass(c);
             }
             return c;
@@ -1089,15 +1090,21 @@ public abstract class ClassLoader {
      *          doesn't have adequate  privileges to get the resource.
      *
      * @since  1.1
+     *  获得指定名称的资源   图像，音频，文本等
      */
     public URL getResource(String name) {
         URL url;
+
         if (parent != null) {
+            //搜索父类加载器的资源
             url = parent.getResource(name);
         } else {
+            //不存在父类，搜索虚拟机默认的类加载器的路径，
             url = getBootstrapResource(name);
         }
+        //仍然获取不到资源
         if (url == null) {
+            //调用findResource(String)来查找资源
             url = findResource(name);
         }
         return url;
