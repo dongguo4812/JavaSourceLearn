@@ -914,15 +914,15 @@ public class ArrayList<E> extends AbstractList<E>
      * ArrayList的内部类
      */
     private class Itr implements Iterator<E> {
-        //光标 默认值0
+        //光标 下一个要返回的元素的索引 默认值0
         int cursor;       // index of next element to return
-        //记录值  默认值 -1
+        //记录值 最后一个返回元素的索引，如果没有就是-1
         int lastRet = -1; // index of last element returned; -1 if no such
         //修改次数赋值给预期修改次数
         int expectedModCount = modCount;
 
         Itr() {}
-
+        //是否还有下一个元素
         public boolean hasNext() {
             //判断光标是否不等于集合的size
             return cursor != size;
@@ -930,31 +930,43 @@ public class ArrayList<E> extends AbstractList<E>
 
         @SuppressWarnings("unchecked")
         public E next() {
-            //校验修改次数与预期修改次数
+            //校验修改次数与预期修改次数是否一致
             checkForComodification();
             int i = cursor;
+            //判断光标是否合理
             if (i >= size)
                 throw new NoSuchElementException();
-            //
+            //当前容纳的所有元素
             Object[] elementData = ArrayList.this.elementData;
-            //并发修改异常
+            //再次进行下标判断，如果不一致则说明数组被修改过，就会抛出并发修改异常
             if (i >= elementData.length)
                 throw new ConcurrentModificationException();
-            //光标向后移动1
+            //光标向后移动1，下个元素的下标
             cursor = i + 1;
-            //取出元素
+            //取出下标对应的元素
             return (E) elementData[lastRet = i];
         }
 
+        /**
+         * 移除当前元素
+         */
         public void remove() {
+            //下标检查
             if (lastRet < 0)
                 throw new IllegalStateException();
+            //检查修改次数是否一致
             checkForComodification();
 
             try {
+                //调用ArrayList的remove方法， 该方法会修改操作值modCount
                 ArrayList.this.remove(lastRet);
+                // 将下标为i的元素删除，后面的元素整体向前移动一位，i下标的元素为原来i+1下标的索引
+                //故删除下标为i的元素，下一个元素的索引变为i，而cursor此时已经为i+1
+                //数据修正
                 cursor = lastRet;
+                //防止连续删除
                 lastRet = -1;
+                //避免并发修改异常，同步操作值
                 expectedModCount = modCount;
             } catch (IndexOutOfBoundsException ex) {
                 throw new ConcurrentModificationException();
@@ -978,6 +990,7 @@ public class ArrayList<E> extends AbstractList<E>
                 consumer.accept((E) elementData[i++]);
             }
             // update once at end of iteration to reduce heap write traffic
+            //
             cursor = i;
             lastRet = i - 1;
             checkForComodification();
@@ -991,8 +1004,14 @@ public class ArrayList<E> extends AbstractList<E>
 
     /**
      * An optimized version of AbstractList.ListItr
+     * AbstractList.ListItr的优化版
      */
     private class ListItr extends Itr implements ListIterator<E> {
+        /**
+         * 有参构造
+         * 由 listIterator(int index) 、 listIterator()方法创建
+         * @param index
+         */
         ListItr(int index) {
             super();
             cursor = index;
@@ -1010,13 +1029,21 @@ public class ArrayList<E> extends AbstractList<E>
             return cursor - 1;
         }
 
+        /**
+         * 真正可以取出元素的方法，与next()含义相反，为遍历上一个
+         * @return
+         */
         @SuppressWarnings("unchecked")
         public E previous() {
+            //判断当前数组是否发生修改
             checkForComodification();
+            //游标cursor指向的上一个元素的索引
             int i = cursor - 1;
+            //cursor为0的情况，即为遍历到了当前数组的第一个元素
             if (i < 0)
                 throw new NoSuchElementException();
             Object[] elementData = ArrayList.this.elementData;
+            //检测集合是否被修改过。
             if (i >= elementData.length)
                 throw new ConcurrentModificationException();
             cursor = i;
@@ -1029,6 +1056,7 @@ public class ArrayList<E> extends AbstractList<E>
             checkForComodification();
 
             try {
+                //ArrayList类本身的set(int index, E element)方法对我们的元素进行修改
                 ArrayList.this.set(lastRet, e);
             } catch (IndexOutOfBoundsException ex) {
                 throw new ConcurrentModificationException();
@@ -1039,9 +1067,12 @@ public class ArrayList<E> extends AbstractList<E>
             checkForComodification();
 
             try {
+                //插入的位置
                 int i = cursor;
+                //ArrayList本类的add(int index, E element)方法来进行插入操作
                 ArrayList.this.add(i, e);
                 cursor = i + 1;
+                //避免重复操作
                 lastRet = -1;
                 expectedModCount = modCount;
             } catch (IndexOutOfBoundsException ex) {
@@ -1097,11 +1128,25 @@ public class ArrayList<E> extends AbstractList<E>
     }
 
     private class SubList extends AbstractList<E> implements RandomAccess {
+        // 父类的引用
         private final AbstractList<E> parent;
+        /*
+         * 父类集合中的位置，如果使用SubList中的subList方法，
+         * 则此时父类为SubList类，不是ArrayList
+         */
         private final int parentOffset;
+        // 子类List在父类 ArrayList 中的下标位置
         private final int offset;
+        // 视图集合的size
         int size;
 
+        /**
+         * 构造方法，参数offset表示父类集合的下标偏移量
+         * @param parent
+         * @param offset
+         * @param fromIndex
+         * @param toIndex
+         */
         SubList(AbstractList<E> parent,
                 int offset, int fromIndex, int toIndex) {
             this.parent = parent;
@@ -1112,9 +1157,13 @@ public class ArrayList<E> extends AbstractList<E>
         }
 
         public E set(int index, E e) {
+            // 检查下标是否越界
             rangeCheck(index);
+            // 检查是否有其他线程修改了父类集合
             checkForComodification();
+            //获取该索引的旧值
             E oldValue = ArrayList.this.elementData(offset + index);
+            // 调用父类方法替换元素，所以本质上还是在父类集合中替换元素
             ArrayList.this.elementData[offset + index] = e;
             return oldValue;
         }
@@ -1122,6 +1171,7 @@ public class ArrayList<E> extends AbstractList<E>
         public E get(int index) {
             rangeCheck(index);
             checkForComodification();
+            // 调用父类方法获取元素
             return ArrayList.this.elementData(offset + index);
         }
 
@@ -1133,11 +1183,18 @@ public class ArrayList<E> extends AbstractList<E>
         public void add(int index, E e) {
             rangeCheckForAdd(index);
             checkForComodification();
+            // 使用父类方法添加元素，
             parent.add(parentOffset + index, e);
+            // 父类add()方法修改了modCount的值，更新subList的modCount值
             this.modCount = parent.modCount;
             this.size++;
         }
 
+        /**
+         * 根据下标移除元素
+         * @param index the index of the element to be removed
+         * @return
+         */
         public E remove(int index) {
             rangeCheck(index);
             checkForComodification();
@@ -1147,6 +1204,11 @@ public class ArrayList<E> extends AbstractList<E>
             return result;
         }
 
+        /**
+         * 移除指定区间的元素
+         * @param fromIndex index of first element to be removed
+         * @param toIndex index after last element to be removed
+         */
         protected void removeRange(int fromIndex, int toIndex) {
             checkForComodification();
             parent.removeRange(parentOffset + fromIndex,
@@ -1172,6 +1234,10 @@ public class ArrayList<E> extends AbstractList<E>
             return true;
         }
 
+        /**
+         *  subList 中迭代器使用ListIterator()
+         * @return
+         */
         public Iterator<E> iterator() {
             return listIterator();
         }
@@ -1315,6 +1381,9 @@ public class ArrayList<E> extends AbstractList<E>
             return "Index: "+index+", Size: "+this.size;
         }
 
+        /**
+         * 检查是否有多线程修改集合
+         */
         private void checkForComodification() {
             if (ArrayList.this.modCount != this.modCount)
                 throw new ConcurrentModificationException();
@@ -1361,6 +1430,7 @@ public class ArrayList<E> extends AbstractList<E>
     }
 
     /** Index-based split-by-two, lazily initialized Spliterator */
+    //基于索引的、二分的、懒加载的分割器
     static final class ArrayListSpliterator<E> implements Spliterator<E> {
 
         /*
@@ -1394,13 +1464,23 @@ public class ArrayList<E> extends AbstractList<E>
          * less-often-used methods cannot take advantage of most of
          * these streamlinings.
          */
-
+        //用于存放ArrayList对象
         private final ArrayList<E> list;
+        //起始位置（包含），advance/split操作时会修改
         private int index; // current index, modified on advance/split
+        //结束位置（不包含），-1 表示到最后一个元素
         private int fence; // -1 until used; then one past last index
+        //用于存放list的modCount，当fence被设值后初始化
         private int expectedModCount; // initialized when fence set
 
         /** Create new spliterator covering the given  range */
+        /**
+         * 创建一个范围性的分割器
+         * @param list
+         * @param origin
+         * @param fence
+         * @param expectedModCount
+         */
         ArrayListSpliterator(ArrayList<E> list, int origin, int fence,
                              int expectedModCount) {
             this.list = list; // OK if null unless traversed
@@ -1409,6 +1489,10 @@ public class ArrayList<E> extends AbstractList<E>
             this.expectedModCount = expectedModCount;
         }
 
+        /**
+         * 在第一次使用时实例化结束位置
+         * @return
+         */
         private int getFence() { // initialize fence to size on first use
             int hi; // (a specialized variant appears in method forEach)
             ArrayList<E> lst;
@@ -1423,6 +1507,12 @@ public class ArrayList<E> extends AbstractList<E>
             return hi;
         }
 
+        /**
+         * 分割list，返回一个新分割出的spliterator实例，相当于二分法，这个方法会递归
+         * 1.ArrayListSpliterator本质上还是对原list进行操作，只是通过index和fence来控制每次处理范围
+         * 2.ArrayListSpliterator在遍历元素时，不能对list进行结构变更操作，否则抛错。
+         * @return
+         */
         public ArrayListSpliterator<E> trySplit() {
             int hi = getFence(), lo = index, mid = (lo + hi) >>> 1;
             return (lo >= mid) ? null : // divide range in half unless too small
@@ -1430,6 +1520,11 @@ public class ArrayList<E> extends AbstractList<E>
                                             expectedModCount);
         }
 
+        /**
+         *   返回true 时，只表示可能还有元素未处理
+         *   返回false 时，没有剩余元素需要处理
+         * @return
+         */
         public boolean tryAdvance(Consumer<? super E> action) {
             if (action == null)
                 throw new NullPointerException();
@@ -1445,6 +1540,9 @@ public class ArrayList<E> extends AbstractList<E>
             return false;
         }
 
+        /**
+         * 顺序遍历处理所有剩下的元素
+         */
         public void forEachRemaining(Consumer<? super E> action) {
             int i, hi, mc; // hoist accesses and checks from loop
             ArrayList<E> lst; Object[] a;
@@ -1468,11 +1566,11 @@ public class ArrayList<E> extends AbstractList<E>
             }
             throw new ConcurrentModificationException();
         }
-
+        //估算大小
         public long estimateSize() {
             return (long) (getFence() - index);
         }
-
+        //获取特征值
         public int characteristics() {
             return Spliterator.ORDERED | Spliterator.SIZED | Spliterator.SUBSIZED;
         }
