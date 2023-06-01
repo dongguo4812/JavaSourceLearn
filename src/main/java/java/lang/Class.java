@@ -128,6 +128,7 @@ public final class Class<T> implements java.io.Serializable,
     private static final int SYNTHETIC = 0x00001000;
     //注册本地方法
     private static native void registerNatives();
+
     static {
         registerNatives();
     }
@@ -1677,7 +1678,9 @@ public final class Class<T> implements java.io.Serializable,
      */
     @CallerSensitive
     public Constructor<?>[] getConstructors() throws SecurityException {
+        //判断是否有访问权限
         checkMemberAccess(Member.PUBLIC, Reflection.getCallerClass(), true);
+        //获取到声明的构造方法，并拷贝一份构造方法
         return copyConstructors(privateGetDeclaredConstructors(true));
     }
 
@@ -2438,7 +2441,7 @@ public final class Class<T> implements java.io.Serializable,
     }
 
     /**
-     * Atomic operations support.
+     * Atomic operations support.Atomic
      */
     private static class Atomic {
         // initialize Unsafe machinery here, since we need to call Class.class instance method
@@ -2513,15 +2516,16 @@ public final class Class<T> implements java.io.Serializable,
             this.redefinedCount = redefinedCount;
         }
     }
-    //反射信息
+    //一个软引用的对象 保存反射信息
     private volatile transient SoftReference<ReflectionData<T>> reflectionData;
 
     // Incremented by the VM on each call to JVM TI RedefineClasses()
     // that redefines this class or a superclass.
-    //每次调用JVM时由VM递增
+    //每次调用JVM时由VM递增   用来判断和ReflectionData当中redefinedCount的值是否相同，如果不同说明缓存当中的数据失效
     private volatile transient int classRedefinedCount = 0;
 
     // Lazily create and cache ReflectionData
+    //创建和缓存反射获得的数据
     private ReflectionData<T> reflectionData() {
         SoftReference<ReflectionData<T>> reflectionData = this.reflectionData;
         int classRedefinedCount = this.classRedefinedCount;
@@ -2690,22 +2694,28 @@ public final class Class<T> implements java.io.Serializable,
     // objects must NOT be propagated to the outside world, but must
     // instead be copied via ReflectionFactory.copyConstructor.
     private Constructor<T>[] privateGetDeclaredConstructors(boolean publicOnly) {
+        //判断是否配置了useCached属性
         checkInitted();
         Constructor<T>[] res;
+        //获取缓存当中的数据
         ReflectionData<T> rd = reflectionData();
         if (rd != null) {
+            //返回缓存当中的构造方法 根据publicOnly决定是共有还是私有的构造方法
             res = publicOnly ? rd.publicConstructors : rd.declaredConstructors;
             if (res != null) return res;
         }
         // No cached value available; request value from VM
         if (isInterface()) {
+            //直接生成一个数组长度为0的Constructor数组  因为接口没有构造方法
             @SuppressWarnings("unchecked")
             Constructor<T>[] temporaryRes = (Constructor<T>[]) new Constructor<?>[0];
             res = temporaryRes;
         } else {
+            //从JVM当中读取数据
             res = getDeclaredConstructors0(publicOnly);
         }
         if (rd != null) {
+            //更新缓存reflectionData当中的构造方法
             if (publicOnly) {
                 rd.publicConstructors = res;
             } else {
