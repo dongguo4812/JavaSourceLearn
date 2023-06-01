@@ -260,6 +260,7 @@ public class Throwable implements Serializable {
      *
      * <p>The {@link #fillInStackTrace()} method is called to initialize
      * the stack trace data in the newly created throwable.
+     * 构造一个新的可抛出的null作为其详细信息。 原因未初始化，可以随后通过调用initCause(java.lang.Throwable)进行初始化 。
      */
     public Throwable() {
         fillInStackTrace();
@@ -275,6 +276,7 @@ public class Throwable implements Serializable {
      *
      * @param   message   the detail message. The detail message is saved for
      *          later retrieval by the {@link #getMessage()} method.
+     *   构造一个具有指定的详细信息的新的throwable。 原因未初始化，可以随后通过调用initCause(java.lang.Throwable)进行初始化 。
      */
     public Throwable(String message) {
         fillInStackTrace();
@@ -297,6 +299,7 @@ public class Throwable implements Serializable {
      *         permitted, and indicates that the cause is nonexistent or
      *         unknown.)
      * @since  1.4
+     * 构造一个具有指定的详细信息和原因的新的throwable。
      */
     public Throwable(String message, Throwable cause) {
         //填充堆栈信息
@@ -321,9 +324,11 @@ public class Throwable implements Serializable {
      *         permitted, and indicates that the cause is nonexistent or
      *         unknown.)
      * @since  1.4
+     * 构造具有指定的原因和详细消息的新throwable
      */
     public Throwable(Throwable cause) {
         fillInStackTrace();
+        //cause允许为空值，表示原因不存在或未知。
         detailMessage = (cause==null ? null : cause.toString());
         this.cause = cause;
     }
@@ -368,18 +373,24 @@ public class Throwable implements Serializable {
      * @see NullPointerException
      * @see ArithmeticException
      * @since 1.7
+     * 构造一个具有指定原因和详细信息的新的throwable，启用或禁用suppression和启用或禁用可写栈跟踪。
+     * 从版本1.7开始，支持抑制异常的概念
+     * 禁用Suppression只应在特殊情况下存在特殊要求，例如虚拟机在低内存情况下重用异常对象。 给定异常对象被重复捕获并重新引导的情况，例如在两个子系统之间实现控制流的情况是另一种情况，即不可变的可抛出对象是合适的。
      */
     protected Throwable(String message, Throwable cause,
                         boolean enableSuppression,
                         boolean writableStackTrace) {
         if (writableStackTrace) {
+            //初始化堆栈跟踪数据
             fillInStackTrace();
         } else {
+            //禁用写入堆栈跟踪数据
             stackTrace = null;
         }
         detailMessage = message;
         this.cause = cause;
         if (!enableSuppression)
+            //禁用Suppression
             suppressedExceptions = null;
     }
 
@@ -800,6 +811,7 @@ public class Throwable implements Serializable {
      *
      * @return  a reference to this {@code Throwable} instance.
      * @see     java.lang.Throwable#printStackTrace()
+     * 初始化新创建的throwable中的堆栈跟踪数据
      */
     public synchronized Throwable fillInStackTrace() {
         //判断stackTrace、backtrace是否为null
