@@ -10,6 +10,7 @@ public final class Class<T> implements java.io.Serializable,
                               Type,
                               AnnotatedElement
 ```
+![image](https://github.com/dongguo4812/JavaSourceLearn/assets/87865453/3db947e9-096d-4afb-9494-655902b8450a)
 
 
 
