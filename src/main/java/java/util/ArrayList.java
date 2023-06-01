@@ -165,8 +165,10 @@ public class ArrayList<E> extends AbstractList<E>
      */
     public ArrayList(int initialCapacity) {
         if (initialCapacity > 0) {
+            //创建指定容量大小的数组
             this.elementData = new Object[initialCapacity];
         } else if (initialCapacity == 0) {
+            //创建一个空数组EMPTY_ELEMENTDATA
             this.elementData = EMPTY_ELEMENTDATA;
         } else {
             throw new IllegalArgumentException("Illegal Capacity: "+
