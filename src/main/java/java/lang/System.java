@@ -65,6 +65,7 @@ public final class System {
      * Note that to use properties set by the VM, see the constraints
      * described in the initializeSystemClass method.
      */
+    //本地注册方法
     private static native void registerNatives();
     static {
         registerNatives();
