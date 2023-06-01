@@ -785,8 +785,230 @@ ArrayList可分割的迭代器，基于二分法的可分割迭代器，是为�
     }
 ```
 
-# **1.添加**
+# **添加**
 
 ## **boolean add(E e)**
 
 将指定的元素追加到此列表的末尾
+
+```java
+    /**
+     * Appends the specified element to the end of this list.
+     *
+     * @param e element to be appended to this list
+     * @return <tt>true</tt> (as specified by {@link Collection#add})
+     *
+     * add添加  添加到最后。O(1)
+     */
+    public boolean add(E e) {
+        //是否触发扩容
+        ensureCapacityInternal(size + 1);  // Increments modCount!!
+        //将元素存放在size索引下，size值后自增1
+        elementData[size++] = e;
+        return true;
+    }
+```
+
+
+
+## **void add(int index, E element)**
+
+在此列表中的指定位置插入指定的元素
+
+```java
+    /**
+     * Inserts the specified element at the specified position in this
+     * list. Shifts the element currently at that position (if any) and
+     * any subsequent elements to the right (adds one to their indices).
+     *
+     * @param index index at which the specified element is to be inserted
+     * @param element element to be inserted
+     * @throws IndexOutOfBoundsException {@inheritDoc}
+     * 添加到指定位置，后面依次后移。O(n)
+     */
+    public void add(int index, E element) {
+        rangeCheckForAdd(index);
+
+        ensureCapacityInternal(size + 1);  // Increments modCount!!
+        //数组拷贝
+        System.arraycopy(elementData, index, elementData, index + 1,
+                size - index);
+        //将元素赋值到指定索引位置    
+        elementData[index] = element;
+        size++;
+    }
+```
+
+### 1.ensureCapacityInternal
+
+确保容量，set后的容量是否超过上限，超过则进行扩容
+
+```java
+    private void ensureCapacityInternal(int minCapacity) {
+        //calculateCapacity返回set后当前要存储元素的个数
+        //ensureExplicitCapacity set后的要存储元素的个数和容量上限比较，是否触发扩容
+        ensureExplicitCapacity(calculateCapacity(elementData, minCapacity));
+    }
+```
+
+#### 1.1calculateCapacity
+
+当创建ArrayList时没有设置数组长度，会创建一个空数组，等到第一次add时，才会设置数组长度为10. 此时数组存储元素的个数为max(10,minCapacity)
+
+否则直接返回minCapacity
+
+```java
+    private static int calculateCapacity(Object[] elementData, int minCapacity) {
+        //如果创建ArrayList没有指定容量大小，max取较大值max(10,minCapacity),否则返回minCapacity
+        if (elementData == DEFAULTCAPACITY_EMPTY_ELEMENTDATA) {
+            return Math.max(DEFAULT_CAPACITY, minCapacity);
+        }
+        return minCapacity;
+    }
+```
+
+#### 1.2ensureExplicitCapacity
+
+```java
+    //确保容量的方法  超过当前容量上限则进行扩容
+    private void ensureExplicitCapacity(int minCapacity) {
+        //用于fail-fast机制，用于在并发场景下
+        modCount++;
+
+        // overflow-conscious code  防溢出,超出容量则扩容
+        if (minCapacity - elementData.length > 0)
+            //扩容方法
+            grow(minCapacity);
+    }
+```
+
+##### 1.2.1grow
+
+扩容为原来容量的1.5倍
+
+如果扩容后的容量依然小于要存储的个数，则数组的容量就设置为要存储的个数
+
+```java
+    /**
+     * Increases the capacity to ensure that it can hold at least the
+     * number of elements specified by the minimum capacity argument.
+     * 私有扩容方法，确保minCapacity个数元素的存储
+     * @param minCapacity the desired minimum capacity
+     */
+    private void grow(int minCapacity) {
+        // overflow-conscious code
+        //扩容前的容量
+        int oldCapacity = elementData.length;
+        //扩容后的容量 为扩容前的1.5倍
+        int newCapacity = oldCapacity + (oldCapacity >> 1);
+        //如果扩容后的容量 依然小于要存储的个数，则数组的容量就等于存储的个数
+        if (newCapacity - minCapacity < 0)
+            newCapacity = minCapacity;
+        //如果扩容后的容量超出了最大数组的长度 则取integer的最大值
+        if (newCapacity - MAX_ARRAY_SIZE > 0)
+            newCapacity = hugeCapacity(minCapacity);
+        // minCapacity is usually close to size, so this is a win:
+        elementData = Arrays.copyOf(elementData, newCapacity);
+    }
+```
+
+###### 1.2.1.1hugeCapacity
+
+```java
+//私有 大容量分配，最大分配Integer.MAX_VALUE,最小分配MAX_ARRAY_SIZE
+    private static int hugeCapacity(int minCapacity) {
+        if (minCapacity < 0) // overflow
+            throw new OutOfMemoryError();
+        return (minCapacity > MAX_ARRAY_SIZE) ?
+                Integer.MAX_VALUE :
+                MAX_ARRAY_SIZE;
+    }
+```
+
+### 2rangeCheckForAdd
+
+```java
+    /**
+     * A version of rangeCheck used by add and addAll.
+     * 传入索引进行条件判断越界
+     */
+    private void rangeCheckForAdd(int index) {
+        if (index > size || index < 0)
+            throw new IndexOutOfBoundsException(outOfBoundsMsg(index));
+    }
+```
+
+## boolean addAll(Collection<? extends E> c)
+
+按指定集合的iterator返回的顺序将指定集合中的所有元素追加到此列表的末尾
+
+```java
+/**
+     * Appends all of the elements in the specified collection to the end of
+     * this list, in the order that they are returned by the
+     * specified collection's Iterator.  The behavior of this operation is
+     * undefined if the specified collection is modified while the operation
+     * is in progress.  (This implies that the behavior of this call is
+     * undefined if the specified collection is this list, and this
+     * list is nonempty.)
+     *
+     * @param c collection containing elements to be added to this list
+     * @return <tt>true</tt> if this list changed as a result of the call
+     * @throws NullPointerException if the specified collection is null
+     * 将传入集合的所有元素添加到列表末尾
+     */
+    public boolean addAll(Collection<? extends E> c) {
+        Object[] a = c.toArray();
+        int numNew = a.length;
+        ensureCapacityInternal(size + numNew);  // Increments modCount
+        //将a数组拷贝到elementData里
+        System.arraycopy(a, 0, elementData, size, numNew);
+        size += numNew;
+        return numNew != 0;
+    }
+```
+
+## boolean addAll(int index, Collection<? extends E> c)
+
+将指定集合中的所有元素插入到此列表中，从指定的位置开始
+
+```java
+    /**
+     * Inserts all of the elements in the specified collection into this
+     * list, starting at the specified position.  Shifts the element
+     * currently at that position (if any) and any subsequent elements to
+     * the right (increases their indices).  The new elements will appear
+     * in the list in the order that they are returned by the
+     * specified collection's iterator.
+     *
+     * @param index index at which to insert the first element from the
+     *              specified collection
+     * @param c collection containing elements to be added to this list
+     * @return <tt>true</tt> if this list changed as a result of the call
+     * @throws IndexOutOfBoundsException {@inheritDoc}
+     * @throws NullPointerException if the specified collection is null
+     * 指定位置插入集合元素
+     */
+    public boolean addAll(int index, Collection<? extends E> c) {
+        rangeCheckForAdd(index);
+
+        Object[] a = c.toArray();
+        int numNew = a.length;
+        ensureCapacityInternal(size + numNew);  // Increments modCount
+        //需要移动的个数 = 集合真实的长度-要存储的索引位置
+        int numMoved = size - index;
+        if (numMoved > 0)
+            System.arraycopy(elementData, index, elementData, index + numNew,
+                             numMoved);
+
+        System.arraycopy(a, 0, elementData, index, numNew);
+        size += numNew;
+        return numNew != 0;
+    }
+```
+
+# **删除**
+
+## **E remove(int index)**
+
+删除指定位置元素

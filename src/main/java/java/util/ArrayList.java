@@ -257,6 +257,8 @@ public class ArrayList<E> extends AbstractList<E>
     }
 
     private void ensureCapacityInternal(int minCapacity) {
+        //calculateCapacity返回set后当前容量大小
+        //ensureExplicitCapacity set后的容量和容量上限比较，是否触发扩容
         ensureExplicitCapacity(calculateCapacity(elementData, minCapacity));
     }
 
@@ -303,7 +305,7 @@ public class ArrayList<E> extends AbstractList<E>
         elementData = Arrays.copyOf(elementData, newCapacity);
     }
 
-    //私有大容量分配，最大分配Integer.MAX_VALUE,最小分配MAX_ARRAY_SIZE
+    //私有 大容量分配，最大分配Integer.MAX_VALUE,最小分配MAX_ARRAY_SIZE
     private static int hugeCapacity(int minCapacity) {
         if (minCapacity < 0) // overflow
             throw new OutOfMemoryError();
@@ -513,7 +515,9 @@ public class ArrayList<E> extends AbstractList<E>
      * add添加  添加到最后。O(1)
      */
     public boolean add(E e) {
+        //是否触发扩容
         ensureCapacityInternal(size + 1);  // Increments modCount!!
+        //将元素存放在size索引下，size值后自增1
         elementData[size++] = e;
         return true;
     }
@@ -532,8 +536,10 @@ public class ArrayList<E> extends AbstractList<E>
         rangeCheckForAdd(index);
 
         ensureCapacityInternal(size + 1);  // Increments modCount!!
+        //数组拷贝
         System.arraycopy(elementData, index, elementData, index + 1,
                 size - index);
+        //将元素赋值到指定索引位置
         elementData[index] = element;
         size++;
     }
@@ -642,6 +648,7 @@ public class ArrayList<E> extends AbstractList<E>
         Object[] a = c.toArray();
         int numNew = a.length;
         ensureCapacityInternal(size + numNew);  // Increments modCount
+        //将a数组拷贝到elementData里
         System.arraycopy(a, 0, elementData, size, numNew);
         size += numNew;
         return numNew != 0;
@@ -671,6 +678,7 @@ public class ArrayList<E> extends AbstractList<E>
         ensureCapacityInternal(size + numNew);  // Increments modCount
 
         int numMoved = size - index;
+        //需要移动的个数 = 集合真实的长度-要存储的索引位置
         if (numMoved > 0)
             System.arraycopy(elementData, index, elementData, index + numNew,
                     numMoved);
