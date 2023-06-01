@@ -2759,17 +2759,18 @@ public final class Class<T> implements java.io.Serializable,
         //等待系统内部类初始化完成，系统属性(sun.reflect.noCaches)被解析完成
         checkInitted();
         Method[] res;
+        //判断当前是否有配置信息
         ReflectionData<T> rd = reflectionData();
         if (rd != null) {
-            //获取对应的方法
+            //从缓存中获取数据
             res = publicOnly ? rd.declaredPublicMethods : rd.declaredMethods;
             if (res != null) return res;
         }
         // No cached value available; request value from VM
-        //调用本地方法进行获取
+        //从JVM当中读取数据  getDeclaredMethods0(publicOnly) 使用native方式读取methods数组对象
         res = Reflection.filterMethods(this, getDeclaredMethods0(publicOnly));
         if (rd != null) {
-            //缓存获取的方法
+            //将缓存当中的数据更新
             if (publicOnly) {
                 rd.declaredPublicMethods = res;
             } else {

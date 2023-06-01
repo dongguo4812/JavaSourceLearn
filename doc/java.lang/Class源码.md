@@ -385,7 +385,7 @@ Class<?> aClass1 = Class.forName("java.lang.Integer");
     }
 ```
 
-### privateGetDeclaredConstructors(true)
+### privateGetDeclaredConstructors()
 
 ```java
     // Returns an array of "root" constructors. These Constructor
@@ -670,3 +670,38 @@ Constructor.java
     }
 ```
 
+### privateGetDeclaredMethods
+
+```java
+    // Returns an array of "root" methods. These Method objects must NOT
+    // be propagated to the outside world, but must instead be copied
+    // via ReflectionFactory.copyMethod.
+    //获取类中声明方法具体的实现
+    //publicOnly 是否只获取public方法
+    private Method[] privateGetDeclaredMethods(boolean publicOnly) {
+        //等待系统内部类初始化完成，系统属性(sun.reflect.noCaches)被解析完成
+        checkInitted();
+        Method[] res;
+        //判断当前是否有配置信息
+        ReflectionData<T> rd = reflectionData();
+        if (rd != null) {
+            //从缓存中获取数据
+            res = publicOnly ? rd.declaredPublicMethods : rd.declaredMethods;
+            if (res != null) return res;
+        }
+        // No cached value available; request value from VM
+        //从JVM当中读取数据  getDeclaredMethods0(publicOnly) 使用native方式读取methods数组对象
+        res = Reflection.filterMethods(this, getDeclaredMethods0(publicOnly));
+        if (rd != null) {
+            //将缓存当中的数据更新
+            if (publicOnly) {
+                rd.declaredPublicMethods = res;
+            } else {
+                rd.declaredMethods = res;
+            }
+        }
+        return res;
+    }
+```
+
+##### 
