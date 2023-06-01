@@ -170,6 +170,8 @@ ClassLoader 顾名思义就是类加载器   ClassLoader 是一个抽象类 没�
 # **常用方法**
 
 ## loadClass
+![image](https://github.com/dongguo4812/JavaSourceLearn/assets/87865453/e4547602-0076-4e96-a0cb-f89b17215cb7)
+
 
 ```java
     /**
@@ -337,6 +339,7 @@ ClassLoader 顾名思义就是类加载器   ClassLoader 是一个抽象类 没�
 
 ClassLoader使用的是双亲委托模型来搜索类的，每个ClassLoader实例都有一个父类加载器的引用（不是继承的关系，是组合关系），虚拟机内置的启动类加载器（Bootstrap ClassLoader）本身没有父类加载器，但可以用作其它ClassLoader实例的的父类加载器。当一个ClassLoader实例需要加载某个类时，它会试图亲自搜索某个类之前，先把这个任务委托给它的父类加载器，这个过程是由上至下依次检查的，首先由最顶层的类加载器Bootstrap ClassLoader试图加载，如果没加载到，则把任务转交给Extension ClassLoader试图加载，如果也没加载到，则转交给App ClassLoader 进行加载，如果它也没有加载得到的话，则返回给委托的发起者，由它到指定的文件系统或网络等URL中加载该类。如果它们都没有加载到这个类时，则抛出ClassNotFoundException异常。否则将这个找到的类生成一个类的定义，并将它加载到内存当中，最后返回这个类在内存中的Class实例对象。
 
+![image](https://github.com/dongguo4812/JavaSourceLearn/assets/87865453/b7c774fa-de81-4f55-a033-3d1022fb21d8)
 
 
 可以发现**委托是从下向上，然后具体查找过程却是自上至下**。
