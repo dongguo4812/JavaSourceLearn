@@ -401,24 +401,32 @@ public final class Constructor<T> extends Executable {
      *              throws an exception.
      * @exception ExceptionInInitializerError if the initialization provoked
      *              by this method fails.
+     *  获取到实例方法
      */
     @CallerSensitive
     public T newInstance(Object ... initargs)
         throws InstantiationException, IllegalAccessException,
                IllegalArgumentException, InvocationTargetException
     {
+        //判断语言级别的访问权限是否被覆盖
         if (!override) {
+            //没有被覆盖需要检查是否有访问权限
             if (!Reflection.quickCheckMemberAccess(clazz, modifiers)) {
                 Class<?> caller = Reflection.getCallerClass();
                 checkAccess(caller, clazz, null, modifiers);
             }
         }
+        //判断是否为枚举类型
         if ((clazz.getModifiers() & Modifier.ENUM) != 0)
+            //如果是枚举类型不能通过反射创建
             throw new IllegalArgumentException("Cannot reflectively create enum objects");
+        //获取constructorAccessor
         ConstructorAccessor ca = constructorAccessor;   // read volatile
         if (ca == null) {
+            //如果为null, 通过acquireConstructorAccessor获取
             ca = acquireConstructorAccessor();
         }
+        //通过ConstructorAccessor创建实例对象
         @SuppressWarnings("unchecked")
         T inst = (T) ca.newInstance(initargs);
         return inst;
@@ -435,6 +443,7 @@ public final class Constructor<T> extends Executable {
 
     /**
      * {@inheritDoc}
+     * @jls 13.1 The Form of a Binary
      * @jls 13.1 The Form of a Binary
      * @since 1.5
      */
@@ -454,10 +463,13 @@ public final class Constructor<T> extends Executable {
         ConstructorAccessor tmp = null;
         if (root != null) tmp = root.getConstructorAccessor();
         if (tmp != null) {
+            //先判断是否已经创建了ConstructorAccessor 如果已经创建了，直接返回获取就可以
             constructorAccessor = tmp;
         } else {
             // Otherwise fabricate one and propagate it up to the root
+            //通过reflectionFactory来创建一个新的ConstructorAccessor
             tmp = reflectionFactory.newConstructorAccessor(this);
+            //设置当前Class对象当中的ConstructorAccessor对象
             setConstructorAccessor(tmp);
         }
 

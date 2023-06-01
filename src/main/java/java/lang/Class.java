@@ -417,6 +417,7 @@ public final class Class<T> implements java.io.Serializable,
         // the current Java memory model.
 
         // Constructor lookup
+        //检查是否加载过构造器
         if (cachedConstructor == null) {
             if (this == Class.class) {
                 throw new IllegalAccessException(
@@ -425,6 +426,7 @@ public final class Class<T> implements java.io.Serializable,
             }
             try {
                 Class<?>[] empty = {};
+                //获取默认私有无参构造
                 final Constructor<T> c = getConstructor0(empty, Member.DECLARED);
                 // Disable accessibility checks on the constructor
                 // since we have to do the security check here anyway
@@ -455,6 +457,7 @@ public final class Class<T> implements java.io.Serializable,
         }
         // Run constructor
         try {
+            //调用无参构造的newInstance方法
             return tmpConstructor.newInstance((Object[])null);
         } catch (InvocationTargetException e) {
             Unsafe.getUnsafe().throwException(e.getTargetException());
@@ -1675,6 +1678,7 @@ public final class Class<T> implements java.io.Serializable,
      *         of this class.
      *
      * @since JDK1.1
+     * 返回构造函数组成的数据
      */
     @CallerSensitive
     public Constructor<?>[] getConstructors() throws SecurityException {
@@ -2154,15 +2158,20 @@ public final class Class<T> implements java.io.Serializable,
      * @jls 8.2 Class Members
      * @jls 8.4 Method Declarations
      * @since JDK1.1
+     * 获取指定的Method对象方法
      */
     @CallerSensitive
     public Method getDeclaredMethod(String name, Class<?>... parameterTypes)
         throws NoSuchMethodException, SecurityException {
+        //判断当前method是否有访问权限
         checkMemberAccess(Member.DECLARED, Reflection.getCallerClass(), true);
+        //privateGetDeclaredMethods获取到当前所声明的所有方法
+        //根据当前传递的方法名和参数类型从声明的方法中找到匹配的方法
         Method method = searchMethods(privateGetDeclaredMethods(false), name, parameterTypes);
         if (method == null) {
             throw new NoSuchMethodException(getName() + "." + name + argumentTypesToString(parameterTypes));
         }
+        //返回
         return method;
     }
 
@@ -2527,36 +2536,46 @@ public final class Class<T> implements java.io.Serializable,
     // Lazily create and cache ReflectionData
     //创建和缓存反射获得的数据
     private ReflectionData<T> reflectionData() {
+        //获取当前reflectionData
         SoftReference<ReflectionData<T>> reflectionData = this.reflectionData;
         int classRedefinedCount = this.classRedefinedCount;
         ReflectionData<T> rd;
+        //如果可以使用缓存，并且缓存当中的数据不为null，而且缓存没有失效，（缓存当中redefinedCount等于classRedefinedCount的值）
         if (useCaches &&
             reflectionData != null &&
             (rd = reflectionData.get()) != null &&
             rd.redefinedCount == classRedefinedCount) {
+            //直接返回缓存当中的reflectionData
             return rd;
         }
         // else no SoftReference or cleared SoftReference or stale ReflectionData
         // -> create and replace new instance
+        //创建新的reflectionData，并保存到缓存当中去
         return newReflectionData(reflectionData, classRedefinedCount);
     }
 
     private ReflectionData<T> newReflectionData(SoftReference<ReflectionData<T>> oldReflectionData,
                                                 int classRedefinedCount) {
+        //不使用缓存，直接返回
         if (!useCaches) return null;
-
+        //while + cas
         while (true) {
+            //创建新的ReflectionData
             ReflectionData<T> rd = new ReflectionData<>(classRedefinedCount);
             // try to CAS it...
+            //更新成功，返回
             if (Atomic.casReflectionData(this, oldReflectionData, new SoftReference<>(rd))) {
                 return rd;
             }
             // else retry
+            //否则获得旧的reflectionData和classRedefinedCount的值
             oldReflectionData = this.reflectionData;
             classRedefinedCount = this.classRedefinedCount;
+            //如果旧的值不为null, 并且缓存未失效，说明其他线程更新成功了
             if (oldReflectionData != null &&
                 (rd = oldReflectionData.get()) != null &&
                 rd.redefinedCount == classRedefinedCount) {
+                //直接返回
                 return rd;
             }
         }
@@ -2938,10 +2957,13 @@ public final class Class<T> implements java.io.Serializable,
     // be propagated to the outside world, but must instead be copied
     // via ReflectionFactory.copyMethod.
     private Method[] privateGetPublicMethods() {
+        //判断是否配置了useCached属性值
         checkInitted();
         Method[] res;
+        //获取缓存当中的数据
         ReflectionData<T> rd = reflectionData();
         if (rd != null) {
+            //如果缓存当中有数据，直接返回缓存当中的构造方法
             res = rd.publicMethods;
             if (res != null) return res;
         }
