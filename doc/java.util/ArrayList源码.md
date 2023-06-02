@@ -1210,8 +1210,6 @@ ArrayList可分割的迭代器，基于二分法的可分割迭代器，是为�
     }
 ```
 
-# TODO debug
-
 ## **boolean batchRemove(Collection c, boolean complement)**
 
 removeAll方法和retainAll方法都调用了batchRemove方法，区别就在于参数complement
@@ -1269,7 +1267,7 @@ removeAll方法和retainAll方法都调用了batchRemove方法，区别就在于
     }
 ```
 
-数组边遍历边赋值
+边遍历边赋值
 
 比如原数组：1 2 3 4 5 6 7 8 9；参数数组:a b c 3 5 8 d
 
@@ -1285,7 +1283,7 @@ removeAll方法和retainAll方法都调用了batchRemove方法，区别就在于
 | 8        | 7    | 5    | flase |                                   |                                    |                                    |
 | 9        | 8    | 5    | true  | elementData[5] = elementData[8]   | <font color="red">12467</font>6789 | <font color="red">124679</font>789 |
 
-将7，8，9删除
+w为5，将数组索引6，7，8元素删除，即将7，8，9删除
 
 原数组变为1 2 4 6 7 9
 
