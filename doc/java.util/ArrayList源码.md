@@ -19,6 +19,7 @@ ArrayList继承了AbstractList，实现了List、RandomAccess、Cloneable、Seri
 public class ArrayList<E> extends AbstractList<E>
         implements List<E>, RandomAccess, Cloneable, java.io.Serializable
 ```
+![image](https://github.com/dongguo4812/JavaSourceLearn/assets/87865453/3953880c-6c47-4819-952d-23b7966ba7b1)
 
 
 
@@ -790,6 +791,7 @@ ArrayList可分割的迭代器，基于二分法的可分割迭代器，是为�
 ## **boolean add(E e)**
 
 将指定的元素追加到此列表的末尾
+![image](https://github.com/dongguo4812/JavaSourceLearn/assets/87865453/b20e7f63-82f5-478a-98a0-cc8e38d01736)
 
 ```java
     /**
@@ -814,6 +816,7 @@ ArrayList可分割的迭代器，基于二分法的可分割迭代器，是为�
 ## **void add(int index, E element)**
 
 在此列表中的指定位置插入指定的元素
+![image](https://github.com/dongguo4812/JavaSourceLearn/assets/87865453/758b9e5b-8fcb-48c6-8454-e660487fd66d)
 
 ```java
     /**
@@ -941,6 +944,7 @@ ArrayList可分割的迭代器，基于二分法的可分割迭代器，是为�
 ## boolean addAll(Collection<? extends E> c)
 
 按指定集合的iterator返回的顺序将指定集合中的所有元素追加到此列表的末尾
+![image](https://github.com/dongguo4812/JavaSourceLearn/assets/87865453/ab7086f0-5b19-4cad-8347-c88d605c6fdb)
 
 ```java
 /**
@@ -971,6 +975,7 @@ ArrayList可分割的迭代器，基于二分法的可分割迭代器，是为�
 ## boolean addAll(int index, Collection<? extends E> c)
 
 将指定集合中的所有元素插入到此列表中，从指定的位置开始
+![image](https://github.com/dongguo4812/JavaSourceLearn/assets/87865453/f1677a9a-6bd8-486c-a392-24a663e3f4cd)
 
 ```java
     /**
@@ -1012,3 +1017,4 @@ ArrayList可分割的迭代器，基于二分法的可分割迭代器，是为�
 ## **E remove(int index)**
 
 删除指定位置元素
+![image](https://github.com/dongguo4812/JavaSourceLearn/assets/87865453/ccde7bb2-d503-4447-a406-6407f17fd357)
