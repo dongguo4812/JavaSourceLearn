@@ -1300,6 +1300,7 @@ removeAll方法和retainAll方法都调用了batchRemove方法，区别就在于
 
 输出结果
 
+![image](https://github.com/dongguo4812/JavaSourceLearn/assets/87865453/9830e51c-ea77-4add-8a4a-1995f8eb95ce)
 
 
 
