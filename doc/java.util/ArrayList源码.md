@@ -1017,4 +1017,616 @@ ArrayList可分割的迭代器，基于二分法的可分割迭代器，是为�
 ## **E remove(int index)**
 
 删除指定位置元素
+
 ![image](https://github.com/dongguo4812/JavaSourceLearn/assets/87865453/ccde7bb2-d503-4447-a406-6407f17fd357)
+
+```java
+    /**
+     * Removes the element at the specified position in this list.
+     * Shifts any subsequent elements to the left (subtracts one from their
+     * indices).
+     *
+     * @param index the index of the element to be removed
+     * @return the element that was removed from the list
+     * @throws IndexOutOfBoundsException {@inheritDoc}
+     * 删除指定位置元素并返回 O(n)
+     */
+    public E remove(int index) {
+        rangeCheck(index);
+
+        modCount++;
+        //获得指定索引的元素
+        E oldValue = elementData(index);
+
+        int numMoved = size - index - 1;
+        if (numMoved > 0)
+            //说明该元素不是在数组最后的位置，进行数组的拷贝（将该元素后组成的数组统一前移一位）
+            System.arraycopy(elementData, index+1, elementData, index,
+                    numMoved);
+        //数组元素个数减1，将数组最后位置置空  让gc进行回收
+        elementData[--size] = null; // clear to let GC do its work
+        //返回旧值
+        return oldValue;
+    }
+```
+
+## **boolean remove(Object o)**
+
+删除指定元素
+
+```java
+    /**
+     * Removes the first occurrence of the specified element from this list,
+     * if it is present.  If the list does not contain the element, it is
+     * unchanged.  More formally, removes the element with the lowest index
+     * <tt>i</tt> such that
+     * <tt>(o==null&nbsp;?&nbsp;get(i)==null&nbsp;:&nbsp;o.equals(get(i)))</tt>
+     * (if such an element exists).  Returns <tt>true</tt> if this list
+     * contained the specified element (or equivalently, if this list
+     * changed as a result of the call).
+     *
+     * @param o element to be removed from this list, if present
+     * @return <tt>true</tt> if this list contained the specified element
+     * 删除给定obj
+     */
+    public boolean remove(Object o) {
+        //传入null
+        if (o == null) {
+            //遍历
+            for (int index = 0; index < size; index++)
+                //找到第一个元素为null所在的索引
+                if (elementData[index] == null) {
+                    //删除元素
+                    fastRemove(index);
+                    return true;
+                }
+        } else {
+            for (int index = 0; index < size; index++)
+                //找到第一个元素为o所在的索引
+                if (o.equals(elementData[index])) {
+                    //删除元素
+                    fastRemove(index);
+                    return true;
+                }
+        }
+        return false;
+    }
+```
+
+## **void fastRemove(int index)**
+
+就是remove(int index)中删除元素的逻辑
+
+```java
+    /*
+     * Private remove method that skips bounds checking and does not
+     * return the value removed.
+     * 私有删除方法，不进行边界检查，不返回被删除元素
+     */
+    private void fastRemove(int index) {
+        modCount++;
+        int numMoved = size - index - 1;
+        if (numMoved > 0)
+            System.arraycopy(elementData, index+1, elementData, index,
+                    numMoved);
+        elementData[--size] = null; // clear to let GC do its work
+    }
+```
+
+## **void removeRange(int fromIndex, int toIndex)**
+
+删除指定范围的元素
+
+```java
+    /**
+     * Removes from this list all of the elements whose index is between
+     * {@code fromIndex}, inclusive, and {@code toIndex}, exclusive.
+     * Shifts any succeeding elements to the left (reduces their index).
+     * This call shortens the list by {@code (toIndex - fromIndex)} elements.
+     * (If {@code toIndex==fromIndex}, this operation has no effect.)
+     *
+     * @throws IndexOutOfBoundsException if {@code fromIndex} or
+     *         {@code toIndex} is out of range
+     *         ({@code fromIndex < 0 ||
+     *          fromIndex >= size() ||
+     *          toIndex > size() ||
+     *          toIndex < fromIndex})
+     * 删除[fromIndex,toIndex)的元素
+     */
+    protected void removeRange(int fromIndex, int toIndex) {
+        modCount++;
+        int numMoved = size - toIndex;
+        System.arraycopy(elementData, toIndex, elementData, fromIndex,
+                numMoved);
+
+        // clear to let GC do its work
+        //删除后新的元素个数
+        int newSize = size - (toIndex-fromIndex);
+        //删除元素
+        for (int i = newSize; i < size; i++) {
+            elementData[i] = null;
+        }
+        //更新元素个数
+        size = newSize;
+    }
+```
+
+## **boolean removeAll(Collection c)**
+
+移除集合中的元素
+
+```java
+    /**
+     * Removes from this list all of its elements that are contained in the
+     * specified collection.
+     *
+     * @param c collection containing elements to be removed from this list
+     * @return {@code true} if this list changed as a result of the call
+     * @throws ClassCastException if the class of an element of this list
+     *         is incompatible with the specified collection
+     * (<a href="Collection.html#optional-restrictions">optional</a>)
+     * @throws NullPointerException if this list contains a null element and the
+     *         specified collection does not permit null elements
+     * (<a href="Collection.html#optional-restrictions">optional</a>),
+     *         or if the specified collection is null
+     * @see Collection#contains(Object)
+     * 移除c集合中的所有元素
+     */
+    public boolean removeAll(Collection<?> c) {
+        //null值判断
+        Objects.requireNonNull(c);
+        return batchRemove(c, false);
+    }
+```
+
+## **boolean retainAll(Collection c)**
+
+保留集合中的元素
+
+```java
+    /**
+     * Retains only the elements in this list that are contained in the
+     * specified collection.  In other words, removes from this list all
+     * of its elements that are not contained in the specified collection.
+     *
+     * @param c collection containing elements to be retained in this list
+     * @return {@code true} if this list changed as a result of the call
+     * @throws ClassCastException if the class of an element of this list
+     *         is incompatible with the specified collection
+     * (<a href="Collection.html#optional-restrictions">optional</a>)
+     * @throws NullPointerException if this list contains a null element and the
+     *         specified collection does not permit null elements
+     * (<a href="Collection.html#optional-restrictions">optional</a>),
+     *         or if the specified collection is null
+     * @see Collection#contains(Object)
+     * 保留c集合中的元素
+     */
+    public boolean retainAll(Collection<?> c) {
+        Objects.requireNonNull(c);
+        return batchRemove(c, true);
+    }
+```
+
+# TODO debug
+
+## **boolean batchRemove(Collection c, boolean complement)**
+
+removeAll方法和retainAll方法都调用了batchRemove方法，区别就在于参数complement
+
+如果为true只保留c集合中元素，如果false，移除c集合中的元素
+
+### 以removeAll为例，当complement为false
+
+```java
+    /**
+     * 批量移除。O(n)
+     * @param c
+     * @param complement   如果为true只保留c集合中元素，如果false，移除c集合中的元素
+     * @return
+     */
+    private boolean batchRemove(Collection<?> c, boolean complement) {
+        final Object[] elementData = this.elementData;
+        //两个指针，r是读取位置，w是写入位置
+        int r = 0, w = 0;
+        boolean modified = false;
+        try {
+            for (; r < size; r++)
+                //遍历数组，当c中不存在该元素时，边判定边写入元素
+                if (c.contains(elementData[r]) == complement)
+                    //elementData[r] 遍历的元素
+                    //elementData[w++] 写入的元素 写入后指针+1
+                    elementData[w++] = elementData[r];
+        } finally {
+            // Preserve behavioral compatibility with AbstractCollection,
+            // even if c.contains() throws.
+            //如果读的元素个数 不等于 数组的个数 说明在操作中抛出了异常，出错后保证数据的完整性
+            if (r != size) {
+                //数组拷贝 从出错的位置开始，将后面所有元素拷贝到写入元素的后面
+                System.arraycopy(elementData, r,
+                        elementData, w,
+                        size - r);
+                //写入的个数 = 真正写入的个数 + 移动元素的个数
+                w += size - r;
+            }
+            //说明写入的个数小于元素的个数，有元素需要删除
+            if (w != size) {
+                // clear to let GC do its work
+                //此时索引w 至 size-1的元素都是要删除的
+                for (int i = w; i < size; i++)
+                    elementData[i] = null;
+                modCount += size - w;
+                //元素的个数为w
+                size = w;
+                //修改成功
+                modified = true;
+            }
+        }
+        return modified;
+    }
+```
+
+## **void clear()**
+
+清空数组
+
+```java
+    /**
+     * Removes all of the elements from this list.  The list will
+     * be empty after this call returns.
+     * 清空list，释放空间 O(n)
+     */
+    public void clear() {
+        modCount++;
+
+        // clear to let GC do its work
+        for (int i = 0; i < size; i++)
+            elementData[i] = null;
+
+        size = 0;
+    }
+```
+
+# **查找**
+
+## **E get(int index)**
+
+```java
+    /**
+     * Returns the element at the specified position in this list.
+     *
+     * @param  index index of the element to return
+     * @return the element at the specified position in this list
+     * @throws IndexOutOfBoundsException {@inheritDoc}
+     * 获取指定位置元素
+     */
+    public E get(int index) {
+        //检查索引是否在条件范围内
+        rangeCheck(index);
+        //返回该索引对应的元素
+        return elementData(index);
+    }
+```
+
+## **int indexOf(Object o)**
+
+顺序查找，返回obj所在下标
+
+```java
+    /**
+     * Returns the index of the first occurrence of the specified element
+     * in this list, or -1 if this list does not contain the element.
+     * More formally, returns the lowest index <tt>i</tt> such that
+     * <tt>(o==null&nbsp;?&nbsp;get(i)==null&nbsp;:&nbsp;o.equals(get(i)))</tt>,
+     * or -1 if there is no such index.
+     * 顺序查找，返回首先出现的位置，找不到返-1。O(n)
+     */
+    public int indexOf(Object o) {
+        //ArrayList可以存储null  查询的元素为null的情况
+        if (o == null) {
+            for (int i = 0; i < size; i++)
+                if (elementData[i]==null)
+                    return i;
+            //不为null的情况
+        } else {
+            for (int i = 0; i < size; i++)
+                if (o.equals(elementData[i]))
+                    return i;
+        }
+        return -1;
+    }
+```
+
+## **int lastIndexOf(Object o)**
+
+逆序查找，返回obj所在下标
+
+```java
+    /**
+     * Returns the index of the last occurrence of the specified element
+     * in this list, or -1 if this list does not contain the element.
+     * More formally, returns the highest index <tt>i</tt> such that
+     * <tt>(o==null&nbsp;?&nbsp;get(i)==null&nbsp;:&nbsp;o.equals(get(i)))</tt>,
+     * or -1 if there is no such index.
+     * 逆序查找，返回最后出现的位置，找不到返-1。O(n)
+     */
+    public int lastIndexOf(Object o) {
+        if (o == null) {
+            for (int i = size-1; i >= 0; i--)
+                if (elementData[i]==null)
+                    return i;
+        } else {
+            for (int i = size-1; i >= 0; i--)
+                if (o.equals(elementData[i]))
+                    return i;
+        }
+        return -1;
+    }
+```
+
+## **boolean contains(Object o)**
+
+判断集合是否包含指定元素
+
+```java
+    /**
+     * Returns <tt>true</tt> if this list contains the specified element.
+     * More formally, returns <tt>true</tt> if and only if this list contains
+     * at least one element <tt>e</tt> such that
+     * <tt>(o==null&nbsp;?&nbsp;e==null&nbsp;:&nbsp;o.equals(e))</tt>.
+     *
+     * @param o element whose presence in this list is to be tested
+     * @return <tt>true</tt> if this list contains the specified element
+     * 顺序查找实现，根据返回值判断集合是否包含元素o
+     */
+    public boolean contains(Object o) {
+        //indexOf(o) >= 0 表示查找到了存储的o元素
+        return indexOf(o) >= 0;
+    }
+```
+
+# **修改**
+
+## **E set(int index, E element)**
+
+```java
+    /**
+     * Replaces the element at the specified position in this list with
+     * the specified element.
+     *
+     * @param index index of the element to replace
+     * @param element element to be stored at the specified position
+     * @return the element previously at the specified position
+     * @throws IndexOutOfBoundsException {@inheritDoc}
+     * 修改指定位置元素
+     */
+    public E set(int index, E element) {
+        rangeCheck(index);
+
+        E oldValue = elementData(index);
+        //赋值
+        elementData[index] = element;
+        //返回旧值
+        return oldValue;
+    }
+```
+
+# **迭代器**
+
+## Iterator<E> iterator()
+
+创建一个Iterator的子类Itr
+
+```java
+    /**
+     * Returns an iterator over the elements in this list in proper sequence.
+     *
+     * <p>The returned iterator is <a href="#fail-fast"><i>fail-fast</i></a>.
+     *
+     * @return an iterator over the elements in this list in proper sequence
+     */
+    public Iterator<E> iterator() {
+        //内部类Itr
+        return new Itr();
+    }
+```
+
+# **其他**
+
+## List<E> subList(int fromIndex, int toIndex)
+
+返回SubList类型的子集合
+
+```java
+    /**
+     * Returns a view of the portion of this list between the specified
+     * {@code fromIndex}, inclusive, and {@code toIndex}, exclusive.  (If
+     * {@code fromIndex} and {@code toIndex} are equal, the returned list is
+     * empty.)  The returned list is backed by this list, so non-structural
+     * changes in the returned list are reflected in this list, and vice-versa.
+     * The returned list supports all of the optional list operations.
+     *
+     * <p>This method eliminates the need for explicit range operations (of
+     * the sort that commonly exist for arrays).  Any operation that expects
+     * a list can be used as a range operation by passing a subList view
+     * instead of a whole list.  For example, the following idiom
+     * removes a range of elements from a list:
+     * <pre>
+     *      list.subList(from, to).clear();
+     * </pre>
+     * Similar idioms may be constructed for {@link #indexOf(Object)} and
+     * {@link #lastIndexOf(Object)}, and all of the algorithms in the
+     * {@link Collections} class can be applied to a subList.
+     *
+     * <p>The semantics of the list returned by this method become undefined if
+     * the backing list (i.e., this list) is <i>structurally modified</i> in
+     * any way other than via the returned list.  (Structural modifications are
+     * those that change the size of this list, or otherwise perturb it in such
+     * a fashion that iterations in progress may yield incorrect results.)
+     *
+     * @throws IndexOutOfBoundsException {@inheritDoc}
+     * @throws IllegalArgumentException {@inheritDoc}
+     * 取子list,返回Sublist这个ArrayList的内部类,
+     * 这是个坑，注意SubList和其他List实现类的区别
+     */
+    public List<E> subList(int fromIndex, int toIndex) {
+        subListRangeCheck(fromIndex, toIndex, size);
+        return new SubList(this, 0, fromIndex, toIndex);
+    }
+
+    /**
+     * 越界判断
+     * @param fromIndex
+     * @param toIndex
+     * @param size
+     */
+    static void subListRangeCheck(int fromIndex, int toIndex, int size) {
+        if (fromIndex < 0)
+            throw new IndexOutOfBoundsException("fromIndex = " + fromIndex);
+        if (toIndex > size)
+            throw new IndexOutOfBoundsException("toIndex = " + toIndex);
+        if (fromIndex > toIndex)
+            throw new IllegalArgumentException("fromIndex(" + fromIndex +
+                                               ") > toIndex(" + toIndex + ")");
+    }
+```
+
+## void sort(Comparator<? super E> c)
+
+```java
+    /**
+     * 传入Compartor，用Arrays.sort()实现，主要是LegacyMergeSort和Timsort
+     * @param c the {@code Comparator} used to compare list elements.
+     *          A {@code null} value indicates that the elements'
+     *          {@linkplain Comparable natural ordering} should be used
+     */
+    @Override
+    @SuppressWarnings("unchecked")
+    public void sort(Comparator<? super E> c) {
+        final int expectedModCount = modCount;
+        //实现排序的方法
+        Arrays.sort((E[]) elementData, 0, size, c);
+        //排序完，再次判断，防止并发修改
+        if (modCount != expectedModCount) {
+            throw new ConcurrentModificationException();
+        }
+        modCount++;
+    }
+```
+
+## **boolean isEmpty()**
+
+判断集合是否为空
+
+```java
+    /**
+     * Returns <tt>true</tt> if this list contains no elements.
+     *
+     * @return <tt>true</tt> if this list contains no elements
+     * 判空，直接看size就行了
+     */
+    public boolean isEmpty() {
+        return size == 0;
+    }
+```
+
+## **Object clone()**
+
+克隆拷贝
+
+```java
+    /**
+     * Returns a shallow copy of this <tt>ArrayList</tt> instance.  (The
+     * elements themselves are not copied.)
+     *
+     * @return a clone of this <tt>ArrayList</tt> instance
+     * 克隆，主要拷贝elementData数组  ArrayLis的clone方法返回类型为ArrayList的类型
+     */
+    public Object clone() {
+        try {
+            //调用父类Object的clone方法，强转为ArrayList
+            ArrayList<?> v = (ArrayList<?>) super.clone();
+            //将原集合的元素赋值给新的集合，指定新集合的长度
+            v.elementData = Arrays.copyOf(elementData, size);
+            //重置修改次数
+            v.modCount = 0;
+            return v;
+        } catch (CloneNotSupportedException e) {
+            // this shouldn't happen, since we are Cloneable
+            throw new InternalError(e);
+        }
+    }
+```
+
+## **void trimToSize()** 
+
+```java
+    /**
+     * Trims the capacity of this <tt>ArrayList</tt> instance to be the
+     * list's current size.  An application can use this operation to minimize
+     * the storage of an <tt>ArrayList</tt> instance.
+     * 拷贝到新数组中，释放多余空间
+     */
+    public void trimToSize() {
+        modCount++;
+        //存储元素小于数组的长度
+        if (size < elementData.length) {
+            elementData = (size == 0)
+                    //空数组
+                    ? EMPTY_ELEMENTDATA
+                    //拷贝
+                    : Arrays.copyOf(elementData, size);
+        }
+    }
+```
+
+## String toString()
+
+ArrayList本身是没有toString方法，调用其父类AbstractCollection的toString方法
+
+`AbstractCollection.java`
+
+```java
+AbstractCollection.java
+     
+    /**
+     * Returns a string representation of this collection.  The string
+     * representation consists of a list of the collection's elements in the
+     * order they are returned by its iterator, enclosed in square brackets
+     * (<tt>"[]"</tt>).  Adjacent elements are separated by the characters
+     * <tt>", "</tt> (comma and space).  Elements are converted to strings as
+     * by {@link String#valueOf(Object)}.
+     *
+     * @return a string representation of this collection
+     */
+    public String toString() {
+        //获取迭代器
+        Iterator<E> it = iterator();
+        //判断迭代器是否有元素
+        if (! it.hasNext())
+            return "[]";
+        //字符串拼接
+        StringBuilder sb = new StringBuilder();
+        sb.append('[');
+        //无限循环
+        for (;;) {
+            E e = it.next();
+            sb.append(e == this ? "(this Collection)" : e);
+            //已经没有元素了，返回拼接的字符串
+            if (! it.hasNext())
+                return sb.append(']').toString();
+            sb.append(',').append(' ');
+        }
+    }
+```
+
+# **答疑**
+
+## **1 ArrayList频繁扩容导致添加性能急剧下降，该如何处理**
+
+ArrayList(int initialCapacity) 构造具有指定初始容量的空列表。可以根据业务场景创建一个适当初始容量的集合，避免了扩容的性能影响。
+
+## **2ArrayList插入或删除元素一定比LinkedList慢吗？**
+
+
+
+## **3ArrayList在什么情况下要保证同步**

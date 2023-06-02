@@ -220,9 +220,12 @@ public class ArrayList<E> extends AbstractList<E>
      */
     public void trimToSize() {
         modCount++;
+        //存储元素小于数组的长度
         if (size < elementData.length) {
             elementData = (size == 0)
+                    //空数组
                     ? EMPTY_ELEMENTDATA
+                    //拷贝
                     : Arrays.copyOf(elementData, size);
         }
     }
@@ -357,11 +360,12 @@ public class ArrayList<E> extends AbstractList<E>
      * 顺序查找，返回首先出现的位置，找不到返-1。O(n)
      */
     public int indexOf(Object o) {
-        //ArrayList可以存储null
+        //ArrayList可以存储null  查询的元素为null的情况
         if (o == null) {
             for (int i = 0; i < size; i++)
                 if (elementData[i]==null)
                     return i;
+            //不为null的情况
         } else {
             for (int i = 0; i < size; i++)
                 if (o.equals(elementData[i]))
@@ -502,7 +506,9 @@ public class ArrayList<E> extends AbstractList<E>
         rangeCheck(index);
 
         E oldValue = elementData(index);
+        //赋值
         elementData[index] = element;
+        //返回旧值
         return oldValue;
     }
 
@@ -558,15 +564,17 @@ public class ArrayList<E> extends AbstractList<E>
         rangeCheck(index);
 
         modCount++;
+        //获得指定索引的元素
         E oldValue = elementData(index);
 
         int numMoved = size - index - 1;
         if (numMoved > 0)
+            //说明该元素不是在数组最后的位置，进行数组的拷贝（将该元素后组成的数组统一前移一位）
             System.arraycopy(elementData, index+1, elementData, index,
                     numMoved);
-        //让gc进行回收
+        //数组元素个数减1，将数组最后位置置空  让gc进行回收
         elementData[--size] = null; // clear to let GC do its work
-
+        //返回旧值
         return oldValue;
     }
 
@@ -585,15 +593,21 @@ public class ArrayList<E> extends AbstractList<E>
      * 删除给定obj
      */
     public boolean remove(Object o) {
+        //传入null
         if (o == null) {
+            //遍历
             for (int index = 0; index < size; index++)
+                //找到第一个元素为null所在的索引
                 if (elementData[index] == null) {
+                    //删除元素
                     fastRemove(index);
                     return true;
                 }
         } else {
             for (int index = 0; index < size; index++)
+                //找到第一个元素为o所在的索引
                 if (o.equals(elementData[index])) {
+                    //删除元素
                     fastRemove(index);
                     return true;
                 }
@@ -710,10 +724,13 @@ public class ArrayList<E> extends AbstractList<E>
                 numMoved);
 
         // clear to let GC do its work
+        //删除后新的元素个数
         int newSize = size - (toIndex-fromIndex);
+        //删除元素
         for (int i = newSize; i < size; i++) {
             elementData[i] = null;
         }
+        //更新元素个数
         size = newSize;
     }
 
@@ -722,6 +739,7 @@ public class ArrayList<E> extends AbstractList<E>
      * runtime exception.  This method does *not* check if the index is
      * negative: It is always used immediately prior to an array access,
      * which throws an ArrayIndexOutOfBoundsException if index is negative.
+     * 越界检查
      */
     private void rangeCheck(int index) {
         //如果查询的索引大于等于当前存储的个数，抛出数组下标越界异常
@@ -764,6 +782,7 @@ public class ArrayList<E> extends AbstractList<E>
      * 移除c集合中的所有元素
      */
     public boolean removeAll(Collection<?> c) {
+        //null值判断
         Objects.requireNonNull(c);
         return batchRemove(c, false);
     }
@@ -790,7 +809,12 @@ public class ArrayList<E> extends AbstractList<E>
         return batchRemove(c, true);
     }
 
-    //批量移除。O(n)   第二个参数，如果为true只保留c集合中元素，如果false，移除c集合中的元素
+    /**
+     * 批量移除。O(n)
+     * @param c
+     * @param complement   如果为true只保留c集合中元素，如果false，移除c集合中的元素
+     * @return
+     */
     private boolean batchRemove(Collection<?> c, boolean complement) {
         final Object[] elementData = this.elementData;
         //两个指针，r是读取位置，w是写入位置
@@ -798,6 +822,7 @@ public class ArrayList<E> extends AbstractList<E>
         boolean modified = false;
         try {
             for (; r < size; r++)
+                //
                 if (c.contains(elementData[r]) == complement)
                     elementData[w++] = elementData[r];
         } finally {
@@ -1125,6 +1150,12 @@ public class ArrayList<E> extends AbstractList<E>
         return new SubList(this, 0, fromIndex, toIndex);
     }
 
+    /**
+     * 越界判断
+     * @param fromIndex
+     * @param toIndex
+     * @param size
+     */
     static void subListRangeCheck(int fromIndex, int toIndex, int size) {
         if (fromIndex < 0)
             throw new IndexOutOfBoundsException("fromIndex = " + fromIndex);
@@ -1642,12 +1673,19 @@ public class ArrayList<E> extends AbstractList<E>
         modCount++;
     }
 
-    //传入Compartor，用Arrays.sort()实现，主要是LegacyMergeSort和Timsort
+    /**
+     * 传入Compartor，用Arrays.sort()实现，主要是LegacyMergeSort和Timsort
+     * @param c the {@code Comparator} used to compare list elements.
+     *          A {@code null} value indicates that the elements'
+     *          {@linkplain Comparable natural ordering} should be used
+     */
     @Override
     @SuppressWarnings("unchecked")
     public void sort(Comparator<? super E> c) {
         final int expectedModCount = modCount;
+        //实现排序的方法
         Arrays.sort((E[]) elementData, 0, size, c);
+        //排序完，再次判断，防止并发修改
         if (modCount != expectedModCount) {
             throw new ConcurrentModificationException();
         }
