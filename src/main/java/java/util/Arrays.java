@@ -98,6 +98,7 @@ public class Arrays {
      * empirical case for separating them for parallel sorting, so all
      * public Object parallelSort methods use the same comparator
      * based implementation.
+     * 实现一组相互比较元素的自然排序的比较器。可在提供的比较器为空时使用。
      */
     static final class NaturalOrder implements Comparator<Object> {
         @SuppressWarnings("unchecked")
@@ -143,6 +144,7 @@ public class Arrays {
      * faster than traditional (one-pivot) Quicksort implementations.
      *
      * @param a the array to be sorted
+     *          按照数字顺序排列指定的int数组。
      */
     public static void sort(int[] a) {
         DualPivotQuicksort.sort(a, 0, a.length - 1, null, 0, 0);
@@ -167,6 +169,7 @@ public class Arrays {
      * @throws IllegalArgumentException if {@code fromIndex > toIndex}
      * @throws ArrayIndexOutOfBoundsException
      *     if {@code fromIndex < 0} or {@code toIndex > a.length}
+     *     按升序排列int数组的指定范围。
      */
     public static void sort(int[] a, int fromIndex, int toIndex) {
         rangeCheck(a.length, fromIndex, toIndex);
@@ -183,6 +186,7 @@ public class Arrays {
      * faster than traditional (one-pivot) Quicksort implementations.
      *
      * @param a the array to be sorted
+     *          按照数字顺序排列指定的long数组。
      */
     public static void sort(long[] a) {
         DualPivotQuicksort.sort(a, 0, a.length - 1, null, 0, 0);
@@ -207,6 +211,7 @@ public class Arrays {
      * @throws IllegalArgumentException if {@code fromIndex > toIndex}
      * @throws ArrayIndexOutOfBoundsException
      *     if {@code fromIndex < 0} or {@code toIndex > a.length}
+     *     按升序排列long数组的指定范围。
      */
     public static void sort(long[] a, int fromIndex, int toIndex) {
         rangeCheck(a.length, fromIndex, toIndex);
@@ -223,6 +228,7 @@ public class Arrays {
      * faster than traditional (one-pivot) Quicksort implementations.
      *
      * @param a the array to be sorted
+     *          按照数字顺序排列指定的short数组。
      */
     public static void sort(short[] a) {
         DualPivotQuicksort.sort(a, 0, a.length - 1, null, 0, 0);
@@ -247,6 +253,7 @@ public class Arrays {
      * @throws IllegalArgumentException if {@code fromIndex > toIndex}
      * @throws ArrayIndexOutOfBoundsException
      *     if {@code fromIndex < 0} or {@code toIndex > a.length}
+     *     按升序排列short数组的指定范围。
      */
     public static void sort(short[] a, int fromIndex, int toIndex) {
         rangeCheck(a.length, fromIndex, toIndex);
@@ -263,6 +270,7 @@ public class Arrays {
      * faster than traditional (one-pivot) Quicksort implementations.
      *
      * @param a the array to be sorted
+     *          按照数字顺序排列指定的char数组。
      */
     public static void sort(char[] a) {
         DualPivotQuicksort.sort(a, 0, a.length - 1, null, 0, 0);
@@ -287,6 +295,7 @@ public class Arrays {
      * @throws IllegalArgumentException if {@code fromIndex > toIndex}
      * @throws ArrayIndexOutOfBoundsException
      *     if {@code fromIndex < 0} or {@code toIndex > a.length}
+     *     按升序排列char数组的指定范围。
      */
     public static void sort(char[] a, int fromIndex, int toIndex) {
         rangeCheck(a.length, fromIndex, toIndex);
@@ -303,6 +312,7 @@ public class Arrays {
      * faster than traditional (one-pivot) Quicksort implementations.
      *
      * @param a the array to be sorted
+     *          按照数字顺序排列指定的byte数组。
      */
     public static void sort(byte[] a) {
         DualPivotQuicksort.sort(a, 0, a.length - 1);
@@ -327,6 +337,7 @@ public class Arrays {
      * @throws IllegalArgumentException if {@code fromIndex > toIndex}
      * @throws ArrayIndexOutOfBoundsException
      *     if {@code fromIndex < 0} or {@code toIndex > a.length}
+     *     按升序排列byte数组的指定范围。
      */
     public static void sort(byte[] a, int fromIndex, int toIndex) {
         rangeCheck(a.length, fromIndex, toIndex);
@@ -351,6 +362,7 @@ public class Arrays {
      * faster than traditional (one-pivot) Quicksort implementations.
      *
      * @param a the array to be sorted
+     *          按升序排列float数组的指定范围。
      */
     public static void sort(float[] a) {
         DualPivotQuicksort.sort(a, 0, a.length - 1, null, 0, 0);
@@ -383,6 +395,7 @@ public class Arrays {
      * @throws IllegalArgumentException if {@code fromIndex > toIndex}
      * @throws ArrayIndexOutOfBoundsException
      *     if {@code fromIndex < 0} or {@code toIndex > a.length}
+     *     按升序排列float数组的指定范围。
      */
     public static void sort(float[] a, int fromIndex, int toIndex) {
         rangeCheck(a.length, fromIndex, toIndex);
@@ -407,6 +420,7 @@ public class Arrays {
      * faster than traditional (one-pivot) Quicksort implementations.
      *
      * @param a the array to be sorted
+     *          按照数字顺序排列指定的double数组。
      */
     public static void sort(double[] a) {
         DualPivotQuicksort.sort(a, 0, a.length - 1, null, 0, 0);
@@ -439,6 +453,7 @@ public class Arrays {
      * @throws IllegalArgumentException if {@code fromIndex > toIndex}
      * @throws ArrayIndexOutOfBoundsException
      *     if {@code fromIndex < 0} or {@code toIndex > a.length}
+     *     按升序排列double数组的指定范围。
      */
     public static void sort(double[] a, int fromIndex, int toIndex) {
         rangeCheck(a.length, fromIndex, toIndex);
@@ -1006,6 +1021,7 @@ public class Arrays {
      * @throws IllegalArgumentException (optional) if the natural
      *         ordering of the array elements is found to violate the
      *         {@link Comparable} contract
+     *         使用Fork/Join框架使排序任务可以在线程池中的多个线程中进行
      *
      * @since 1.8
      */
@@ -1203,6 +1219,7 @@ public class Arrays {
      * compatibility with broken comparators) using a system property.
      * Cannot be a static boolean in the enclosing class due to
      * circular dependencies. To be removed in a future release.
+     * 经典的归并排序，不过它即将被废弃了，只是用来兼容老的排序方法，
      */
     static final class LegacyMergeSort {
         private static final boolean userRequested =
@@ -1252,6 +1269,7 @@ public class Arrays {
      * @throws IllegalArgumentException (optional) if the natural
      *         ordering of the array elements is found to violate the
      *         {@link Comparable} contract
+     *         根据元素的自然顺序，将指定的对象数组按升序排序。
      */
     public static void sort(Object[] a) {
         if (LegacyMergeSort.userRequested)
@@ -1317,6 +1335,8 @@ public class Arrays {
      * @throws ClassCastException if the array contains elements that are
      *         not <i>mutually comparable</i> (for example, strings and
      *         integers).
+     *         对指定对象升序排列的数组的指定范围内，根据natural ordering的元素。
+     *         根据元素的自然顺序，将对象数组指定范围按升序排序。
      */
     public static void sort(Object[] a, int fromIndex, int toIndex) {
         rangeCheck(a.length, fromIndex, toIndex);
@@ -1349,7 +1369,7 @@ public class Arrays {
      * off is the offset to generate corresponding low, high in src
      * To be removed in a future release.
      */
-    @SuppressWarnings({"unchecked", "rawtypes"})
+    @SuppressWarnings({"unchecked", "rawtypes"})mergeSort
     private static void mergeSort(Object[] src,
                                   Object[] dest,
                                   int low,
@@ -1358,9 +1378,12 @@ public class Arrays {
         int length = high - low;
 
         // Insertion sort on smallest arrays
+        //需要排序的长度小于7 使用插入排序
         if (length < INSERTIONSORT_THRESHOLD) {
             for (int i=low; i<high; i++)
+                //倒序遍历
                 for (int j=i; j>low &&
+                         //左侧的值比遍历到的值大，交换位置
                          ((Comparable) dest[j-1]).compareTo(dest[j])>0; j--)
                     swap(dest, j, j-1);
             return;
@@ -1372,17 +1395,21 @@ public class Arrays {
         low  += off;
         high += off;
         int mid = (low + high) >>> 1;
+        //将数组分成两部分进行排序
         mergeSort(dest, src, low, mid, -off);
         mergeSort(dest, src, mid, high, -off);
 
         // If list is already sorted, just copy from src to dest.  This is an
         // optimization that results in faster sorts for nearly ordered lists.
+        //两个数组排完序，如果左侧数组的最大值小于右侧数组的最小值，说明整体有序
         if (((Comparable)src[mid-1]).compareTo(src[mid]) <= 0) {
+            //拷贝
             System.arraycopy(src, low, dest, destLow, length);
             return;
         }
 
         // Merge sorted halves (now in src) into dest
+        //否则进行归并排序
         for(int i = destLow, p = low, q = mid; i < destHigh; i++) {
             if (q >= high || p < mid && ((Comparable)src[p]).compareTo(src[q])<=0)
                 dest[i] = src[p++];
@@ -1442,6 +1469,7 @@ public class Arrays {
      *         not <i>mutually comparable</i> using the specified comparator
      * @throws IllegalArgumentException (optional) if the comparator is
      *         found to violate the {@link Comparator} contract
+     *         根据指定的比较器对指定的对象数组进行排序。
      */
     public static <T> void sort(T[] a, Comparator<? super T> c) {
         if (c == null) {
@@ -1514,6 +1542,7 @@ public class Arrays {
      *         {@link Comparator} contract
      * @throws ArrayIndexOutOfBoundsException if {@code fromIndex < 0} or
      *         {@code toIndex > a.length}
+     *         根据指定的比较器对指定的对象数组的指定范围进行排序。
      */
     public static <T> void sort(T[] a, int fromIndex, int toIndex,
                                 Comparator<? super T> c) {

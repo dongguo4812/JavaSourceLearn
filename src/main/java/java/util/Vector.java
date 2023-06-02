@@ -95,6 +95,7 @@ public class Vector<E>
      * <p>Any array elements following the last element in the Vector are null.
      *
      * @serial
+     * 数组缓冲区
      */
     protected Object[] elementData;
 
@@ -104,6 +105,7 @@ public class Vector<E>
      * {@code elementData[elementCount-1]} are the actual items.
      *
      * @serial
+     * 元素个数
      */
     protected int elementCount;
 
@@ -114,10 +116,12 @@ public class Vector<E>
      * of the vector is doubled each time it needs to grow.
      *
      * @serial
+     * 容量增量 如果容量增量小于或等于零，则每次需要增长时，向量的容量将增加一倍。
      */
     protected int capacityIncrement;
 
     /** use serialVersionUID from JDK 1.0.2 for interoperability */
+    //序列化版本号
     private static final long serialVersionUID = -2767605614048989439L;
 
     /**
@@ -129,6 +133,7 @@ public class Vector<E>
      *                              increased when the vector overflows
      * @throws IllegalArgumentException if the specified initial capacity
      *         is negative
+     *         构造具有指定的初始容量和容量增量的空向量。
      */
     public Vector(int initialCapacity, int capacityIncrement) {
         super();
@@ -146,6 +151,7 @@ public class Vector<E>
      * @param   initialCapacity   the initial capacity of the vector
      * @throws IllegalArgumentException if the specified initial capacity
      *         is negative
+     *         构造具有指定初始容量并且其容量增量等于零的空向量。
      */
     public Vector(int initialCapacity) {
         this(initialCapacity, 0);
@@ -155,6 +161,7 @@ public class Vector<E>
      * Constructs an empty vector so that its internal data array
      * has size {@code 10} and its standard capacity increment is
      * zero.
+     * 构造一个空向量，使其内部数据数组的大小为 10 ，标准容量增量为零。
      */
     public Vector() {
         this(10);
@@ -169,13 +176,16 @@ public class Vector<E>
      *       vector
      * @throws NullPointerException if the specified collection is null
      * @since   1.2
+     * 构造一个包含指定集合元素的向量，按照集合的迭代器返回的顺序。
      */
     public Vector(Collection<? extends E> c) {
         Object[] a = c.toArray();
         elementCount = a.length;
+        //c为ArrayList类型 直接赋值
         if (c.getClass() == ArrayList.class) {
             elementData = a;
         } else {
+            //拷贝
             elementData = Arrays.copyOf(a, elementCount, Object[].class);
         }
     }
@@ -257,6 +267,7 @@ public class Vector<E>
      * Some VMs reserve some header words in an array.
      * Attempts to allocate larger arrays may result in
      * OutOfMemoryError: Requested array size exceeds VM limit
+     * 存储元素最大值
      */
     private static final int MAX_ARRAY_SIZE = Integer.MAX_VALUE - 8;
 
