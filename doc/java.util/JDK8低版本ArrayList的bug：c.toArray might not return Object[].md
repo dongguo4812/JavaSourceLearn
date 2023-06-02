@@ -18,8 +18,9 @@ public ArrayList(Collection<? extends E> c) {
 
 
 
-能够看到这个bug提交时间是2005-04-25，受到影响的版本追溯到jdk5，好像在jdk8后期的版本中修复了，子任务中看到jdk9受到了影响，所以显示修复了jdk9的bug
+能够看到这个bug提交时间是2005-04-25，受到影响的版本追溯到jdk5，好像在jdk8后期的版本中修复了，子任务中看到jdk9受到了影响，所以显示修复了jdk9的bug，查看子任务
 
+![image](https://github.com/dongguo4812/JavaSourceLearn/assets/87865453/59adf8b9-a4f6-4f05-af71-490b0737c72d)
 
 
 
@@ -34,7 +35,7 @@ Collection.toArray()声明的返回值是Object[]，它允许返回子类型数�
 
 
 
-# **jdk8高版本**
+# **jdk8高版本及以后**
 
 ```java
     public ArrayList(Collection<? extends E> c) {
