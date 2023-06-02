@@ -1151,7 +1151,7 @@ ArrayList可分割的迭代器，基于二分法的可分割迭代器，是为�
     }
 ```
 
-## **boolean removeAll(Collection c)**
+## **boolean removeAll(Collection<?> c)**
 
 移除集合中的元素
 
@@ -1179,7 +1179,7 @@ ArrayList可分割的迭代器，基于二分法的可分割迭代器，是为�
     }
 ```
 
-## **boolean retainAll(Collection c)**
+## **boolean retainAll(Collection<?> c)**
 
 保留集合中的元素
 
