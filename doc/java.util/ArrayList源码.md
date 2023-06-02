@@ -1219,7 +1219,7 @@ removeAll方法和retainAll方法都调用了batchRemove方法，区别就在于
 如果为true只保留c集合中元素，如果false，移除c集合中的元素
 
 ### 以removeAll为例，当complement为false
-![image](https://github.com/dongguo4812/JavaSourceLearn/assets/87865453/40c873f2-ddbf-42a3-b620-1a0bd1b40bbb)
+
 
 ```java
     /**
@@ -1268,6 +1268,41 @@ removeAll方法和retainAll方法都调用了batchRemove方法，区别就在于
         return modified;
     }
 ```
+
+数组边遍历边赋值
+
+比如原数组：1 2 3 4 5 6 7 8 9；参数数组:a b c 3 5 8 d
+
+| 循环次数 | r    | w    | if值  | elementData[w++] = elementData[r] | 原数组值                           | 替换值                             |
+| -------- | ---- | ---- | ----- | --------------------------------- | ---------------------------------- | ---------------------------------- |
+| 1        | 0    | 0    | true  | elementData[0] = elementData[0]   | 123456789                          | <font color="red">1</font>23456789 |
+| 2        | 1    | 1    | true  | elementData[1] = elementData[1]   | <font color="red">1</font>23456789 | <font color="red">12</font>3456789 |
+| 3        | 2    | 2    | flase |                                   |                                    |                                    |
+| 4        | 3    | 2    | true  | elementData[2] = elementData[3]   | <font color="red">12</font>3456789 | <font color="red">124</font>456789 |
+| 5        | 4    | 3    | flase |                                   |                                    |                                    |
+| 6        | 5    | 3    | ture  | elementData[3] = elementData[5]   | <font color="red">124</font>456789 | <font color="red">1246</font>56789 |
+| 7        | 6    | 4    | true  | elementData[4] = elementData[6]   | <font color="red">1246</font>56789 | <font color="red">12467</font>6789 |
+| 8        | 7    | 5    | flase |                                   |                                    |                                    |
+| 9        | 8    | 5    | true  | elementData[5] = elementData[8]   | <font color="red">12467</font>6789 | <font color="red">124679</font>789 |
+
+将7，8，9删除
+
+原数组变为1 2 4 6 7 9
+
+```java
+    public static void main(String[] args) {
+        ArrayList<Object> src = new ArrayList<>(Arrays.asList(1, 2, 3, 4, 5, 6, 7, 8, 9));
+        ArrayList<Object> c = new ArrayList<>(Arrays.asList("a", "b", "c", 3, 5, 8, "d"));
+        System.out.println(src.removeAll(c));
+        System.out.println(src);
+    }
+```
+
+输出结果
+
+
+
+
 
 ## **void clear()**
 
