@@ -845,6 +845,7 @@ ArrayList可分割的迭代器，基于二分法的可分割迭代器，是为�
 ### 1.ensureCapacityInternal
 
 确保容量，set后的容量是否超过上限，超过则进行扩容
+![image](https://github.com/dongguo4812/JavaSourceLearn/assets/87865453/3da05a23-ecc9-4179-b913-a5ef18b5c01a)
 
 ```java
     private void ensureCapacityInternal(int minCapacity) {
@@ -1154,6 +1155,7 @@ ArrayList可分割的迭代器，基于二分法的可分割迭代器，是为�
 ## **boolean removeAll(Collection<?> c)**
 
 移除集合中的元素
+![image](https://github.com/dongguo4812/JavaSourceLearn/assets/87865453/2524ccdf-21b9-4de0-9c7b-fe47c472418d)
 
 ```java
     /**
@@ -1182,6 +1184,7 @@ ArrayList可分割的迭代器，基于二分法的可分割迭代器，是为�
 ## **boolean retainAll(Collection<?> c)**
 
 保留集合中的元素
+![image](https://github.com/dongguo4812/JavaSourceLearn/assets/87865453/1c96e7a7-10bc-4a72-8a7f-61f5843e3d26)
 
 ```java
     /**
@@ -1216,6 +1219,7 @@ removeAll方法和retainAll方法都调用了batchRemove方法，区别就在于
 如果为true只保留c集合中元素，如果false，移除c集合中的元素
 
 ### 以removeAll为例，当complement为false
+![image](https://github.com/dongguo4812/JavaSourceLearn/assets/87865453/40c873f2-ddbf-42a3-b620-1a0bd1b40bbb)
 
 ```java
     /**
@@ -1435,6 +1439,7 @@ removeAll方法和retainAll方法都调用了batchRemove方法，区别就在于
 ## List<E> subList(int fromIndex, int toIndex)
 
 返回SubList类型的子集合
+![image](https://github.com/dongguo4812/JavaSourceLearn/assets/87865453/946b8c48-a52e-45a2-8c3c-32a4d11d6ba2)
 
 ```java
     /**
