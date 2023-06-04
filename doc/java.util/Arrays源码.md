@@ -1104,16 +1104,22 @@ Arrays 在对 Object 数组进行排序是会使用到 legacyMergeSort 和 Compa
     // Like public version, but without range checks.
     private static int binarySearch0(int[] a, int fromIndex, int toIndex,
                                      int key) {
+        // 定义数组开始位置
         int low = fromIndex;
+        // 定义数组结束位置
         int high = toIndex - 1;
-
+        // 开始位置 <= 结束位置
         while (low <= high) {
+            // 数组mid位置值
             int mid = (low + high) >>> 1;
+            //下标mid位置的值
             int midVal = a[mid];
-
+            //小于搜索的值
             if (midVal < key)
+                //二分 查找后面的部分 
                 low = mid + 1;
             else if (midVal > key)
+                //二分 查找前面的部分 
                 high = mid - 1;
             else
                 return mid; // key found  找到了
@@ -1124,12 +1130,27 @@ Arrays 在对 Object 数组进行排序是会使用到 legacyMergeSort 和 Compa
 
 ### **当出现重复元素时会取哪个下标**
 
+从源码可分析出查找的过程：
+
+![image-20230604092639295](https://gitee.com/dongguo4812_admin/image/raw/master/image/202306040927754.png)
+
+第一次循环:[0,1,2,3,4,5]二分为[0,1]，[3.4.5] mid为2
+
+第二次循环：[0,1] 二分为[0],[1] mid为 0    [3,4,5]二分为[3] ，[5] ，mid为4  此时搜索0或4，直接返回
+
+第三次循环：剩下[1],[3],[5]，此时搜索1,3或5，直接返回
 
 
 
 
-```
-	public static void main(String[] args) {
+
+![image-20230604092649778](https://gitee.com/dongguo4812_admin/image/raw/master/image/202306040927517.png)
+
+那么，如果出现重复元素时
+
+```java
+    @Test
+    public void test(){
         System.out.println("当前数组长度为奇数时：");
         int[] sort = new int[]{10,10,30,40,50,60,70};
         int index = Arrays.binarySearch(sort,10);
@@ -1150,7 +1171,7 @@ Arrays 在对 Object 数组进行排序是会使用到 legacyMergeSort 和 Compa
         index = Arrays.binarySearch(sort,60);
         System.out.println("60的下标为："+index);
         System.out.println("--------------");
-        
+
         System.out.println("当前数组长度为偶数时：");
         sort = new int[]{10,10,30,40,50,60};
         index = Arrays.binarySearch(sort,10);
@@ -1168,12 +1189,12 @@ Arrays 在对 Object 数组进行排序是会使用到 legacyMergeSort 和 Compa
         index = Arrays.binarySearch(sort,50);
         System.out.println("50的下标为："+index);
     }
-
 ```
+
+![image-20230604105437709](https://gitee.com/dongguo4812_admin/image/raw/master/image/202306041054254.png)
 
 现在我们可以得出结论，
 
 - **当数组长度为奇数时，数组中有重复元素，Arrays.binarySearch()会优先返回奇数且靠近当前区间中间的下标**
 - **当数组长度为偶数时，数组中有重复元素，Arrays.binarySearch()会优先返回偶数且靠近当前区间中间的下标**
 
-### 

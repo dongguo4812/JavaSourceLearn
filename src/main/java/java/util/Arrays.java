@@ -1950,16 +1950,22 @@ public class Arrays {
     // Like public version, but without range checks.
     private static int binarySearch0(int[] a, int fromIndex, int toIndex,
                                      int key) {
+        // 定义数组开始位置
         int low = fromIndex;
+        // 定义数组结束位置
         int high = toIndex - 1;
-
+        // 开始位置 <= 结束位置
         while (low <= high) {
+            // 数组mid位置值
             int mid = (low + high) >>> 1;
+            //下标mid位置的值
             int midVal = a[mid];
-
+            //小于搜索的值
             if (midVal < key)
+                //二分 查找后面的部分
                 low = mid + 1;
             else if (midVal > key)
+                //二分 查找前面的部分
                 high = mid - 1;
             else
                 return mid; // key found  找到了
