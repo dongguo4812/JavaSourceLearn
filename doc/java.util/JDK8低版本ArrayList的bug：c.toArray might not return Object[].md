@@ -16,12 +16,12 @@ public ArrayList(Collection<? extends E> c) {
 
 官方bug库编号 6260652，详情请参看https://bugs.java.com/bugdatabase/view_bug.do?bug_id=6260652
 
-![image](https://github.com/dongguo4812/JavaSourceLearn/assets/87865453/f5fc837d-19e8-4242-83b9-7e4430409bd6)
+![image-20230604081947731](https://gitee.com/dongguo4812_admin/image/raw/master/image/202306040820275.png)
 
 
 能够看到这个bug提交时间是2005-04-25，受到影响的版本追溯到jdk5，好像在jdk8后期的版本中修复了，子任务中看到jdk9受到了影响，所以显示修复了jdk9的bug，查看子任务
 
-![image](https://github.com/dongguo4812/JavaSourceLearn/assets/87865453/59adf8b9-a4f6-4f05-af71-490b0737c72d)
+![image-20230604082022010](https://gitee.com/dongguo4812_admin/image/raw/master/image/202306040820258.png)
 
 
 
