@@ -57,4 +57,11 @@ public class ArraysTest {
         int index = Arrays.binarySearch(sort,0);
         System.out.println("10的下标为："+index);
     }
+    @Test
+    public void test2(){
+        List<Integer> list = Arrays.asList(1, 2, 3, 4);
+        list.set(0,10);
+        System.out.println(list);
+    }
+
 }
