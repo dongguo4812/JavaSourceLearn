@@ -12,6 +12,8 @@ public class Vector<E>
     implements List<E>, RandomAccess, Cloneable, java.io.Serializable
 ```
 
+![image-20230604114538478](https://gitee.com/dongguo4812_admin/image/raw/master/image/202306041145711.png)
+
 # **常量&变量**
 
 ```java
