@@ -1031,8 +1031,11 @@ public class LinkedList<E>
     }
 
     private static class Node<E> {
+        //元素
         E item;
+        //前节点
         Node<E> next;
+        //后节点
         Node<E> prev;
 
         Node(Node<E> prev, E element, Node<E> next) {
