@@ -289,9 +289,13 @@ public class HashMap<K,V> extends AbstractMap<K,V>
      * TreeNode subclass, and in LinkedHashMap for its Entry subclass.)
      */
     static class Node<K,V> implements Map.Entry<K,V> {
+        //hash码，表示元素在桶的位置
         final int hash;
+        //Node节点对应的key
         final K key;
+        //Node节点对应value
         V value;
+        //链表结构   表示下一个节点
         Node<K,V> next;
 
         Node(int hash, K key, V value, Node<K,V> next) {
@@ -315,6 +319,7 @@ public class HashMap<K,V> extends AbstractMap<K,V>
             return oldValue;
         }
 
+        //判断hashmap中是否存在该元素 键值都相等
         public final boolean equals(Object o) {
             if (o == this)
                 return true;
@@ -545,6 +550,7 @@ public class HashMap<K,V> extends AbstractMap<K,V>
      * @param m the map
      * @param evict false when initially constructing this map, else
      * true (relayed to method afterNodeInsertion).
+     *       将指定map中的所有元素添加至HashMap中
      */
     final void putMapEntries(Map<? extends K, ? extends V> m, boolean evict) {
         //获取参数集合的长度
@@ -1027,16 +1033,23 @@ public class HashMap<K,V> extends AbstractMap<K,V>
     }
 
     final class KeySet extends AbstractSet<K> {
+        //元素个数
         public final int size()                 { return size; }
+        //清空
         public final void clear()               { HashMap.this.clear(); }
+        //用于迭代KeySet的迭代器
         public final Iterator<K> iterator()     { return new KeyIterator(); }
+        //判断是否存在key为o的元素
         public final boolean contains(Object o) { return containsKey(o); }
+        //通过key删除元素
         public final boolean remove(Object key) {
             return removeNode(hash(key), key, null, false, true) != null;
         }
+        //分割迭代器
         public final Spliterator<K> spliterator() {
             return new KeySpliterator<>(HashMap.this, 0, -1, 0, 0);
         }
+        //函数式编程 参数可以是接口的实现，也可以是Lambda表达式
         public final void forEach(Consumer<? super K> action) {
             Node<K,V>[] tab;
             if (action == null)
@@ -1534,9 +1547,13 @@ public class HashMap<K,V> extends AbstractMap<K,V>
     // iterators
 
     abstract class HashIterator {
+        //下次迭代的元素
         Node<K,V> next;        // next entry to return
+        //当前迭代的元素
         Node<K,V> current;     // current entry
+        //期望的修改次数
         int expectedModCount;  // for fast-fail
+        //下标
         int index;             // current slot
 
         HashIterator() {
@@ -1548,11 +1565,11 @@ public class HashMap<K,V> extends AbstractMap<K,V>
                 do {} while (index < t.length && (next = t[index++]) == null);
             }
         }
-
+        //是否有下一个元素
         public final boolean hasNext() {
             return next != null;
         }
-
+        //下一个元素节点
         final Node<K,V> nextNode() {
             Node<K,V>[] t;
             Node<K,V> e = next;
@@ -1565,7 +1582,7 @@ public class HashMap<K,V> extends AbstractMap<K,V>
             }
             return e;
         }
-
+        //移除当前节点
         public final void remove() {
             Node<K,V> p = current;
             if (p == null)
