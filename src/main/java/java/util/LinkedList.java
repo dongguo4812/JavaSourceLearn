@@ -170,15 +170,21 @@ public class LinkedList<E>
 
     /**
      * Inserts element e before non-null Node succ.
+     * 在非空节点succ前，插入元素 e
      */
     void linkBefore(E e, Node<E> succ) {
         // assert succ != null;
+        //原index对应节点succ的前驱节点
         final Node<E> pred = succ.prev;
+        //创建新的节点  pred <-- e --> succ
         final Node<E> newNode = new Node<>(pred, e, succ);
+        //succ的前驱节点为newNode   pred <-- e <--> succ
         succ.prev = newNode;
         if (pred == null)
+            // e <--> succ
             first = newNode;
         else
+            //pred的后继节点为newNode  pred <--> e <--> succ
             pred.next = newNode;
         size++;
         modCount++;
@@ -426,6 +432,7 @@ public class LinkedList<E>
      * @param c collection containing elements to be added to this list
      * @return {@code true} if this list changed as a result of the call
      * @throws NullPointerException if the specified collection is null
+     * 将指定集合中的所有元素追加到此列表的末尾。
      */
     public boolean addAll(Collection<? extends E> c) {
         return addAll(size, c);
@@ -445,39 +452,53 @@ public class LinkedList<E>
      * @return {@code true} if this list changed as a result of the call
      * @throws IndexOutOfBoundsException {@inheritDoc}
      * @throws NullPointerException if the specified collection is null
+     * 将指定集合（Collection c）中的所有元素插入到此列表中，从指定的位置（index）开始。
      */
     public boolean addAll(int index, Collection<? extends E> c) {
         //判断索引是否越界
         checkPositionIndex(index);
-
+        //通过指定集合获得数组
         Object[] a = c.toArray();
+        //数组的长度
         int numNew = a.length;
+        //长度为空，直接返回失败
         if (numNew == 0)
             return false;
-
+        //节点的前驱节点、后继节点
         Node<E> pred, succ;
+        //直接从尾部添加该集合
         if (index == size) {
+            //后继节点为null，前驱节点为尾节点
             succ = null;
             pred = last;
         } else {
+            //指定索引对应的节点为后继节点，节点的前节点为前驱节点
             succ = node(index);
             pred = succ.prev;
         }
-
+        //遍历数组
         for (Object o : a) {
+            //类型转换
             @SuppressWarnings("unchecked") E e = (E) o;
+            //构造新节点       pred  <-- e
             Node<E> newNode = new Node<>(pred, e, null);
             if (pred == null)
+                //新节点为头节点  e
                 first = newNode;
             else
+                //前驱节点的下一个节点为新节点  pred <--> e
                 pred.next = newNode;
+            //为了下个循环，将新节点置为前驱节点
             pred = newNode;
         }
-
+        //如果后继节点为null（尾部插入的情况），前驱节点就是尾结点
         if (succ == null) {
+            // pred <--> e
             last = pred;
         } else {
+            //前驱节点的后节点为后继节点   pred <--> e --> succ
             pred.next = succ;
+            //后继节点的前节点为前驱节点   pred <--> e <--> succ
             succ.prev = pred;
         }
 
@@ -584,6 +605,7 @@ public class LinkedList<E>
     /**
      * Tells if the argument is the index of a valid position for an
      * iterator or an add operation.
+     * 参数index是否符合条件
      */
     private boolean isPositionIndex(int index) {
         return index >= 0 && index <= size;
@@ -603,7 +625,12 @@ public class LinkedList<E>
             throw new IndexOutOfBoundsException(outOfBoundsMsg(index));
     }
 
+    /**
+     * 判断索引是否越界
+     * @param index
+     */
     private void checkPositionIndex(int index) {
+        //不符合条件 报错
         if (!isPositionIndex(index))
             throw new IndexOutOfBoundsException(outOfBoundsMsg(index));
     }
@@ -749,6 +776,7 @@ public class LinkedList<E>
      * @param e the element to add
      * @return {@code true} (as specified by {@link Queue#offer})
      * @since 1.5
+     * 尾部添加指定元素
      */
     public boolean offer(E e) {
         //直接调用add方法
@@ -932,40 +960,50 @@ public class LinkedList<E>
     }
 
     private class ListItr implements ListIterator<E> {
-        //最后一次访问的元素对象
+        //上一次执行next()或previos()方法时的节点
         private Node<E> lastReturned;
-        //下一次即将访问的元素
+        //下一次即将访问的元素(后继节点)
         private Node<E> next;
-        //下一次要访问的元素的下标
+        //下一次要访问的元素的索引(后继节点的索引)
         private int nextIndex;
-        //         预期的修改次数  =     修改次数
+        //将修改次数modCount赋给expectedModCount  预期的修改次数  =  实际修改次数
         private int expectedModCount = modCount;
 
         ListItr(int index) {
             // assert isPositionIndex(index);
+            //根据索引获得后继节点
             next = (index == size) ? null : node(index);
+            //后继节点的索引
             nextIndex = index;
         }
 
+        //判断是否有下一个元素可访问
         public boolean hasNext() {
+            //nextIndex小于size表示仍然还有后继结点，如果大于等于size那么表示要么是尾结点，要么索引越界了
             return nextIndex < size;
         }
-
+        //获取下一个访问的元素
         public E next() {
             checkForComodification();
+            //如果没有下一个元素
             if (!hasNext())
+                //抛出NoSuchElementException异常
                 throw new NoSuchElementException();
-
+            //保存当前遍历的节点
             lastReturned = next;
+            //下个节点
             next = next.next;
+            //索引加1
             nextIndex++;
+            //返回旧next节点的元素
             return lastReturned.item;
         }
         //判断是否有上一个元素可访问
         public boolean hasPrevious() {
+            //向前遍历，当索引大于0，表示前驱节点存在
             return nextIndex > 0;
         }
-
+        //获取上一个访问的元素
         public E previous() {
             checkForComodification();
             if (!hasPrevious())
@@ -975,26 +1013,34 @@ public class LinkedList<E>
             nextIndex--;
             return lastReturned.item;
         }
-
+        //获取下一个访问的元素在线性表中的索引
         public int nextIndex() {
             return nextIndex;
         }
-
+        //获取上一个访问元素在线性表中的索引
         public int previousIndex() {
             return nextIndex - 1;
         }
 
+        /**
+         * 使用迭代器进行迭代的时候不能进行调用list.remove()或list.add()删除修改元素，否则会抛出ConcurrentModificationException异常
+         * 所以如果要增加或删除元素需要使用迭代器Iterator内部的remove()和add()方法
+         */
+        //删除元素
         public void remove() {
             checkForComodification();
             if (lastReturned == null)
                 throw new IllegalStateException();
-
+            //后继节点
             Node<E> lastNext = lastReturned.next;
+            //删除当前节点
             unlink(lastReturned);
+            //next 和 上一次遍历的节点 是同一个对象 说明是向前遍历
             if (next == lastReturned)
                 next = lastNext;
             else
                 nextIndex--;
+            //置null 便于回收
             lastReturned = null;
             expectedModCount++;
         }
@@ -1005,13 +1051,16 @@ public class LinkedList<E>
             checkForComodification();
             lastReturned.item = e;
         }
-
+        //添加
         public void add(E e) {
             checkForComodification();
             lastReturned = null;
+
             if (next == null)
+                //当前节点是尾结点，直接在尾部添加
                 linkLast(e);
             else
+                //插入到next节点前
                 linkBefore(e, next);
             nextIndex++;
             expectedModCount++;
@@ -1037,9 +1086,9 @@ public class LinkedList<E>
     private static class Node<E> {
         //元素
         E item;
-        //前节点
-        Node<E> next;
         //后节点
+        Node<E> next;
+        //前节点
         Node<E> prev;
 
         Node(Node<E> prev, E element, Node<E> next) {
