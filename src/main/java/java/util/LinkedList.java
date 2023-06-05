@@ -932,9 +932,13 @@ public class LinkedList<E>
     }
 
     private class ListItr implements ListIterator<E> {
+        //最后一次访问的元素对象
         private Node<E> lastReturned;
+        //下一次即将访问的元素
         private Node<E> next;
+        //下一次要访问的元素的下标
         private int nextIndex;
+        //         预期的修改次数  =     修改次数
         private int expectedModCount = modCount;
 
         ListItr(int index) {
@@ -957,7 +961,7 @@ public class LinkedList<E>
             nextIndex++;
             return lastReturned.item;
         }
-
+        //判断是否有上一个元素可访问
         public boolean hasPrevious() {
             return nextIndex > 0;
         }
