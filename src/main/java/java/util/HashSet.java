@@ -94,7 +94,7 @@ public class HashSet<E>
     //序列化版本号
     static final long serialVersionUID = -5024744406713321676L;
 
-    //依赖的HashMap实例
+    //依赖的HashMap实例 HashSet的底层就是由HashMap来进行实现的，就是把key存储在map的key中，value用一个空对象PRESENT填补。
     private transient HashMap<E,Object> map;
 
     // Dummy value to associate with an Object in the backing Map
@@ -184,6 +184,7 @@ public class HashSet<E>
      * Returns the number of elements in this set (its cardinality).
      *
      * @return the number of elements in this set (its cardinality)
+     * 返回一个这个set中元素个数。
      */
     public int size() {
         return map.size();
@@ -193,6 +194,7 @@ public class HashSet<E>
      * Returns <tt>true</tt> if this set contains no elements.
      *
      * @return <tt>true</tt> if this set contains no elements
+     * set是否为空
      */
     public boolean isEmpty() {
         return map.isEmpty();
@@ -249,6 +251,7 @@ public class HashSet<E>
     /**
      * Removes all of the elements from this set.
      * The set will be empty after this call returns.
+     * 清空set
      */
     public void clear() {
         map.clear();
