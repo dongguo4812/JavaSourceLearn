@@ -1615,11 +1615,15 @@ public class HashMap<K,V> extends AbstractMap<K,V>
     // spliterators
 
     static class HashMapSpliterator<K,V> {
+        //需要拆分的map
         final HashMap<K,V> map;
+        //当前节点
         Node<K,V> current;          // current node
+        //bucket的下标
         int index;                  // current index, modified on advance/split
         int fence;                  // one past last index
         int est;                    // size estimate
+        //期望的修改次数
         int expectedModCount;       // for comodification checks
 
         HashMapSpliterator(HashMap<K,V> m, int origin,
@@ -1632,8 +1636,13 @@ public class HashMap<K,V> extends AbstractMap<K,V>
             this.expectedModCount = expectedModCount;
         }
 
+        /**
+         * 初始化方法
+         * @return
+         */
         final int getFence() { // initialize fence and size on first use
             int hi;
+            //如果完成了初始化，则fence不为-1 只有new的时候传入的fence为-1
             if ((hi = fence) < 0) {
                 HashMap<K,V> m = map;
                 est = m.size;
@@ -1644,6 +1653,10 @@ public class HashMap<K,V> extends AbstractMap<K,V>
             return hi;
         }
 
+        /**
+         * 确保初始化方法被调用
+         * @return
+         */
         public final long estimateSize() {
             getFence(); // force init
             return (long) est;
@@ -1658,6 +1671,12 @@ public class HashMap<K,V> extends AbstractMap<K,V>
             super(m, origin, fence, est, expectedModCount);
         }
 
+        /**
+         * 对spliterator进行分割 分治法
+         * 如果Spliterator可以被分割，那么会返回一个新的Spliterator，在传统的情况下，比如list，如果为偶数，则拆分一半，如果为奇数，则会少一个。
+         * 对于HashMap，实际上bucket是2的幂，那么直接位移就能实现。
+         * @return
+         */
         public KeySpliterator<K,V> trySplit() {
             int hi = getFence(), lo = index, mid = (lo + hi) >>> 1;
             return (lo >= mid || current != null) ? null :
@@ -1665,12 +1684,18 @@ public class HashMap<K,V> extends AbstractMap<K,V>
                                         expectedModCount);
         }
 
+        /**
+         * 对Spliterator执行遍历
+         * @param action The action
+         */
         public void forEachRemaining(Consumer<? super K> action) {
             int i, hi, mc;
             if (action == null)
                 throw new NullPointerException();
             HashMap<K,V> m = map;
+            //map中的bucket
             Node<K,V>[] tab = m.table;
+            //fence < 0,说明没有进行初始化
             if ((hi = fence) < 0) {
                 mc = expectedModCount = m.modCount;
                 hi = fence = (tab == null) ? 0 : tab.length;
@@ -1682,6 +1707,7 @@ public class HashMap<K,V> extends AbstractMap<K,V>
                 Node<K,V> p = current;
                 current = null;
                 do {
+                    //如果p为空，移动到下一个bucket
                     if (p == null)
                         p = tab[i++];
                     else {
@@ -1937,10 +1963,15 @@ public class HashMap<K,V> extends AbstractMap<K,V>
      * linked node.
      */
     static final class TreeNode<K,V> extends LinkedHashMap.Entry<K,V> {
+        //父节点
         TreeNode<K,V> parent;  // red-black tree links
+        //左子树
         TreeNode<K,V> left;
+        //右子树
         TreeNode<K,V> right;
+        //前驱节点  删除后需要取消链接
         TreeNode<K,V> prev;    // needed to unlink next upon deletion
+        //颜色属性
         boolean red;
         TreeNode(int hash, K key, V val, Node<K,V> next) {
             super(hash, key, val, next);
@@ -2105,12 +2136,16 @@ public class HashMap<K,V> extends AbstractMap<K,V>
          */
         final TreeNode<K,V> putTreeVal(HashMap<K,V> map, Node<K,V>[] tab,
                                        int h, K k, V v) {
+            //定义k的类信息
             Class<?> kc = null;
             boolean searched = false;
+            //红黑树的根节点
             TreeNode<K,V> root = (parent != null) ? root() : this;
             for (TreeNode<K,V> p = root;;) {
                 int dir, ph; K pk;
+                //存入key的hash和root根节点比较
                 if ((ph = p.hash) > h)
+                    //小于，即放置在节点的左侧
                     dir = -1;
                 else if (ph < h)
                     dir = 1;
