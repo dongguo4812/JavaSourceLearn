@@ -191,6 +191,7 @@ public class LinkedHashMap<K,V>
      *  双向链表
      */
     static class Entry<K,V> extends HashMap.Node<K,V> {
+        //前后节点
         Entry<K,V> before, after;
         Entry(int hash, K key, V value, Node<K,V> next) {
             super(hash, key, value, next);
@@ -224,13 +225,18 @@ public class LinkedHashMap<K,V>
     // internal utilities
 
     // link at the end of list
+    //将指定entry插入到双向链表末尾
     private void linkNodeLast(LinkedHashMap.Entry<K,V> p) {
         LinkedHashMap.Entry<K,V> last = tail;
+        //尾指针指向p
         tail = p;
+        //如果原尾节点指向null，意味着双向循环链表为空，头尾指针都指向p
         if (last == null)
             head = p;
         else {
+            //p的前驱节点指向原尾节点
             p.before = last;
+            //原尾节点的后继节点指向p
             last.after = p;
         }
     }
@@ -258,8 +264,10 @@ public class LinkedHashMap<K,V>
     }
 
     Node<K,V> newNode(int hash, K key, V value, Node<K,V> e) {
+        //创建Entry节点
         LinkedHashMap.Entry<K,V> p =
             new LinkedHashMap.Entry<K,V>(hash, key, value, e);
+        //添加到尾部
         linkNodeLast(p);
         return p;
     }
@@ -577,12 +585,17 @@ public class LinkedHashMap<K,V>
     }
 
     final class LinkedKeySet extends AbstractSet<K> {
+        //元素个数
         public final int size()                 { return size; }
+        //清空
         public final void clear()               { LinkedHashMap.this.clear(); }
+        //key的迭代器
         public final Iterator<K> iterator() {
             return new LinkedKeyIterator();
         }
+        //是否包含指定的key
         public final boolean contains(Object o) { return containsKey(o); }
+        //通过key移除
         public final boolean remove(Object key) {
             return removeNode(hash(key), key, null, false, true) != null;
         }
@@ -742,8 +755,11 @@ public class LinkedHashMap<K,V>
     // Iterators
 
     abstract class LinkedHashIterator {
+        //下个Node节点
         LinkedHashMap.Entry<K,V> next;
+        //当前节点
         LinkedHashMap.Entry<K,V> current;
+        //预期修改次数
         int expectedModCount;
 
         LinkedHashIterator() {
