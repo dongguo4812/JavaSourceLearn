@@ -324,6 +324,7 @@ public class LinkedHashMap<K,V>
      *       a b c d e
      *       get(b),将b放到末尾
      *       a c d e b
+     *
      *       将元素移动到最后一个
      * @param e
      */
@@ -331,22 +332,26 @@ public class LinkedHashMap<K,V>
         LinkedHashMap.Entry<K,V> last;
         // 当需要排序并且加入节点e不是尾节点时，进入逻辑(为尾节点时，无需操作，已经为最近访问过的元素)
         if (accessOrder && (last = tail) != e) {
-            // 首先暂存插入节点的当前节点，上一个节点，下一个节点
+            // 首先暂存插入节点的当前节点，前节点，后节点
             LinkedHashMap.Entry<K,V> p =
                 (LinkedHashMap.Entry<K,V>)e, b = p.before, a = p.after;
-            // 将插入节点的后置节点设为null，代表尾节点
+            // 将插入节点的后节点设为null，代表尾节点
             p.after = null;
-            // 如果p的前置节点为null，代表插入节点为头节点，将新的头节点设置为插入节点的下一个节点
+            // 如果p的前置节点为null，代表插入节点p为头节点，p的后节点a就变为头节点
+            // a  ...
             if (b == null)
                 head = a;
             else
-                // 不为空时，将插入节点的前一个节点的下一个节点设置为插入节点的后一个节点
+                // 不为空时， b的后指针指向a节点  b  a
+                // b -> a
                 b.after = a;
-            // 插入节点的后一个节点不为null时，插入节点的后一个节点的前一个节点设置为插入节点的前一个节点
+            // 插入节点的后一个节点不为null时，插入节点的后一个节点的前一个节点设置为插入节点的前一个节点  b  p a
             if (a != null)
+                //a的上一个节点就变为b
+                // b  <- a
                 a.before = b;
             else
-                // TODO
+                //b为尾结点
                 last = b;
             // 尾节点为null，代表链表为空，头节点直接设置为插入节点
             if (last == null)
