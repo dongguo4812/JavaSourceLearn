@@ -24,6 +24,13 @@ jdk8源码学习
   [Class源码](https://github.com/dongguo4812/JavaSourceLearn/blob/master/doc/java.lang/Class%E6%BA%90%E7%A0%81.md)<br>
   [ClassLoader源码](https://github.com/dongguo4812/JavaSourceLearn/blob/master/doc/java.lang/ClassLoader%E6%BA%90%E7%A0%81.md)<br>
 2.2 java.util<br>
+  [ArrayList源码](https://github.com/dongguo4812/JavaSourceLearn/blob/master/doc/java.util/ArrayList%E6%BA%90%E7%A0%81.md)<br>
+  [JDK8低版本ArrayList的bug：c.toArray might not return Object[]](https://github.com/dongguo4812/JavaSourceLearn/blob/master/doc/java.util/JDK8%E4%BD%8E%E7%89%88%E6%9C%ACArrayList%E7%9A%84bug%EF%BC%9Ac.toArray%20might%20not%20return%20Object%5B%5D.md)<br>
+  [为什么不建议用ArrayList的subList方法](https://github.com/dongguo4812/JavaSourceLearn/blob/master/doc/java.util/%E4%B8%BA%E4%BB%80%E4%B9%88%E5%BB%BA%E8%AE%AE%E4%B8%8D%E8%A6%81%E7%94%A8ArrayList%E7%9A%84subList%E6%96%B9%E6%B3%95.md)<br>
+  [Vector源码](https://github.com/dongguo4812/JavaSourceLearn/blob/master/doc/java.util/Vector%E6%BA%90%E7%A0%81.md)<br>
+  [Arrays源码](https://github.com/dongguo4812/JavaSourceLearn/blob/master/doc/java.util/Arrays%E6%BA%90%E7%A0%81.md)<br>
+  [操作Arrays.asList的list报UnsupportedOperationException的坑](https://github.com/dongguo4812/JavaSourceLearn/blob/master/doc/java.util/%E6%93%8D%E4%BD%9CArrays.asList%E7%9A%84list%E6%8A%A5UnsupportedOperationException%E7%9A%84%E5%9D%91.md)<br>
+
 2.3 java.util.concurrent<br>
 2.4 java.util.concurrent.atomic<br>
 2.5 java.util.concurrent.locks<br>
