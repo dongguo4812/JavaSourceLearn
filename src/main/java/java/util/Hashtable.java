@@ -400,6 +400,7 @@ public class Hashtable<K,V>
      * Some VMs reserve some header words in an array.
      * Attempts to allocate larger arrays may result in
      * OutOfMemoryError: Requested array size exceeds VM limit
+     * 哈希表容量的最大值
      */
     private static final int MAX_ARRAY_SIZE = Integer.MAX_VALUE - 8;
 
@@ -502,7 +503,7 @@ public class Hashtable<K,V>
      * @see     Object#equals(Object)
      * @see     #get(Object)
      *
-     * 存入键值对key-value  键和值都不能是 null。
+     * 存入键值对key-value  键和值都不能是 null。  key重复则执行value值的更新，key不存在则正常添此加键值对。
      * 可以通过使用与原始键相同的键调用 get 方法来检索该值。
      */
     public synchronized V put(K key, V value) {
@@ -522,13 +523,13 @@ public class Hashtable<K,V>
         //创建entry指向对应位置的位桶头结点
         @SuppressWarnings("unchecked")
         Entry<K,V> entry = (Entry<K,V>)tab[index];
-        //遍历链表
+        //遍历链表中的节点
         for(; entry != null ; entry = entry.next) {
             //判断结点的hash值和key是否与传入的相等  相等则保存新值返回旧值
             if ((entry.hash == hash) && entry.key.equals(key)) {
-                //如果相等 保存旧值
+
                 V old = entry.value;
-                //赋值新值
+                //保存新值覆盖旧值
                 entry.value = value;
                 //返回旧值
                 return old;
@@ -720,7 +721,7 @@ public class Hashtable<K,V>
             keySet = Collections.synchronizedSet(new KeySet(), this);
         return keySet;
     }
-
+    //key的set集合
     private class KeySet extends AbstractSet<K> {
         public Iterator<K> iterator() {
             return getIterator(KEYS);
@@ -760,7 +761,7 @@ public class Hashtable<K,V>
             entrySet = Collections.synchronizedSet(new EntrySet(), this);
         return entrySet;
     }
-
+    //entry的set集合
     private class EntrySet extends AbstractSet<Map.Entry<K,V>> {
         public Iterator<Map.Entry<K,V>> iterator() {
             return getIterator(ENTRIES);
@@ -842,7 +843,7 @@ public class Hashtable<K,V>
                                                         this);
         return values;
     }
-
+    //value的Collection集合
     private class ValueCollection extends AbstractCollection<V> {
         public Iterator<V> iterator() {
             return getIterator(VALUES);
@@ -1331,9 +1332,13 @@ public class Hashtable<K,V>
      * Hashtable bucket collision list entry
      */
     private static class Entry<K,V> implements Map.Entry<K,V> {
+        //key的hash值
         final int hash;
+        //key值
         final K key;
+        //value值
         V value;
+        //哈希冲突产生的链表  下一个节点
         Entry<K,V> next;
 
         protected Entry(int hash, K key, V value, Entry<K,V> next) {
@@ -1387,6 +1392,8 @@ public class Hashtable<K,V>
     }
 
     // Types of Enumerations/Iterations
+    // 用于获取哈希表中的key或者value时指定一个类型
+    // 返回相应的枚举器
     private static final int KEYS = 0;
     private static final int VALUES = 1;
     private static final int ENTRIES = 2;
