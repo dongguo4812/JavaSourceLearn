@@ -346,13 +346,15 @@ public class TreeMap<K,V>
     final Entry<K,V> getEntry(Object key) {
         // Offload comparator-based version for sake of performance
         if (comparator != null)
+            // 如果比较器为空，只是用key作为比较器查询
             return getEntryUsingComparator(key);
         if (key == null)
             throw new NullPointerException();
         @SuppressWarnings("unchecked")
             Comparable<? super K> k = (Comparable<? super K>) key;
+        // 取得root节点
         Entry<K,V> p = root;
-        //遍历红黑树找到相同的元素返回
+        //遍历红黑树找到相同的元素返回  从root节点开始查找，根据比较器判断是在左子树还是右子树
         while (p != null) {
             int cmp = k.compareTo(p.key);
             if (cmp < 0)
@@ -539,32 +541,39 @@ public class TreeMap<K,V>
      *  如果key存在的话，old value被替换，否则新建一个节点，然后做红黑树的平衡操作
      */
     public V put(K key, V value) {
+        //根节点
         Entry<K,V> t = root;
         if (t == null) {
             compare(key, key); // type (and possibly null) check
-
+            //根节点为空  创建根节点
             root = new Entry<>(key, value, null);
             size = 1;
             modCount++;
             return null;
         }
+        //compare的比较结果
         int cmp;
         Entry<K,V> parent;
         // split comparator and comparable paths
-        // 自定义key大小比较规则
+        // 自定义key大小比较器
         Comparator<? super K> cpr = comparator;
         if (cpr != null) {
-            //对红黑树进行遍历搜索
+            //对红黑树进行遍历搜索 查找key要插入的位置
             do {
+                //当前遍历到的节点
                 parent = t;
+                //插入的key 与当前节点的key比价
                 cmp = cpr.compare(key, t.key);
+                //小于 遍历左子节点
                 if (cmp < 0)
                     t = t.left;
+                //大于 遍历右子节点
                 else if (cmp > 0)
                     t = t.right;
                 else
-                    //如果该节点存在，替换并返回
+                    //相等，该节点存在，替换并返回
                     return t.setValue(value);
+                //结束条件 遍历到的节点t为null
             } while (t != null);
         }
         else {
@@ -611,11 +620,13 @@ public class TreeMap<K,V>
      *         does not permit null keys
      */
     public V remove(Object key) {
+        //找到对应的节点对象
         Entry<K,V> p = getEntry(key);
         if (p == null)
             return null;
 
         V oldValue = p.value;
+        //删除节点
         deleteEntry(p);
         return oldValue;
     }
@@ -1356,6 +1367,7 @@ public class TreeMap<K,V>
         private static final long serialVersionUID = -2102997345730753016L;
         /**
          * The backing map.
+         * map的视图
          */
         final TreeMap<K,V> m;
 
@@ -1366,7 +1378,11 @@ public class TreeMap<K,V>
          * backing map, and the other values are ignored. Otherwise,
          * if loInclusive is true, lo is the inclusive bound, else lo
          * is the exclusive bound. Similarly for the upper bound.
+         * 通过这6个变量来控制起始与结束边界。
          */
+        //（fromStart，lo，loInclusive）代表起点，若fromStart为true则为map的最左节点，即最小。
+        //若fromStart为false，lo为起点，是否包含lo由loInclusive决定。
+        //（toEnd, hi, hiInclusive)代表终点，规则与上面一样
         final K lo, hi;
         final boolean fromStart, toEnd;
         final boolean loInclusive, hiInclusive;
@@ -2234,61 +2250,120 @@ public class TreeMap<K,V>
         return (p == null) ? null: p.right;
     }
 
+    /**
+     * 对红黑树的节点(x)进行左旋转
+     *
+     * 左旋示意图(对节点x进行左旋)：
+     *      px                              px
+     *     /                               /
+     *    x                               y
+     *   /  \      --(左旋)--             / \
+     *  lx   y                          x  ry
+     *     /   \                       /  \
+     *    ly   ry                     lx  ly
+     *
+     */
     /** From CLR */
     private void rotateLeft(Entry<K,V> p) {
         if (p != null) {
+            //节点p的右孩子
             Entry<K,V> r = p.right;
+            //r的左孩子设为p的右孩子
             p.right = r.left;
+            // 如果r的左孩子非空，将"p"设为"r的左孩子的父亲"
             if (r.left != null)
                 r.left.parent = p;
+            // 将"p的父亲"设为"y的父亲"
             r.parent = p.parent;
+            // 如果"p的父亲"是空节点，则将r设为根节点
             if (p.parent == null)
                 root = r;
+                // 如果p是它父节点的左孩子，则将r设为"p的父节点的左孩子"
             else if (p.parent.left == p)
                 p.parent.left = r;
             else
+                // 如果p是它父节点的左孩子，则将r设为"p的父节点的左孩子"
                 p.parent.right = r;
+            // 将"p"设为"r的左孩子"
             r.left = p;
+            // 将"p的父节点"设为"r"
             p.parent = r;
         }
     }
 
+    /**
+     * 对红黑树的节点进行右旋转
+     *
+     * 右旋示意图(对节点y进行右旋)：
+     *            py                               py
+     *           /                                /
+     *          y                                x
+     *         /  \      --(右旋)--            /  \
+     *        x   ry                           lx   y
+     *       / \                                   / \
+     *      lx  rx                                rx  ry
+     *
+     */
     /** From CLR */
     private void rotateRight(Entry<K,V> p) {
         if (p != null) {
+            // 取得要选择节点p的左孩子
             Entry<K,V> l = p.left;
+            // 将"l的右孩子"设为"p的左孩子"
             p.left = l.right;
+            // 如果"l的右孩子"不为空的话，将"p"设为"l的右孩子的父亲"
             if (l.right != null) l.right.parent = p;
+            // 将"p的父亲"设为"l的父亲"
             l.parent = p.parent;
+            // 如果"p的父亲"是空节点，则将l设为根节点
             if (p.parent == null)
                 root = l;
+                // 如果p是它父节点的右孩子，则将l设为"p的父节点的右孩子"
             else if (p.parent.right == p)
                 p.parent.right = l;
+                //如果p是它父节点的左孩子，将l设为"p的父节点的左孩子"
             else p.parent.left = l;
+            // 将"p"设为"l的右孩子"
             l.right = p;
+            // 将"l"设为"p父节点"
             p.parent = l;
         }
     }
 
     /** From CLR */
+    //新增节点后对红黑树的调整方法
     private void fixAfterInsertion(Entry<K,V> x) {
+        //新插入的节点颜色 为红色
         x.color = RED;
 
+        //保证新加入节点x不是根节点或者x的父节点不是红色
         while (x != null && x != root && x.parent.color == RED) {
+            //x的父节点是祖父节点的左孩子
             if (parentOf(x) == leftOf(parentOf(parentOf(x)))) {
+                //获得父节点的兄弟节点
                 Entry<K,V> y = rightOf(parentOf(parentOf(x)));
+                //如果x的父节点是红色
                 if (colorOf(y) == RED) {
+                    //将x的父节点设置为黑色
                     setColor(parentOf(x), BLACK);
+                    //x的父节点的兄弟节点设置为黑色
                     setColor(y, BLACK);
+                    //将x的祖父节点设置为红色
                     setColor(parentOf(parentOf(x)), RED);
+                    //将x指向祖父节点，如果x的祖父节点的父节点是红色，按照上面的步奏继续循环
                     x = parentOf(parentOf(x));
                 } else {
+                    //x的父节点是祖父节点的右孩子
                     if (x == rightOf(parentOf(x))) {
+                        //左旋父节点
                         x = parentOf(x);
                         rotateLeft(x);
                     }
+                    //x的父节点设置为黑色
                     setColor(parentOf(x), BLACK);
+                    //x的祖父节点设置为红色
                     setColor(parentOf(parentOf(x)), RED);
+                    //右旋x的祖父节点
                     rotateRight(parentOf(parentOf(x)));
                 }
             } else {
@@ -2309,6 +2384,7 @@ public class TreeMap<K,V>
                 }
             }
         }
+        // 最后将根节点设置为黑色，不管当前是不是红色，反正根节点必须是黑色
         root.color = BLACK;
     }
 
@@ -2317,11 +2393,14 @@ public class TreeMap<K,V>
      */
     private void deleteEntry(Entry<K,V> p) {
         modCount++;
+        //元素个数减1
         size--;
 
         // If strictly internal, copy successor's element to p and then make p
         // point to successor.
+        //如果被删除的节点p的左孩子和右孩子都不为空，则寻找替代节点
         if (p.left != null && p.right != null) {
+            // 查找p的替代节点 （后继节点）
             Entry<K,V> s = successor(p);
             p.key = s.key;
             p.value = s.value;
@@ -2329,35 +2408,47 @@ public class TreeMap<K,V>
         } // p has 2 children
 
         // Start fixup at replacement node, if it exists.
+        //replacement为替代节点p的继承者  p的左孩子存在则用p的左孩子替代，否则用p的右孩子
         Entry<K,V> replacement = (p.left != null ? p.left : p.right);
-
+        //如果上面的if有两个孩子不通过--------------这里表示要删除的节点只有一个孩子
         if (replacement != null) {
             // Link replacement to parent
+            // 将p的父节点拷贝给替代节点
             replacement.parent = p.parent;
+            // 如果替代节点p的父节点为空，也就是p为跟节点，则将replacement设置为根节点
             if (p.parent == null)
                 root = replacement;
+                // 如果替代节点p是其父节点的左孩子，则将replacement设置为其父节点的左孩子
             else if (p == p.parent.left)
                 p.parent.left  = replacement;
             else
+                // 如果替代节点p是其父节点的左孩子，则将replacement设置为其父节点的右孩子
                 p.parent.right = replacement;
 
             // Null out links so they are OK to use by fixAfterDeletion.
+            //将替代节点p的left、right、parent的指针都指向空，即解除前后引用关系（相当于将p从树种摘除），使得gc可以回收
             p.left = p.right = p.parent = null;
 
             // Fix replacement
+            // 如果替代节点p的颜色是黑色，则需要调整红黑树以保持其平衡
             if (p.color == BLACK)
                 fixAfterDeletion(replacement);
         } else if (p.parent == null) { // return if we are the only node.
+            // 如果要替代节点p没有父节点，代表p为根节点，直接删除即可
             root = null;
         } else { //  No children. Use self as phantom replacement and unlink.
+            // 判断进入这里说明替代节点p没有孩子--------------这里表示没有孩子则直接删除
+            // 如果p的颜色是黑色，则调整红黑树
             if (p.color == BLACK)
                 fixAfterDeletion(p);
-
+            // 下面删除替代节点p
             if (p.parent != null) {
+                // 解除p的父节点对p的引用
                 if (p == p.parent.left)
                     p.parent.left = null;
                 else if (p == p.parent.right)
                     p.parent.right = null;
+                // 解除p对p父节点的引用
                 p.parent = null;
             }
         }
@@ -2365,34 +2456,54 @@ public class TreeMap<K,V>
 
     /** From CLR */
     private void fixAfterDeletion(Entry<K,V> x) {
+        //保证要删除节点x不是跟节点，并且是黑色（根节点和红色不需要调整）
         while (x != root && colorOf(x) == BLACK) {
+            // 如果要删除节点x是其父亲的左孩子
             if (x == leftOf(parentOf(x))) {
+                // 取出要删除节点x的兄弟节点
                 Entry<K,V> sib = rightOf(parentOf(x));
-
+                // 如果删除节点x的兄弟节点是红色
                 if (colorOf(sib) == RED) {
+                    // 将x的兄弟节点颜色设置为黑色
                     setColor(sib, BLACK);
+                    // 将x的父节点颜色设置为红色
                     setColor(parentOf(x), RED);
+                    // 左旋x的父节点
                     rotateLeft(parentOf(x));
+                    // 将sib重新指向旋转后x的兄弟节点 ，进入else的步奏
                     sib = rightOf(parentOf(x));
                 }
-
+                // 如果x的兄弟节点的两个孩子都是黑色
                 if (colorOf(leftOf(sib))  == BLACK &&
                     colorOf(rightOf(sib)) == BLACK) {
+                    // 将兄弟节点的颜色设置为红色
                     setColor(sib, RED);
+                    // 将x的父节点指向x，如果x的父节点是黑色，需要将x的父节点整天看做一个节点继续调整
                     x = parentOf(x);
                 } else {
+                    // 如果x的兄弟节点右孩子是黑色，左孩子是红色
                     if (colorOf(rightOf(sib)) == BLACK) {
+                        // 将x的兄弟节点的左孩子设置为黑色
                         setColor(leftOf(sib), BLACK);
+                        // 将x的兄弟节点设置为红色
                         setColor(sib, RED);
+                        // 右旋x的兄弟节点
                         rotateRight(sib);
+                        // 将sib重新指向旋转后x的兄弟节点
                         sib = rightOf(parentOf(x));
                     }
+                    //如果x的兄弟节点右孩子是红色
                     setColor(sib, colorOf(parentOf(x)));
+                    //将x的父节点设置为黑色
                     setColor(parentOf(x), BLACK);
+                    // 将x的兄弟节点的右孩子设置为黑色
                     setColor(rightOf(sib), BLACK);
+                    // 左旋x的父节点
                     rotateLeft(parentOf(x));
+                    // 达到平衡，将x指向root，退出循环
                     x = root;
                 }
+                // 如果要删除节点x是其父亲的右孩子
             } else { // symmetric
                 Entry<K,V> sib = leftOf(parentOf(x));
 
