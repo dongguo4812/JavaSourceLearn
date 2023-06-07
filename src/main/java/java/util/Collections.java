@@ -100,11 +100,15 @@ public class Collections {
      * (The first word of each tuning parameter name is the algorithm to which
      * it applies.)
      */
-    /** 一些算法所用到的常量，主要是些阈值 **/
+    /** 一些算法所用到的常量，主要是些阙值 **/
+    //二分查找的阙值
     private static final int BINARYSEARCH_THRESHOLD   = 5000;
+    //反转阙值
     private static final int REVERSE_THRESHOLD        =   18;
+    //洗牌阙值
     private static final int SHUFFLE_THRESHOLD        =    5;
     private static final int FILL_THRESHOLD           =   25;
+    //旋转阙值
     private static final int ROTATE_THRESHOLD         =  100;
     private static final int COPY_THRESHOLD           =   10;
     private static final int REPLACEALL_THRESHOLD     =   11;
@@ -226,48 +230,63 @@ public class Collections {
     //索引二叉搜索
     private static <T>
     int indexedBinarySearch(List<? extends Comparable<? super T>> list, T key) {
+        //初始低位为0
         int low = 0;
+        //初始高位为 list.size()-1
         int high = list.size()-1;
 
         while (low <= high) {
-            // 获取中间值
+            // 位运算获取中间下标
             int mid = (low + high) >>> 1;
+            //获取中间下标元素
             Comparable<? super T> midVal = list.get(mid);
-            // 指定元素与中间值的大小比较
+            // 调用compareTo方法, 中间元素和寻找元素做对比 大于返回大于0, 小于返回小于0, 相等返回0
             int cmp = midVal.compareTo(key);
             // 更新上界和下界，缩小查找范围
             if (cmp < 0)
+                // 小于0说明中间元素小于寻找元素, 说明寻找元素在右边, 低位 = 中间下标 + 1
                 low = mid + 1;
             else if (cmp > 0)
+                // 大于0说明中间元素大于寻找元素, 说明寻找元素在左边, 高位 = 中间下标 - 1
                 high = mid - 1;
             else
+                // 相等 找到该值 返回中间下标
                 return mid; // key found
         }
         // 当为查找到时，返回负的最小下标+1
         return -(low + 1);  // key not found
     }
 
-    //迭代器二叉搜索
+    //迭代器二叉搜索  迭代器二分查找通过迭代器获取元素, 时间复杂度为O(n)
     private static <T>
     int iteratorBinarySearch(List<? extends Comparable<? super T>> list, T key)
     {
+        // 初始低位为0
         int low = 0;
+        // 初始高位为集合大小 - 1
         int high = list.size()-1;
         // 与索引搜索不同，使用迭代器
         ListIterator<? extends Comparable<? super T>> i = list.listIterator();
 
         while (low <= high) {
+            // 通过位运算获取中间下标
             int mid = (low + high) >>> 1;
+            // 通过迭代器获取中间下标元素值
             Comparable<? super T> midVal = get(i, mid);
+            // 中间值和寻找值做对于 大于返回大于0, 小于返回小于0, 相等返回等于0
             int cmp = midVal.compareTo(key);
 
             if (cmp < 0)
+                // 中间值小于寻找值, 说明寻找值在右边, 低位 = 中间下标 + 1
                 low = mid + 1;
             else if (cmp > 0)
+                // 中间值大于寻找值, 说明寻找值在左边, 高位 = 中间下标 - 1
                 high = mid - 1;
             else
+                // 找到该值 返回下标
                 return mid; // key found
         }
+        // 没有找到返回 -(low + 1)
         return -(low + 1);  // key not found
     }
 
@@ -436,11 +455,13 @@ public class Collections {
      */
     public static void shuffle(List<?> list) {
         Random rnd = r;
+        // 没有传入固定随机种子则初始化
         if (rnd == null)
             r = rnd = new Random(); // harmless race.
+        // 洗牌算法
         shuffle(list, rnd);
     }
-
+    //随机值
     private static Random r;
 
     /**
@@ -468,14 +489,21 @@ public class Collections {
      */
     @SuppressWarnings({"rawtypes", "unchecked"})
     public static void shuffle(List<?> list, Random rnd) {
+        //集合容量
         int size = list.size();
+        // 集合容量小于洗牌阙值5 或者 是RandomAccess
         if (size < SHUFFLE_THRESHOLD || list instanceof RandomAccess) {
+            //调用交换算法
             for (int i=size; i>1; i--)
                 swap(list, i-1, rnd.nextInt(i));
         } else {
+            // 集合容量大于洗牌阙值5, 且不是RandomAccess, 比如LindedList
+            // 转成数组,对数组做调换操作, 不调用list的set方法主要是因为LindedList的set方法要获取传入下标的元素,获取元素
+            // 时间复杂度为O(n)性能低
             Object[] arr = list.toArray();
 
             // Shuffle array
+            //对数组做交换操作
             for (int i=size; i>1; i--)
                 swap(arr, i-1, rnd.nextInt(i));
 
@@ -483,6 +511,7 @@ public class Collections {
             // instead of using a raw type here, it's possible to capture
             // the wildcard but it will require a call to a supplementary
             // private method
+            // 通过迭代器进行元素的调换, 使用迭代器的set方法性能就是很高,因为可以通过迭代器获取元素
             ListIterator it = list.listIterator();
             for (int i=0; i<arr.length; i++) {
                 it.next();
@@ -510,6 +539,11 @@ public class Collections {
         // the wildcard but it will require a call to a supplementary
         // private method
         final List l = list;
+        // 通过list.set(int index, E e)方法进行元素调换, 该方法返回原元素
+        // 比如list(1, 2, 3, 4, 5, 6, 7, 8) i = 7, j = 0
+        // 首先 l.set(j, l.get(i)) 将下标为7的元素调到下位为0的位置,并返回元素1, 此时list为(8,2,3,4,5,6,7,8)
+        // l.set(i, 1), 将元素1设置到下标7, 此时list为(8,2,3,4,5,6,7,1)
+        // 这样子就完成了元素调换
         l.set(i, l.set(j, l.get(i)));
     }
 
@@ -517,6 +551,7 @@ public class Collections {
      * Swaps the two specified elements in the specified array.
      */
     private static void swap(Object[] arr, int i, int j) {
+        //完成下标i,j元素的调换
         Object tmp = arr[i];
         arr[i] = arr[j];
         arr[j] = tmp;
@@ -803,10 +838,11 @@ public class Collections {
     }
 
     private static <T> void rotate1(List<T> list, int distance) {
+        //集合容量
         int size = list.size();
         if (size == 0)
             return;
-        // 将过长距离缩短
+        // 计算旋转的距离
         distance = distance % size;
         // 将过短的距离增加
         if (distance < 0)
@@ -815,13 +851,16 @@ public class Collections {
             return;
         // 将元素进行移动distance距离
         for (int cycleStart = 0, nMoved = 0; nMoved != size; cycleStart++) {
+            //旋转的元素
             T displaced = list.get(cycleStart);
+            // 旋转的元素下标
             int i = cycleStart;
             do {
                 i += distance;
                 // 将后半部分元素前移动
                 if (i >= size)
                     i -= size;
+                // 通过list.set方法旋转元素
                 displaced = list.set(i, displaced);
                 nMoved ++;
             } while (i != cycleStart);
@@ -1055,8 +1094,9 @@ public class Collections {
      * @serial include
      */
     static class UnmodifiableCollection<E> implements Collection<E>, Serializable {
+        //序列化版本号
         private static final long serialVersionUID = 1820017752578914078L;
-
+        //存储的集合类
         final Collection<? extends E> c;
 
         UnmodifiableCollection(Collection<? extends E> c) {
@@ -1064,7 +1104,7 @@ public class Collections {
                 throw new NullPointerException();
             this.c = c;
         }
-
+        // 实现行为相同的方法，以代理的方式访问传入的集合类
         public int size()                   {return c.size();}
         public boolean isEmpty()            {return c.isEmpty();}
         public boolean contains(Object o)   {return c.contains(o);}
@@ -2040,6 +2080,7 @@ public class Collections {
         private static final long serialVersionUID = 3053995032091335093L;
 
         final Collection<E> c;  // Backing Collection
+        //锁对象
         final Object mutex;     // Object on which to synchronize
 
         SynchronizedCollection(Collection<E> c) {
@@ -2051,7 +2092,7 @@ public class Collections {
             this.c = Objects.requireNonNull(c);
             this.mutex = Objects.requireNonNull(mutex);
         }
-
+        // 对操作进行加锁处理
         public int size() {
             synchronized (mutex) {return c.size();}
         }
@@ -2067,7 +2108,7 @@ public class Collections {
         public <T> T[] toArray(T[] a) {
             synchronized (mutex) {return c.toArray(a);}
         }
-
+        //迭代器同步需自行实现
         public Iterator<E> iterator() {
             return c.iterator(); // Must be manually synched by user!
         }
@@ -3083,7 +3124,7 @@ public class Collections {
             return "Attempt to insert " + o.getClass() +
                 " element into collection with element type " + type;
         }
-
+        //必须指定类型
         CheckedCollection(Collection<E> c, Class<E> type) {
             this.c = Objects.requireNonNull(c, "c");
             this.type = Objects.requireNonNull(type, "type");
@@ -4841,6 +4882,7 @@ public class Collections {
 
         private final E element;
 
+        // 初始化时传入一个元素
         SingletonList(E obj)                {element = obj;}
 
         public Iterator<E> iterator() {
@@ -4850,7 +4892,7 @@ public class Collections {
         public int size()                   {return 1;}
 
         public boolean contains(Object obj) {return eq(obj, element);}
-
+        // 只允许返回第一个元素
         public E get(int index) {
             if (index != 0)
               throw new IndexOutOfBoundsException("Index: "+index+", Size: 1");
