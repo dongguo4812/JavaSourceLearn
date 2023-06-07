@@ -355,6 +355,7 @@ class Properties extends Hashtable<Object,Object> {
      * @throws IOException
      */
     private void load0 (LineReader lr) throws IOException {
+        //转换的字符数组
         char[] convtBuf = new char[1024];
         // 字符总数
         int limit;
@@ -362,11 +363,13 @@ class Properties extends Hashtable<Object,Object> {
         int keyLen;
         // value的起始位置
         int valueStart;
+        //比较的当前字符
         char c;
+        //连接符处理标识
         boolean hasSep;
         // 是否是转义字符
         boolean precedingBackslash;
-
+        // 当前行的内容不为空
         while ((limit = lr.readLine()) >= 0) {
             c = 0;
             keyLen = 0;
@@ -377,22 +380,25 @@ class Properties extends Hashtable<Object,Object> {
             //System.out.println("line=<" + new String(lineBuf, 0, limit) + ">");
             precedingBackslash = false;
             // keyLen < limit
+            // 读取key的内容
             while (keyLen < limit) {
+                // 获取key中的字符
                 c = lr.lineBuf[keyLen];
                 //need check if escaped.
-                // 检测到非空格分隔符且前面的字符没有转义
+                // 此处解释了properties文件中key、value的书写方式：key=value、key:value，并且判断前一个字符不是转义字符
                 if ((c == '=' ||  c == ':') && !precedingBackslash) {
                     //下一个就是value开始的位置
                     valueStart = keyLen + 1;
                     // 并且指定，去除空格
                     hasSep = true;
                     break;
+                    // tab方式、空格方式的key、value也可被读取
                 } else if ((c == ' ' || c == '\t' ||  c == '\f') && !precedingBackslash) {
                     // 检测到空格分隔符
                     valueStart = keyLen + 1;
                     break;
                 }
-                // 检测到'\'，记录
+                // 当前读取的字符为'\\'，更新是否是转义字符标识
                 if (c == '\\') {
                     precedingBackslash = !precedingBackslash;
                 } else {
@@ -402,6 +408,7 @@ class Properties extends Hashtable<Object,Object> {
                 keyLen++;
             }
             // valueStart < limit
+            // 读取value的内容
             while (valueStart < limit) {
                 c = lr.lineBuf[valueStart];
                 // 判断是否是空格类字符
@@ -415,10 +422,10 @@ class Properties extends Hashtable<Object,Object> {
                 }
                 valueStart++;
             }
-            // 读取key和value
+            // 将字符数组中的key、value转化为字符串
             String key = loadConvert(lr.lineBuf, 0, keyLen, convtBuf);
             String value = loadConvert(lr.lineBuf, valueStart, limit - valueStart, convtBuf);
-            // 放入
+            // Hashtable的put方法，将key、value存储在内存中
             put(key, value);
         }
     }
