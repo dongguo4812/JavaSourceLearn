@@ -330,6 +330,7 @@ public abstract class AbstractList<E> extends AbstractCollection<E> implements L
     private class Itr implements Iterator<E> {
         /**
          * Index of element to be returned by subsequent call to next.
+         * 游标 下一次调用next返回的元素索引
          */
         int cursor = 0;
 
@@ -337,6 +338,8 @@ public abstract class AbstractList<E> extends AbstractCollection<E> implements L
          * Index of element returned by most recent call to next or
          * previous.  Reset to -1 if this element is deleted by a call
          * to remove.
+         * 最近一次调用next或者previous返回的元素索引
+         * 调用remove删除元素，会被置为-1，避免连续删除
          */
         int lastRet = -1;
 
@@ -344,6 +347,8 @@ public abstract class AbstractList<E> extends AbstractCollection<E> implements L
          * The modCount value that the iterator believes that the backing
          * List should have.  If this expectation is violated, the iterator
          * has detected concurrent modification.
+         * 期望修改次数 = 实际修改次数
+         * 如果迭代器在使用过程中，检测到这个值（expectedModCount）和list的值(modCount)不一样，则发生并发修改异常
          */
         int expectedModCount = modCount;
 
@@ -354,18 +359,25 @@ public abstract class AbstractList<E> extends AbstractCollection<E> implements L
         public E next() {
             checkForComodification();
             try {
+                //下一次next返回索引，迭代前先取出
                 int i = cursor;
+                //获得下标的元素
                 E next = get(i);
+                //调用next返回的元素索引i
                 lastRet = i;
+                //下次迭代的游标
                 cursor = i + 1;
                 return next;
             } catch (IndexOutOfBoundsException e) {
+                //get函数可能抛出IndexOutOfBoundsException
+                //可能因为出现并发修改异常导致数组下标越界
                 checkForComodification();
                 throw new NoSuchElementException();
             }
         }
 
         public void remove() {
+            //再次删除的情况，上一次执行了迭代器的删除后，还没有进行元素的移动，这种情况不允许操作，为-1
             if (lastRet < 0)
                 throw new IllegalStateException();
             checkForComodification();
@@ -374,6 +386,7 @@ public abstract class AbstractList<E> extends AbstractCollection<E> implements L
                 AbstractList.this.remove(lastRet);
                 if (lastRet < cursor)
                     cursor--;
+                //删除后，为-1
                 lastRet = -1;
                 expectedModCount = modCount;
             } catch (IndexOutOfBoundsException e) {
@@ -391,7 +404,7 @@ public abstract class AbstractList<E> extends AbstractCollection<E> implements L
         ListItr(int index) {
             cursor = index;
         }
-
+        //只要游标不为0，都可以往前迭代
         public boolean hasPrevious() {
             return cursor != 0;
         }
@@ -399,8 +412,10 @@ public abstract class AbstractList<E> extends AbstractCollection<E> implements L
         public E previous() {
             checkForComodification();
             try {
+                //往前迭代
                 int i = cursor - 1;
                 E previous = get(i);
+                //更新下标
                 lastRet = cursor = i;
                 return previous;
             } catch (IndexOutOfBoundsException e) {
@@ -418,6 +433,7 @@ public abstract class AbstractList<E> extends AbstractCollection<E> implements L
         }
 
         public void set(E e) {
+            //说明执行了remove或add后，还没有进行过next或previous操作
             if (lastRet < 0)
                 throw new IllegalStateException();
             checkForComodification();
@@ -612,11 +628,15 @@ public abstract class AbstractList<E> extends AbstractCollection<E> implements L
 }
 
 class SubList<E> extends AbstractList<E> {
+    //表示被截取的list
     private final AbstractList<E> l;
+    //偏移量
     private final int offset;
+    //元素个数
     private int size;
 
     SubList(AbstractList<E> list, int fromIndex, int toIndex) {
+        //参数校验
         if (fromIndex < 0)
             throw new IndexOutOfBoundsException("fromIndex = " + fromIndex);
         if (toIndex > list.size())
@@ -631,7 +651,9 @@ class SubList<E> extends AbstractList<E> {
     }
 
     public E set(int index, E element) {
+        //下标越界检查
         rangeCheck(index);
+        //并发修改检查
         checkForComodification();
         return l.set(index+offset, element);
     }
