@@ -633,11 +633,14 @@ public class ConcurrentHashMap<K,V> extends AbstractMap<K,V>
      * in bulk tasks.  Subclasses of Node with a negative hash field
      * are special, and contain null keys and values (but are never
      * exported).  Otherwise, keys and vals are never null.
+     * 链表节点Node
      */
     static class Node<K,V> implements Map.Entry<K,V> {
+        //哈希值
         final int hash;
         final K key;
         volatile V val;
+        //链表下一个节点
         volatile Node<K,V> next;
 
         Node(int hash, K key, V val, Node<K,V> next) {
@@ -809,6 +812,12 @@ public class ConcurrentHashMap<K,V> extends AbstractMap<K,V>
      * when table is null, holds the initial table size to use upon
      * creation, or 0 for default. After initialization, holds the
      * next element count value upon which to resize the table.
+     * 在数组的初始化和扩容的时候会用到
+     * 当值为负数时：如果为-1表示正在初始化，如果为-n则表示正有N-1个线程在进行扩容操作；
+     *             如果为0表示map刚刚new好，并且没有指定数组的初始化长度
+     * 当值为正数时：
+     *          如果当前数组为null，map刚刚创建，sizeCtl表示需要新建数组的长度。
+     *          如果已经初始化过了，则表示临界值（容量*负载因子），超过这个值就需要进行扩容；
      */
     private transient volatile int sizeCtl;
 
@@ -837,6 +846,7 @@ public class ConcurrentHashMap<K,V> extends AbstractMap<K,V>
 
     /**
      * Creates a new, empty map with the default initial table size (16).
+     * 无参构造，创建一个空map 默认容量为16
      */
     public ConcurrentHashMap() {
     }
@@ -854,8 +864,10 @@ public class ConcurrentHashMap<K,V> extends AbstractMap<K,V>
     public ConcurrentHashMap(int initialCapacity) {
         if (initialCapacity < 0)
             throw new IllegalArgumentException();
+        //如果指定的初始容量大于等于最大容量的一半，使用最大容量MAXIMUM_CAPACITY
         int cap = ((initialCapacity >= (MAXIMUM_CAPACITY >>> 1)) ?
                    MAXIMUM_CAPACITY :
+                    //扩容 容量为2的n次幂
                    tableSizeFor(initialCapacity + (initialCapacity >>> 1) + 1));
         this.sizeCtl = cap;
     }
@@ -864,6 +876,7 @@ public class ConcurrentHashMap<K,V> extends AbstractMap<K,V>
      * Creates a new map with the same mappings as the given map.
      *
      * @param m the map
+     * map的迁移
      */
     public ConcurrentHashMap(Map<? extends K, ? extends V> m) {
         this.sizeCtl = DEFAULT_CAPACITY;
@@ -2203,8 +2216,10 @@ public class ConcurrentHashMap<K,V> extends AbstractMap<K,V>
 
     /**
      * A node inserted at head of bins during transfer operations.
+     * 转移节点
      */
     static final class ForwardingNode<K,V> extends Node<K,V> {
+        //下一个数组，只有在进行转移时才会出现
         final Node<K,V>[] nextTable;
         ForwardingNode(Node<K,V>[] tab) {
             super(MOVED, null, null, null);
@@ -2266,23 +2281,35 @@ public class ConcurrentHashMap<K,V> extends AbstractMap<K,V>
      */
     private final Node<K,V>[] initTable() {
         Node<K,V>[] tab; int sc;
+        //判断数组是否初始化
         while ((tab = table) == null || tab.length == 0) {
+            //sizeCtl < 0 表示其他线程正在初始化
             if ((sc = sizeCtl) < 0)
+                //放弃当前cpu资源
                 Thread.yield(); // lost initialization race; just spin
+            //cas操作将SIZECTL修改为-1，表示该线程开始进行初始化
             else if (U.compareAndSwapInt(this, SIZECTL, sc, -1)) {
                 try {
+                    //双重检测 数组是否初始化
                     if ((tab = table) == null || tab.length == 0) {
+                        //确定容量
                         int n = (sc > 0) ? sc : DEFAULT_CAPACITY;
                         @SuppressWarnings("unchecked")
+                        //创建哈希表
                         Node<K,V>[] nt = (Node<K,V>[])new Node<?,?>[n];
                         table = tab = nt;
+                        // n(1-0.25) = 0.75n = 更新阈值
                         sc = n - (n >>> 2);
                     }
                 } finally {
+                    //初始化成功，sizeCtl记录的是阈值
+                    //初始化失败，则还原sizeCtl
                     sizeCtl = sc;
                 }
                 break;
             }
+            //数组未初始化，准备去初始化，结果有其他线程去执行 初始化。
+            //并不知道是否完成初始化，重新循环检查
         }
         return tab;
     }
@@ -2299,14 +2326,22 @@ public class ConcurrentHashMap<K,V> extends AbstractMap<K,V>
      */
     private final void addCount(long x, int check) {
         CounterCell[] as; long b, s;
+        //counterCells为空证明不存在竞争
         if ((as = counterCells) != null ||
+                //cas尝试利用baseCount累加元素和
             !U.compareAndSwapLong(this, BASECOUNT, b = baseCount, s = b + x)) {
             CounterCell a; long v; int m;
+            //true表示没有线程竞争
             boolean uncontended = true;
+            //如果当前as为空证明多线程导致baseCount赋值失败，所以需要初始化一个counterCells数组进行统计
             if (as == null || (m = as.length - 1) < 0 ||
+                    //如果当前as不为空，但是对应线程数组下标实例为空，那么调用fullAddCount构造一个实例再放入新加入的元素个数
                 (a = as[ThreadLocalRandom.getProbe() & m]) == null ||
+                    //如果当前as不为空，且当前线程对应as数组存储的对象不为空，那么直接用实例对象存储的数值加上当前插入的数据累加和即可
+                    //通过cas操作去修改当前数组下标中对应的计数，失败则表示存在并发竞争
                 !(uncontended =
                   U.compareAndSwapLong(a, CELLVALUE, v = a.value, v + x))) {
+                //CounterCell扩容 初始化等操作
                 fullAddCount(x, uncontended);
                 return;
             }
@@ -2694,8 +2729,10 @@ public class ConcurrentHashMap<K,V> extends AbstractMap<K,V>
     private final void treeifyBin(Node<K,V>[] tab, int index) {
         Node<K,V> b; int n, sc;
         if (tab != null) {
+            //数组长度小于64，进行扩容
             if ((n = tab.length) < MIN_TREEIFY_CAPACITY)
                 tryPresize(n << 1);
+            //否则链表转换红黑树
             else if ((b = tabAt(tab, index)) != null && b.hash >= 0) {
                 synchronized (b) {
                     if (tabAt(tab, index) == b) {
@@ -2737,6 +2774,7 @@ public class ConcurrentHashMap<K,V> extends AbstractMap<K,V>
 
     /**
      * Nodes for use in TreeBins
+     * 红黑树节点
      */
     static final class TreeNode<K,V> extends Node<K,V> {
         TreeNode<K,V> parent;  // red-black tree links
