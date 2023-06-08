@@ -377,7 +377,7 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
      * we can only terminate if, after seeing that it is empty, we see
      * that workerCount is 0 (which sometimes entails a recheck -- see
      * below).
-     * 存储线程池状态和线程池大小，那么用前3位表示线程池状态，后29位表示：线程池大小，即线程池线程数
+     * 原子类 用来保存线程数量和线程池的状态，那么用前3位表示线程池状态，后29位表示：线程池大小，即线程池线程数
      */
     private final AtomicInteger ctl = new AtomicInteger(ctlOf(RUNNING, 0));
     //常量29 用于计算的位数
@@ -387,7 +387,7 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
 
     // runState is stored in the high-order bits
     //以下为线程池的四个状态，用32位中的前三位表示
-    // 111 00000 00000000 00000000 00000000  线程运行中 【running状态值为负数最小】
+    // 111 00000 00000000 00000000 00000000  接收新任务，并执行队列中的任务
     private static final int RUNNING    = -1 << COUNT_BITS;
     // 000 拒绝新的任务提交,会将队列中的任务执行完,正在执行的任务继续执行.
     private static final int SHUTDOWN   =  0 << COUNT_BITS;
