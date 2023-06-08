@@ -83,6 +83,7 @@ public class Base64 {
      * <a href="#basic">Basic</a> type base64 encoding scheme.
      *
      * @return  A Base64 encoder.
+     * 获得简单类型的编码器
      */
     public static Encoder getEncoder() {
          return Encoder.RFC4648;
@@ -206,6 +207,7 @@ public class Base64 {
          * This array is a lookup table that translates 6-bit positive integer
          * index values into their "Base64 Alphabet" equivalents as specified
          * in "Table 1: The Base64 Alphabet" of RFC 2045 (and RFC 4648).
+         * 简单类型查找表， 编码字符只包含 A-Za-z0-9+/ 等 64 个字符。且编码的时候不会包含任何换行符 ( \r 、 \n 、\r\n ）。解码的时候也只会解码 A-Za-z0-9+/ 内的字符，超出的则会被拒绝。
          */
         private static final char[] toBase64 = {
             'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M',
@@ -219,6 +221,7 @@ public class Base64 {
          * It's the lookup table for "URL and Filename safe Base64" as specified
          * in Table 2 of the RFC 4648, with the '+' and '/' changed to '-' and
          * '_'. This table is used when BASE64_URL is specified.
+         * URL查找表 编码字符只包含 A-Za-z0-9+_ 等 64 个字符。和 简单 相比，就是把 / 换成了 _ 。因为没有 / 字符，因此这种编码方式非常适合 URL 和文件名等。
          */
         private static final char[] toBase64URL = {
             'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M',
@@ -227,7 +230,7 @@ public class Base64 {
             'n', 'o', 'p', 'q', 'r', 's', 't', 'u', 'v', 'w', 'x', 'y', 'z',
             '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '-', '_'
         };
-
+        //MIME 每行输出不能超过76个字符
         private static final int MIMELINEMAX = 76;
         private static final byte[] CRLF = new byte[] {'\r', '\n'};
 
@@ -313,7 +316,9 @@ public class Base64 {
          */
         @SuppressWarnings("deprecation")
         public String encodeToString(byte[] src) {
+            //编码为base64编码的字节数组
             byte[] encoded = encode(src);
+            //构造新的字符串
             return new String(encoded, 0, 0, encoded.length);
         }
 
