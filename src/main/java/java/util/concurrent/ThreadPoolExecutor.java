@@ -995,7 +995,7 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
      * 创建新的线程执行当前任务
      */
     private boolean addWorker(Runnable firstTask, boolean core) {
-        //外循环：
+        //外循环：goto跳出循环
         retry:
         for (;;) {
             int c = ctl.get();
@@ -1004,7 +1004,7 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
             // Check if queue empty only if necessary.
             // 如果线程池状态是SHUTDOWN、STOP、TIDYING、TERMINATED就不允许提交。
             // && 后面的特殊情况，线程池的状态是SHUTDOWN并且要要执行的任务为Null并且队列不是空，
-            // 这种情况下是允许增加一个线程来帮助队列中的任务跑完的，因为shutdown状态下，允许执行完成阻塞队里中的任务
+            // 这种情况下是允许增加一个线程来帮助队列中的任务跑完的，因为shutdown状态下，允许执行完阻塞队里中的任务
             if (rs >= SHUTDOWN &&
                 ! (rs == SHUTDOWN &&
                    //execute()有addWorkder(null,false)的场景
@@ -2252,6 +2252,7 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
      * directly in the calling thread of the {@code execute} method,
      * unless the executor has been shut down, in which case the task
      * is discarded.
+     *
      */
     public static class CallerRunsPolicy implements RejectedExecutionHandler {
         /**
@@ -2265,8 +2266,10 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
          *
          * @param r the runnable task requested to be executed
          * @param e the executor attempting to execute this task
+         *          在调用线程中执行任务，除非执行器已经被关闭，此时这个任务将被丢弃
          */
         public void rejectedExecution(Runnable r, ThreadPoolExecutor e) {
+            //如果线程池没有关闭，直接在该线程中运行此方法
             if (!e.isShutdown()) {
                 r.run();
             }
@@ -2276,6 +2279,7 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
     /**
      * A handler for rejected tasks that throws a
      * {@code RejectedExecutionException}.
+     * 直接抛出RejectedExecutionException异常
      */
     public static class AbortPolicy implements RejectedExecutionHandler {
         /**
@@ -2312,6 +2316,7 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
          *
          * @param r the runnable task requested to be executed
          * @param e the executor attempting to execute this task
+         *          不做任何事情，相当于直接丢弃任务
          */
         public void rejectedExecution(Runnable r, ThreadPoolExecutor e) {
         }
@@ -2336,10 +2341,15 @@ public class ThreadPoolExecutor extends AbstractExecutorService {
          *
          * @param r the runnable task requested to be executed
          * @param e the executor attempting to execute this task
+         *          获取并且忽略线程池下一个要执行的任务
+         *          线程池可用的话，就调用execute执行新的任务
+         *          线程池关闭的话，新的任务将被丢弃
          */
         public void rejectedExecution(Runnable r, ThreadPoolExecutor e) {
             if (!e.isShutdown()) {
+                //队列中位于头部的任务出栈
                 e.getQueue().poll();
+                //执行新的任务
                 e.execute(r);
             }
         }
