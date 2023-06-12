@@ -645,8 +645,10 @@ public class CopyOnWriteArrayList<E>
      *
      * @param e element to be added to this list, if absent
      * @return {@code true} if the element was added
+     * 添加元素，如果数组中不存在，添加，存在，则不添加
      */
     public boolean addIfAbsent(E e) {
+        //获取当前数组
         Object[] snapshot = getArray();
         return indexOf(e, snapshot, 0, snapshot.length) >= 0 ? false :
             addIfAbsent(e, snapshot);
@@ -657,25 +659,38 @@ public class CopyOnWriteArrayList<E>
      * recent snapshot does not contain e.
      */
     private boolean addIfAbsent(E e, Object[] snapshot) {
+        //重入锁
         final ReentrantLock lock = this.lock;
+        //获取锁
         lock.lock();
         try {
+            //获取当前数组
             Object[] current = getArray();
+            //数组长度len
             int len = current.length;
+            //快照不等于当前数组，对数组进行了修改
             if (snapshot != current) {
                 // Optimize for lost race to another addXXX operation
+                //二者取最小
                 int common = Math.min(snapshot.length, len);
                 for (int i = 0; i < common; i++)
+                    //当前数组的元素与快照的元素不相等并且e与当前元素相等
                     if (current[i] != snapshot[i] && eq(e, current[i]))
+                        //表示在snapshot与current之间修改了数组，并且设置了数组某一元素为e，已经存在
                         return false;
                 if (indexOf(e, current, common, len) >= 0)
+                    //在数组中找到了元素e
                         return false;
             }
+            //赋值数组
             Object[] newElements = Arrays.copyOf(current, len + 1);
+            //索引len的元素赋值为e
             newElements[len] = e;
+            //将新数组设置为当前数组
             setArray(newElements);
             return true;
         } finally {
+            //释放锁
             lock.unlock();
         }
     }
@@ -1171,19 +1186,21 @@ public class CopyOnWriteArrayList<E>
 
     static final class COWIterator<E> implements ListIterator<E> {
         /** Snapshot of the array */
+        //快照
         private final Object[] snapshot;
         /** Index of element to be returned by subsequent call to next.  */
+        //游标
         private int cursor;
 
         private COWIterator(Object[] elements, int initialCursor) {
             cursor = initialCursor;
             snapshot = elements;
         }
-
+        //是否有下一个元素
         public boolean hasNext() {
             return cursor < snapshot.length;
         }
-
+        //是否有上一个元素
         public boolean hasPrevious() {
             return cursor > 0;
         }
@@ -1214,6 +1231,7 @@ public class CopyOnWriteArrayList<E>
          * Not supported. Always throws UnsupportedOperationException.
          * @throws UnsupportedOperationException always; {@code remove}
          *         is not supported by this iterator.
+         *         不支持remove
          */
         public void remove() {
             throw new UnsupportedOperationException();
@@ -1223,6 +1241,7 @@ public class CopyOnWriteArrayList<E>
          * Not supported. Always throws UnsupportedOperationException.
          * @throws UnsupportedOperationException always; {@code set}
          *         is not supported by this iterator.
+         *         不支持set
          */
         public void set(E e) {
             throw new UnsupportedOperationException();
@@ -1232,6 +1251,7 @@ public class CopyOnWriteArrayList<E>
          * Not supported. Always throws UnsupportedOperationException.
          * @throws UnsupportedOperationException always; {@code add}
          *         is not supported by this iterator.
+         *         不支持add
          */
         public void add(E e) {
             throw new UnsupportedOperationException();
