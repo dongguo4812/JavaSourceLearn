@@ -379,19 +379,25 @@ public abstract class AbstractQueuedSynchronizer
      */
     static final class Node {
         /** Marker to indicate a node is waiting in shared mode */
+        //用来表示在共享模式下等待的标记
         static final Node SHARED = new Node();
         /** Marker to indicate a node is waiting in exclusive mode */
+        //用来表示在独占模式下等待的标记
         static final Node EXCLUSIVE = null;
 
         /** waitStatus value to indicate thread has cancelled */
+        //waitStatus 的值，用来表示线程已经被取消
         static final int CANCELLED =  1;
         /** waitStatus value to indicate successor's thread needs unparking */
+        //waitStatus的值，用来表示后继线程都需要被挂起
         static final int SIGNAL    = -1;
         /** waitStatus value to indicate thread is waiting on condition */
+        //waitStatus 的值，表示线程在一个条件上等待
         static final int CONDITION = -2;
         /**
          * waitStatus value to indicate the next acquireShared should
          * unconditionally propagate
+         * waitStatus 的值，表示下一个acquireShared应该无条件传播
          */
         static final int PROPAGATE = -3;
 
@@ -428,6 +434,7 @@ public abstract class AbstractQueuedSynchronizer
          * The field is initialized to 0 for normal sync nodes, and
          * CONDITION for condition nodes.  It is modified using CAS
          * (or when possible, unconditional volatile writes).
+         * 等待状态值 仅接收以上4个值和默认的0
          */
         volatile int waitStatus;
 
@@ -441,6 +448,7 @@ public abstract class AbstractQueuedSynchronizer
          * head only as a result of successful acquire. A
          * cancelled thread never succeeds in acquiring, and a thread only
          * cancels itself, not any other node.
+         * 前驱结点
          */
         volatile Node prev;
 
@@ -456,12 +464,14 @@ public abstract class AbstractQueuedSynchronizer
          * double-check.  The next field of cancelled nodes is set to
          * point to the node itself instead of null, to make life
          * easier for isOnSyncQueue.
+         * 后继节点
          */
         volatile Node next;
 
         /**
          * The thread that enqueued this node.  Initialized on
          * construction and nulled out after use.
+         * 当前线程
          */
         volatile Thread thread;
 
@@ -474,6 +484,7 @@ public abstract class AbstractQueuedSynchronizer
          * re-acquire. And because conditions can only be exclusive,
          * we save a field by using special value to indicate shared
          * mode.
+         * 下一个条件等待节点
          */
         Node nextWaiter;
 
@@ -490,6 +501,7 @@ public abstract class AbstractQueuedSynchronizer
          * be elided, but is present to help the VM.
          *
          * @return the predecessor of this node
+         * 获取当前节点的前驱节点
          */
         final Node predecessor() throws NullPointerException {
             Node p = prev;
@@ -502,11 +514,12 @@ public abstract class AbstractQueuedSynchronizer
         Node() {    // Used to establish initial head or SHARED marker
         }
 
+        //用于addWaiter方法
         Node(Thread thread, Node mode) {     // Used by addWaiter
             this.nextWaiter = mode;
             this.thread = thread;
         }
-
+        //用于Condition中使用
         Node(Thread thread, int waitStatus) { // Used by Condition
             this.waitStatus = waitStatus;
             this.thread = thread;
@@ -615,7 +628,7 @@ public abstract class AbstractQueuedSynchronizer
         //pred指向tail
         /**
           +------+       +-----+       +-----+             prev  +-----+
-      head |      | <---- |     | <---- |     |  tail    <----  |     |  
+      head |      | <---- |     | <---- |     |  tail    <----  |     |
            +------+       +-----+       +-----+                 +-----+
         */
         Node pred = tail;
@@ -1710,7 +1723,7 @@ public abstract class AbstractQueuedSynchronizer
         if (node.waitStatus == Node.CONDITION || node.prev == null)
             return false;
         //节点的后继节点不为null，说明节点肯定在队列中，返回true，
-        //这里很重要的一点要明白，prev和next都是针对同步队列的节点    
+        //这里很重要的一点要明白，prev和next都是针对同步队列的节点
         if (node.next != null) // If has successor, it must be on queue
             return true;
         /*
@@ -1935,7 +1948,7 @@ public abstract class AbstractQueuedSynchronizer
          * Adds a new waiter to wait queue.
          * @return its new wait node
          */
-        //将当前线程封装为节点并设置为CONDITION加入到Condition队列中，这里如果lastWaiter不为CONDITION状态，那么会把它踢出Condition队列; 
+        //将当前线程封装为节点并设置为CONDITION加入到Condition队列中，这里如果lastWaiter不为CONDITION状态，那么会把它踢出Condition队列;
         private Node addConditionWaiter() {
             Node t = lastWaiter;
             // If lastWaiter is cancelled, clean out.
@@ -1949,10 +1962,10 @@ public abstract class AbstractQueuedSynchronizer
             //尾节点为空则表明队列为空，将新节点设置为头节点
             if (t == null)
                 firstWaiter = node;
-            //尾节点不为空则表明队列不为空，将新节点设置为尾节点的后续节点    
+            //尾节点不为空则表明队列不为空，将新节点设置为尾节点的后续节点
             else
                 t.nextWaiter = node;
-            //将新节点设置为尾节点    
+            //将新节点设置为尾节点
             lastWaiter = node;
             return node;
         }
@@ -1969,7 +1982,7 @@ public abstract class AbstractQueuedSynchronizer
                 if ( (firstWaiter = first.nextWaiter) == null)
                     lastWaiter = null;
                 first.nextWaiter = null;
-             //将头节点从等待队列中移除   
+             //将头节点从等待队列中移除
             } while (!transferForSignal(first) &&
                      (first = firstWaiter) != null);
         }
@@ -2037,7 +2050,7 @@ public abstract class AbstractQueuedSynchronizer
             //isHeldExclusively是需要子类继承的，在lock中判断当前线程是否是获得锁的线程,是则返回true，如何当前线程不是获取锁的线程则抛出异常
             if (!isHeldExclusively())
                 throw new IllegalMonitorStateException();
-            //获取Condition队列中第一个Node    
+            //获取Condition队列中第一个Node
             Node first = firstWaiter;
             //队首的节点不为null
             if (first != null)
@@ -2142,7 +2155,7 @@ public abstract class AbstractQueuedSynchronizer
             //await()方法对中断敏感，线程中断为true时调用await()就会抛出异常
             if (Thread.interrupted())
                 throw new InterruptedException();
-            //将当前线程封装成节点并且设置为CONDITION加入到Condition队列中去，这里如果lastWaiter不为CONDITION状态，那么会把它踢出Condition队列。    
+            //将当前线程封装成节点并且设置为CONDITION加入到Condition队列中去，这里如果lastWaiter不为CONDITION状态，那么会把它踢出Condition队列。
             Node node = addConditionWaiter();
             //释放node节点线程的锁
             int savedState = fullyRelease(node);
