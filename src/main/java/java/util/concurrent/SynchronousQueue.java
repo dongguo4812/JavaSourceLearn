@@ -690,6 +690,7 @@ public class SynchronousQueue<E> extends AbstractQueue<E>
          * Reference to a cancelled node that might not yet have been
          * unlinked from queue because it was the last inserted node
          * when it was cancelled.
+         * 指向已经取消的节点，这个节点可能还没有从队列中取消连接，因为他是取消时最后一个插入的节点
          */
         transient volatile QNode cleanMe;
 
