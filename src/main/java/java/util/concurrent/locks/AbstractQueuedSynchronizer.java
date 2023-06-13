@@ -1025,19 +1025,29 @@ public abstract class AbstractQueuedSynchronizer
      * @param arg the acquire argument
      */
     private void doAcquireShared(int arg) {
+        //构造节点 加入到阻塞队列中
         final Node node = addWaiter(Node.SHARED);
+        //获取锁失败标识
         boolean failed = true;
         try {
+            //中断标识
             boolean interrupted = false;
             for (;;) {
+                //node的前驱节点p
                 final Node p = node.predecessor();
+                //前驱节点是头节点
                 if (p == head) {
+                    //尝试获取锁
                     int r = tryAcquireShared(arg);
+                    //获取到了锁
                     if (r >= 0) {
+                        //将node设置为头节点 ，唤醒后继节点
                         setHeadAndPropagate(node, r);
+                        //释放头节点p，便于GC回收
                         p.next = null; // help GC
                         if (interrupted)
                             selfInterrupt();
+                        //获取锁成功标识
                         failed = false;
                         return;
                     }
@@ -1048,6 +1058,7 @@ public abstract class AbstractQueuedSynchronizer
             }
         } finally {
             if (failed)
+                //最终还是没有获取到锁，取消获取锁
                 cancelAcquire(node);
         }
     }
@@ -1287,7 +1298,7 @@ public abstract class AbstractQueuedSynchronizer
             //addWaiter:将线程封装到 Node 节点并添加到队列尾部
             //acquireQueued查看当前排队的 Node 是否在队列的前面，如果在前面，尝试获取锁资源。如果没在前面，线程进入到阻塞状态。
             acquireQueued(addWaiter(Node.EXCLUSIVE), arg))
-            //中断当前线程，唤醒
+            //中断当前线程，等待唤醒
             selfInterrupt();
     }
 
@@ -1375,7 +1386,9 @@ public abstract class AbstractQueuedSynchronizer
      *        and can represent anything you like.
      */
     public final void acquireShared(int arg) {
+        //尝试获取锁
         if (tryAcquireShared(arg) < 0)
+            //获取锁失败则加入队列，自旋获取锁
             doAcquireShared(arg);
     }
 
