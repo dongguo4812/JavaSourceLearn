@@ -468,7 +468,7 @@ public final class URI
     // Note: Comments containing the word "ASSERT" indicate places where a
     // throw of an InternalError should be replaced by an appropriate assertion
     // statement once asserts are enabled in the build.
-    //序列化版本号
+    //版本序列号
     static final long serialVersionUID = -6052424284110960213L;
 
 
@@ -513,6 +513,7 @@ public final class URI
      * The string form of this URI.
      *
      * @serial
+     * 字符串形式的URI
      */
     private volatile String string;             // The only serializable field
 
@@ -590,6 +591,7 @@ public final class URI
      * @throws  URISyntaxException
      *          If the given string violates RFC&nbsp;2396, as augmented
      *          by the above deviations
+     *          根据提供的一个uri字符串构造一个URI对象。
      */
     public URI(String str) throws URISyntaxException {
         new Parser(str).parse(false);
@@ -667,6 +669,7 @@ public final class URI
      *         if the URI string constructed from the given components violates
      *         RFC&nbsp;2396, or if the authority component of the string is
      *         present but cannot be parsed as a server-based authority
+     *         主要针对层次的URI。通过 模式、用户信息、服务器地址、端口、文件路径、查询条件、片段标识构造URI。
      */
     public URI(String scheme,
                String userInfo, String host, int port,
@@ -740,6 +743,7 @@ public final class URI
      *         if the URI string constructed from the given components violates
      *         RFC&nbsp;2396, or if the authority component of the string is
      *         present but cannot be parsed as a server-based authority
+     *         主要针对层次的URI。通过 模式、授权机构、文件路径、查询条件、片段标识构造URI。
      */
     public URI(String scheme,
                String authority,
@@ -774,6 +778,7 @@ public final class URI
      * @throws  URISyntaxException
      *          If the URI string constructed from the given components
      *          violates RFC&nbsp;2396
+     *          主要针对层次的URI。通过 模式、服务器地址、文件路径、片段标识构造URI。
      */
     public URI(String scheme, String host, String path, String fragment)
         throws URISyntaxException
@@ -817,6 +822,7 @@ public final class URI
      * @throws  URISyntaxException
      *          If the URI string constructed from the given components
      *          violates RFC&nbsp;2396
+     *          主要针对非层次URI。通过 模式、模式特定部分和片段标识创建URI。
      */
     public URI(String scheme, String ssp, String fragment)
         throws URISyntaxException

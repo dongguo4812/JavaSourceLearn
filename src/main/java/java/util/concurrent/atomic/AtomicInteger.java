@@ -52,7 +52,7 @@ import sun.misc.Unsafe;
  * @author Doug Lea
 */
 public class AtomicInteger extends Number implements java.io.Serializable {
-    //序列化版本号
+    //版本序列号
     private static final long serialVersionUID = 6214790243416807050L;
 
     // setup to use Unsafe.compareAndSwapInt for updates
@@ -173,6 +173,7 @@ public class AtomicInteger extends Number implements java.io.Serializable {
      * Atomically decrements by one the current value.
      *
      * @return the previous value
+     * 将当前值自动减1
      */
     public final int getAndDecrement() {
         return unsafe.getAndAddInt(this, valueOffset, -1);
