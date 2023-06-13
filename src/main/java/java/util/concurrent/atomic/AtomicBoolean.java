@@ -86,6 +86,8 @@ public class AtomicBoolean implements java.io.Serializable {
      * Returns the current value.
      *
      * @return the current value
+     * 0 false
+     * 1 true
      */
     public final boolean get() {
         return value != 0;
