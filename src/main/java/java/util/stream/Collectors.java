@@ -1268,6 +1268,7 @@ public final class Collectors {
     Collector<T, ?, Map<K,U>> toMap(Function<? super T, ? extends K> keyMapper,
                                     Function<? super T, ? extends U> valueMapper,
                                     BinaryOperator<U> mergeFunction) {
+        //默认使用HashMap
         return toMap(keyMapper, valueMapper, mergeFunction, HashMap::new);
     }
 
