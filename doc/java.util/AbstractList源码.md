@@ -6,7 +6,7 @@ AbstractList是AbstractCollection和List的抽象子类，为一些通用的方�
 public abstract class AbstractList<E> extends AbstractCollection<E> implements List<E> 
 ```
 
-![image-20230617035004505](F:\note\image\image-20230617035004505.png)
+![image-20230617035004505](https://gitee.com/dongguo4812_admin/image/raw/master/image/202306170423922.png)
 
 这个抽象类提供了List接口的大多数实现，ArrayList和LinkedList只需要继承这个抽象类并重写抽象方法即可。
 
