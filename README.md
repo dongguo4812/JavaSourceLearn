@@ -42,6 +42,7 @@ jdk8源码学习
 [有序集合使用Collectors.groupingBy()或Collectors.toMap()输出乱序问题](https://github.com/dongguo4812/JavaSourceLearn/blob/master/doc/java.util/%E6%9C%89%E5%BA%8F%E9%9B%86%E5%90%88%E4%BD%BF%E7%94%A8Collectors.groupingBy()%E6%88%96Collectors.toMap()%E8%BE%93%E5%87%BA%E4%B9%B1%E5%BA%8F%E9%97%AE%E9%A2%98.md)<br>
 [AbstractList源码](https://github.com/dongguo4812/JavaSourceLearn/blob/master/doc/java.util/AbstractList%E6%BA%90%E7%A0%81.md)<br>
 2.3 java.util.concurrent<br>
+[ConcurrentHashMap源码](https://github.com/dongguo4812/JavaSourceLearn/blob/master/doc/java.util/concurrent/ConcurrentHashMap%E6%BA%90%E7%A0%81.md)<br>
 2.4 java.util.concurrent.atomic<br>
 2.5 java.util.concurrent.locks<br>
 2.6 java.io<br>
