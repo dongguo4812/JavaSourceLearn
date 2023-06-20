@@ -43,8 +43,10 @@ jdk8源码学习
 [AbstractList源码](https://github.com/dongguo4812/JavaSourceLearn/blob/master/doc/java.util/AbstractList%E6%BA%90%E7%A0%81.md)<br>
 2.3 java.util.concurrent<br>
 [ConcurrentHashMap源码](https://github.com/dongguo4812/JavaSourceLearn/blob/master/doc/java.util/concurrent/ConcurrentHashMap%E6%BA%90%E7%A0%81.md)<br>
+[ThreadPoolExecutor源码](https://github.com/dongguo4812/JavaSourceLearn/blob/master/doc/java.util/concurrent/ThreadPoolExecutor%E6%BA%90%E7%A0%81.md)<br>
 2.4 java.util.concurrent.atomic<br>
 2.5 java.util.concurrent.locks<br>
+[AbstractQueuedSynchronizer源码](https://github.com/dongguo4812/JavaSourceLearn/blob/master/doc/java.util/concurrent/locks/AbstractQueuedSynchronizer%E6%BA%90%E7%A0%81.md)<br>
 2.6 java.io<br>
 2.7 java.nio<br>
 2.8 java.net<br>
