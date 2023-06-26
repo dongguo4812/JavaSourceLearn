@@ -395,22 +395,30 @@ public class ConcurrentLinkedQueue<E> extends AbstractQueue<E>
     }
 
     public E poll() {
-        restartFromHead:
+        //如果出现p被删除的情况需要从head重新开始
+        restartFromHead:          //goto
         for (;;) {
+            //h为头节点
             for (Node<E> h = head, p = h, q;;) {
+                //p节点中的item元素
                 E item = p.item;
-
+                //item不为null，则将item设置为null
                 if (item != null && p.casItem(item, null)) {
                     // Successful CAS is the linearization point
                     // for item to be removed from this queue.
+                    //p！= h，则更新head
                     if (p != h) // hop two nodes at a time
+                        //头节点从h修改   p的next不为null， 修改为q，
+                                        //      为null， 修改为p
                         updateHead(h, ((q = p.next) != null) ? q : p);
                     return item;
                 }
+                //p的next 为null， 修改为p
                 else if ((q = p.next) == null) {
                     updateHead(h, p);
                     return null;
                 }
+                //当一个线程在poll的时候，另一个线程已经把当前的p从队列中删除——将p.next = p，p已经被移除不能继续，跳出多层循环
                 else if (p == q)
                     continue restartFromHead;
                 else
