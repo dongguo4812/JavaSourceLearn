@@ -1844,7 +1844,7 @@ public abstract class AbstractQueuedSynchronizer
      * Cancels node and throws exception on failure.
      * @param node the condition node for this wait
      * @return previous sync state
-     * 使用release确保线程释放持有的锁
+     * 使用release负责线程释放持有的锁
      */
     final int fullyRelease(Node node) {
         boolean failed = true;
@@ -1856,10 +1856,12 @@ public abstract class AbstractQueuedSynchronizer
                 failed = false;
                 return savedState;
             } else {
+                //当线程未持有锁，调用await方法时，抛出该异常
                 throw new IllegalMonitorStateException();
             }
         } finally {
             if (failed)
+                //释放锁失败，会设置Node的等待状态为Node.CANCELED
                 node.waitStatus = Node.CANCELLED;
         }
     }
@@ -2014,12 +2016,13 @@ public abstract class AbstractQueuedSynchronizer
          */
         private void doSignal(Node first) {
             do {
-                //新的头节点为空则，队列为空
+                //修改头节点
+                // 如果新的头节点为空则，则队列为空
                 if ( (firstWaiter = first.nextWaiter) == null)
                     lastWaiter = null;
                 //断开头节点与队列的连接
                 first.nextWaiter = null;
-             //将头节点从等待队列中移除
+             //将头节点从等待队列中移除，移动到CLH同步队列中
             } while (!transferForSignal(first) &&
                      (first = firstWaiter) != null);
         }
@@ -2051,7 +2054,7 @@ public abstract class AbstractQueuedSynchronizer
          * particular target to unlink all pointers to garbage nodes
          * without requiring many re-traversals during cancellation
          * storms.
-         * 检查逻辑
+         * 检查逻辑  将条件队列中状态不为Node.CONDITION的节点删除，等待队列是一个单向链表，遍历链表将已经取消的节点清除
          * 从等待队列的头节点开始遍历，如果头节点的waitStatus != Node.CONDITION则将firstWaiter的引用指向头结点的下一个节点，
          * 则该下一个节点就变成了新的头节点，如此往复进行
          */
@@ -2063,7 +2066,7 @@ public abstract class AbstractQueuedSynchronizer
             //从头节点开始遍历
             while (t != null) {
                 Node next = t.nextWaiter;
-                //当前线程的等待状态不是 Node.CONDITION等待状态
+                //当前节点的等待状态不是 Node.CONDITION等待状态， 取消该节点
                 if (t.waitStatus != Node.CONDITION) {
                     //断开与下一个节点的连接 t独立出来便于GC回收
                     t.nextWaiter = null;
@@ -2093,13 +2096,13 @@ public abstract class AbstractQueuedSynchronizer
          *
          * @throws IllegalMonitorStateException if {@link #isHeldExclusively}
          *         returns {@code false}
-         * signal的作用就是将await中Condition队列的第一个节点唤醒；
+         * signal的作用就是将await中Condition队列的第一个节点唤醒，在唤醒节点前，会将节点移到CLH同步队列中。
          */
         public final void signal() {
             //isHeldExclusively是需要子类继承的，在lock中判断当前线程是否是获得锁的线程,是则返回true，如果当前线程不是获取锁的线程则抛出异常
             if (!isHeldExclusively())
                 throw new IllegalMonitorStateException();
-            //获取Condition队列中第一个Node
+            //获取Condition队列中第一个Node，唤醒条件队列中第一个节点
             Node first = firstWaiter;
             //队首的节点不为null
             if (first != null)
@@ -2220,7 +2223,7 @@ public abstract class AbstractQueuedSynchronizer
                 LockSupport.park(this);
                 //线程被唤醒或者中断后，判断线程的中断状态
                 if ((interruptMode = checkInterruptWhileWaiting(node)) != 0)
-                    //中断则推出循环
+                    //中断则退出循环
                     break;
             }
             //线程被唤醒后重新获取锁，锁状态恢复到savedState

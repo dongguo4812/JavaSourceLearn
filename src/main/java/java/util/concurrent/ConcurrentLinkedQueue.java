@@ -104,6 +104,7 @@ import java.util.function.Consumer;
  */
 public class ConcurrentLinkedQueue<E> extends AbstractQueue<E>
         implements Queue<E>, java.io.Serializable {
+    //序列化版本号
     private static final long serialVersionUID = 196745693267521676L;
 
     /*
@@ -178,25 +179,29 @@ public class ConcurrentLinkedQueue<E> extends AbstractQueue<E>
      */
 
     private static class Node<E> {
+        //item节点元素域 即Node中存放的元素
         volatile E item;
+        //链表中下一个节点
         volatile Node<E> next;
 
         /**
          * Constructs a new node.  Uses relaxed write because item can
          * only be seen after publication via casNext.
+         * 初始化时，获取item和next的偏移量，为后期的cas做准备
          */
         Node(E item) {
             UNSAFE.putObject(this, itemOffset, item);
         }
-
+        //在cas操作时更新item值，将item从cmp更新为val。
         boolean casItem(E cmp, E val) {
             return UNSAFE.compareAndSwapObject(this, itemOffset, cmp, val);
         }
-
+        //该方法是一个延迟设置操作，将节点的next指针设置为val。
+        // 由于该方法使用putOrderedObject方法，因此在设置前会对变量进行内存屏障，保证可见性。
         void lazySetNext(Node<E> val) {
             UNSAFE.putOrderedObject(this, nextOffset, val);
         }
-
+        //cas操作，用于将next指针从cmp更新为val。
         boolean casNext(Node<E> cmp, Node<E> val) {
             return UNSAFE.compareAndSwapObject(this, nextOffset, cmp, val);
         }
@@ -204,7 +209,9 @@ public class ConcurrentLinkedQueue<E> extends AbstractQueue<E>
         // Unsafe mechanics
 
         private static final sun.misc.Unsafe UNSAFE;
+        //item偏移量
         private static final long itemOffset;
+        //下一个元素的偏移量
         private static final long nextOffset;
 
         static {
@@ -232,6 +239,7 @@ public class ConcurrentLinkedQueue<E> extends AbstractQueue<E>
      * - head.item may or may not be null.
      * - it is permitted for tail to lag behind head, that is, for tail
      *   to not be reachable from head!
+     *   头节点
      */
     private transient volatile Node<E> head;
 
@@ -246,13 +254,16 @@ public class ConcurrentLinkedQueue<E> extends AbstractQueue<E>
      * - it is permitted for tail to lag behind head, that is, for tail
      *   to not be reachable from head!
      * - tail.next may or may not be self-pointing to tail.
+     * 尾结点
      */
     private transient volatile Node<E> tail;
 
     /**
      * Creates a {@code ConcurrentLinkedQueue} that is initially empty.
+     * 创建一个初始为空的ConcurrentLinkedQueue
      */
     public ConcurrentLinkedQueue() {
+        //使用无参构造创建对象时，头尾节点都是指向一个空节点。
         head = tail = new Node<E>(null);
     }
 
@@ -264,23 +275,35 @@ public class ConcurrentLinkedQueue<E> extends AbstractQueue<E>
      * @param c the collection of elements to initially contain
      * @throws NullPointerException if the specified collection or any
      *         of its elements are null
+     *         使用指定 collection 中的元素创建一个新的 ConcurrentLinkedQueue
      */
     public ConcurrentLinkedQueue(Collection<? extends E> c) {
+        //h:头节点，t：尾节点
         Node<E> h = null, t = null;
+        //遍历集合元素
         for (E e : c) {
+            //判断元素是否为null
             checkNotNull(e);
+            //构造成一个新节点，e为新节点的item值
             Node<E> newNode = new Node<E>(e);
             if (h == null)
+                //如果头节点为null，则新节点为第一个元素，将头节点和尾节点指向该节点
                 h = t = newNode;
             else {
+                //头节点不为null，则将当前节点设置为尾节点的下一个节点
                 t.lazySetNext(newNode);
+                //将尾节点指向当前节点
                 t = newNode;
             }
         }
+        //遍历完之后头节点为null，说明集合c是空集合，这里的处理是创建一个空队列
         if (h == null)
             h = t = new Node<E>(null);
+        //最终的头节点
         head = h;
-        tail = t;
+        //
+        最终的尾节点
+                tail = t;
     }
 
     // Have to override just to update the javadoc
@@ -324,31 +347,49 @@ public class ConcurrentLinkedQueue<E> extends AbstractQueue<E>
      * @throws NullPointerException if the specified element is null
      */
     public boolean offer(E e) {
+        //检查节点是否为null
         checkNotNull(e);
+        //创建新节点
         final Node<E> newNode = new Node<E>(e);
-
+        //死循环 直到成功为止
+        // t和p默认都为尾结点 q为p的后继节点
         for (Node<E> t = tail, p = t;;) {
             Node<E> q = p.next;
-            if (q == null) {
+            //q == null 表示p已经是最后一个节点，尝试将新节点加入到队列尾
+            if (q == null) {             //判断1
                 // p is last node
-                if (p.casNext(null, newNode)) {
+                //casNext： p节点的next指向新节点，失败则继续循环
+                if (p.casNext(null, newNode)) {              //判断2
                     // Successful CAS is the linearization point
                     // for e to become an element of this queue,
                     // and for newNode to become "live".
-                    if (p != t) // hop two nodes at a time
+                    //p！=t node加入节点后会导致tail距离最后一个节点相差大于一个，需要更新tail
+                    if (p != t) // hop two nodes at a time          //判断3
+                        //将tail指向新节点 ，失败也没事，因为失败了就是有别的线程更新成功了
                         casTail(t, newNode);  // Failure is OK.
                     return true;
                 }
+                //如果casNext插入失败，则表示其他线程已经修改了p.next的指向
+                //当前线程需要重新尝试获取p的下一个节点再次cas操作
                 // Lost CAS race to another thread; re-read next
             }
-            else if (p == q)
+            // p == q 代表着该节点已经被删除了
+            // 由于多线程的原因，我们offer()的时候也会poll()，如果offer()的时候正好该节点已经poll()了
+            // 那么在poll()方法中的updateHead()方法会将head指向当前的q，而把p.next指向自己，即：p.next == p
+            else if (p == q)                //判断4
                 // We have fallen off list.  If tail is unchanged, it
                 // will also be off-list, in which case we need to
                 // jump to head, from which all live nodes are always
                 // reachable.  Else the new tail is a better bet.
+                // 这样就会导致tail节点滞后head（tail位于head的前面），则需要重新设置p
+                //如果当前tail还是没变则取head，head永远是活动的节点，否则tail仍然是最快获取尾结点的方式
                 p = (t != (t = tail)) ? t : head;
-            else
+                //tail并没有指向尾节点,当前有另一个线程改变的结构，则重新获取尾结点。
+            else              //判断5
                 // Check for tail updates after two hops.
+                //则将p指向最后一个节点，继续循环
+                //(p != t)  说明执行过 p = q 操作(向后遍历操作)
+                //(t != (t = tail))) 说明尾节点在其他的线程发生变化
                 p = (p != t && t != (t = tail)) ? t : q;
         }
     }
@@ -672,6 +713,7 @@ public class ConcurrentLinkedQueue<E> extends AbstractQueue<E>
     private class Itr implements Iterator<E> {
         /**
          * Next node to return item for.
+         * 下一个节点
          */
         private Node<E> nextNode;
 
@@ -680,11 +722,13 @@ public class ConcurrentLinkedQueue<E> extends AbstractQueue<E>
          * that an element exists in hasNext(), we must return it in
          * the following next() call even if it was in the process of
          * being removed when hasNext() was called.
+         * 下一个节点中的元素
          */
         private E nextItem;
 
         /**
          * Node of the last returned item, to support remove.
+         * 上一个节点
          */
         private Node<E> lastRet;
 
@@ -695,6 +739,8 @@ public class ConcurrentLinkedQueue<E> extends AbstractQueue<E>
         /**
          * Moves to next valid node and returns item to return for
          * next(), or null if no such.
+         * 寻找下一个非空元素节点，并返回上一个元素节点中的元素。
+         * 该方法会同时更新lastRet、next和nextItem。
          */
         private E advance() {
             lastRet = nextNode;
@@ -729,16 +775,16 @@ public class ConcurrentLinkedQueue<E> extends AbstractQueue<E>
                 }
             }
         }
-
+        //判断是否还有下一个元素
         public boolean hasNext() {
             return nextNode != null;
         }
-
+        //返回下一个元素，并将next、nextItem和lastRet更新。如果已经没有下一个元素，则抛出NoSuchElementException异常。
         public E next() {
             if (nextNode == null) throw new NoSuchElementException();
             return advance();
         }
-
+        //移除上一个元素节点，并将lastRet置为null。如果上一个元素节点为null，则抛出IllegalStateException异常。
         public void remove() {
             Node<E> l = lastRet;
             if (l == null) throw new IllegalStateException();
@@ -805,35 +851,55 @@ public class ConcurrentLinkedQueue<E> extends AbstractQueue<E>
 
     /** A customized variant of Spliterators.IteratorSpliterator */
     static final class CLQSpliterator<E> implements Spliterator<E> {
+        //最大批处理大小
         static final int MAX_BATCH = 1 << 25;  // max batch array size;
         final ConcurrentLinkedQueue<E> queue;
+        //当前节点，初始化之前都为null
         Node<E> current;    // current node; null until initialized
+        //分割批次的大小
         int batch;          // batch size for splits
+        //如果没有元素了，为true
         boolean exhausted;  // true when no more nodes
         CLQSpliterator(ConcurrentLinkedQueue<E> queue) {
             this.queue = queue;
         }
-
+        //并发分裂队列，将队列分成多个子队列进行同时处理，提高处理效率。
         public Spliterator<E> trySplit() {
             Node<E> p;
             final ConcurrentLinkedQueue<E> q = this.queue;
             int b = batch;
+            //n表示数组长度
+            //分割批次长度<=0，数组长度为1；
+            //分割批次长度>=最大批处理大小，数组长度为最大批处理大小；否则为分割批次长度+1
             int n = (b <= 0) ? 1 : (b >= MAX_BATCH) ? MAX_BATCH : b + 1;
+            //!exhausted 为true表示队列还有元素
+            //((p = current) != null || (p = q.first()) != null) 如果前部分为true表示已经运行过一次，后部分为true表		  //示是第一次运行，将队列的头节点赋值给p
+            //p.next != null 表示队列后面还有元素,p表示的节点不是最后一个
             if (!exhausted &&
                 ((p = current) != null || (p = q.first()) != null) &&
                 p.next != null) {
+                //临时存储需分割的元素
                 Object[] a = new Object[n];
+                //已分割的元素计数，只计数item不为null的元素
+                //对于ConcurrentLinkedQueue来说，这里不会有item值为null的情况
                 int i = 0;
                 do {
+                    //节点item值赋值临时数组
                     if ((a[i] = p.item) != null)
+                        //计数
                         ++i;
+                    //当next也指向本身p的时候为true,也就是自引用，重新找头节点
                     if (p == (p = p.next))
                         p = q.first();
+                    //直到取完需要的元素数量
                 } while (p != null && i < n);
+                //如果p等于null了就说明没有元素了
                 if ((current = p) == null)
                     exhausted = true;
+                //有不为null的元素
                 if (i > 0) {
                     batch = i;
+                    //创建Spliterator，数组从0-i不包括i，指定了迭代器的特性
                     return Spliterators.spliterator
                         (a, 0, i, Spliterator.ORDERED | Spliterator.NONNULL |
                          Spliterator.CONCURRENT);
@@ -841,7 +907,7 @@ public class ConcurrentLinkedQueue<E> extends AbstractQueue<E>
             }
             return null;
         }
-
+        //循环遍历当前迭代器中所有没有被移除的节点数据（item不为空）做指定的操作
         public void forEachRemaining(Consumer<? super E> action) {
             Node<E> p;
             if (action == null) throw new NullPointerException();
@@ -858,7 +924,7 @@ public class ConcurrentLinkedQueue<E> extends AbstractQueue<E>
                 } while (p != null);
             }
         }
-
+        //获取第一个item不为空的节点数据做指定的操作
         public boolean tryAdvance(Consumer<? super E> action) {
             Node<E> p;
             if (action == null) throw new NullPointerException();
@@ -881,8 +947,10 @@ public class ConcurrentLinkedQueue<E> extends AbstractQueue<E>
             return false;
         }
 
+        //返回了一个Long.MAX_VALUE，用于表示队列长度为无限大
         public long estimateSize() { return Long.MAX_VALUE; }
-
+        //返回了Spliterator.ORDERED、Spliterator.NONNULL和Spliterator.CONCURRENT三个标志，
+        // 表示该Spliterator是有序、非空且并发处理的。
         public int characteristics() {
             return Spliterator.ORDERED | Spliterator.NONNULL |
                 Spliterator.CONCURRENT;
@@ -931,7 +999,10 @@ public class ConcurrentLinkedQueue<E> extends AbstractQueue<E>
     // Unsafe mechanics
 
     private static final sun.misc.Unsafe UNSAFE;
+    //头节点相对于对象的偏移量
+
     private static final long headOffset;
+    //尾节点相对于对象的偏移量
     private static final long tailOffset;
     static {
         try {
