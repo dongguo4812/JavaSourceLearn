@@ -62,21 +62,31 @@ import sun.reflect.annotation.TypeAnnotationParser;
 public final
 class Field extends AccessibleObject implements Member {
 
+    //表示该字段所属的类
     private Class<?>            clazz;
+    //表示该字段在对象的内存布局中的偏移量。这个偏移量是相对于对象头(ObjectHeader)的，而不是相对于对象的起始地址。
     private int                 slot;
     // This is guaranteed to be interned by the VM in the 1.4
     // reflection implementation
+    //表示该字段的名称
     private String              name;
+    //表示该字段所属的类。这个Class对象是通过getDeclaringClass()方法获取的
     private Class<?>            type;
+    //表示该字段的访问修饰符。这个访问修饰符是通过getModifiers()方法获取的 如public、private、protected等
     private int                 modifiers;
     // Generics and annotations support
+    //表示该字段的签名。这个签名是通过getSignature()方法获取的
     private transient String    signature;
     // generic info repository; lazily initialized
+    //表示该字段的泛型信息。这个泛型信息是通过getGenericInfo()方法获取的，它返回的是该字段的泛型信息的FieldRepository对象
     private transient FieldRepository genericInfo;
+    //表示该字段的注解信息。这个注解信息是通过getAnnotations()方法获取的
     private byte[]              annotations;
     // Cached field accessor created without override
+    //表示该字段的访问器。这个访问器是通过getFieldAccessor()方法获取的
     private FieldAccessor fieldAccessor;
     // Cached field accessor created with override
+    //表示该字段的覆盖访问器。这个覆盖访问器是通过getOverrideFieldAccessor()方法获取的
     private FieldAccessor overrideFieldAccessor;
     // For sharing of FieldAccessors. This branching structure is
     // currently only two levels deep (i.e., one root Field and
@@ -84,6 +94,7 @@ class Field extends AccessibleObject implements Member {
     //
     // If this branching structure would ever contain cycles, deadlocks can
     // occur in annotation code.
+    //表示该字段的根节点。这个根节点是通过getRoot()方法获取的
     private Field               root;
 
     // Generics infrastructure
@@ -113,6 +124,7 @@ class Field extends AccessibleObject implements Member {
      * Package-private constructor used by ReflectAccess to enable
      * instantiation of these objects in Java code from the java.lang
      * package via sun.reflect.LangReflectAccess.
+     *
      */
     Field(Class<?> declaringClass,
           String name,
@@ -1138,7 +1150,7 @@ class Field extends AccessibleObject implements Member {
     public Annotation[] getDeclaredAnnotations()  {
         return AnnotationParser.toArray(declaredAnnotations());
     }
-
+    //表示该字段声明的注解信息。这个注解信息是通过getDeclaredAnnotations()方法获取的
     private transient Map<Class<? extends Annotation>, Annotation> declaredAnnotations;
 
     private synchronized  Map<Class<? extends Annotation>, Annotation> declaredAnnotations() {
